@@ -1,6 +1,31 @@
 # oscar-ui
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
+## Development setup
+
+On Debian/Ubuntu Linux x86_64:
+
+```sh
+./install.sh --development --check
+./install.sh --development
+```
+
+If system packages are missing, the installer prints an `apt-get` command.
+Run that command yourself, then rerun setup. Java 21 must be selected through
+`JAVA_HOME` or `PATH`; setup does not change your shell configuration or use
+elevated privileges. Other Linux distributions are not currently supported by
+this installer.
+
+Development setup downloads the verified Oscar release, installs Qt 6.8.3
+through a project-local Python virtual environment, and builds and tests the
+UI using the Maven wrapper. Existing Qt installations can be selected with
+`QT_HOME`. Downloads require internet access. The `--check` option checks only
+system prerequisites, without downloading or building anything.
+
+After a successful setup, launch with `./scripts/desktop.sh run`. A graphical
+desktop is required for normal use. Native installer packaging tools such as
+`rpm` and `fakeroot` are not part of development setup.
+
 ## Oscar dependency
 
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
