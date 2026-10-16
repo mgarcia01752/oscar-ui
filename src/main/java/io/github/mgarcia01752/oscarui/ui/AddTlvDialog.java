@@ -17,9 +17,15 @@ final class AddTlvDialog extends QDialog {
 
     AddTlvDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
                  OscarDocumentService.Node insertionParent, List<TlvDefinition> choices) {
+        this(parent, service, document, insertionParent, choices, null);
+    }
+
+    AddTlvDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
+                 OscarDocumentService.Node insertionParent, List<TlvDefinition> choices,
+                 OscarDocumentService.Node editing) {
         super(parent);
-        setObjectName("addTlvDialog");
-        setWindowTitle("Add TLV - " + document.type().header());
+        setObjectName(editing == null ? "addTlvDialog" : "editTlvDialog");
+        setWindowTitle((editing == null ? "Add TLV - " : "Edit TLV - ") + document.type().header());
         resize(620, 540);
         var layout = new QVBoxLayout(this);
         layout.addWidget(new QLabel("Parent: " + insertionParent.name()));
@@ -46,8 +52,8 @@ final class AddTlvDialog extends QDialog {
         validation.setWordWrap(true);
         layout.addWidget(validation);
         var buttons = new QDialogButtonBox();
-        var add = buttons.addButton("Add", QDialogButtonBox.ButtonRole.AcceptRole);
-        add.setObjectName("confirmAddTlv");
+        var add = buttons.addButton(editing == null ? "Add" : "Apply", QDialogButtonBox.ButtonRole.AcceptRole);
+        add.setObjectName(editing == null ? "confirmAddTlv" : "confirmEditTlv");
         add.setEnabled(false);
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(this::accept);
@@ -84,12 +90,24 @@ final class AddTlvDialog extends QDialog {
             list.clear();
             String query = text.toLowerCase(Locale.ROOT);
             visible = choices.stream().filter(entry -> entry.name().toLowerCase(Locale.ROOT).contains(query)
-                    || entry.path().toString().contains(query)).toList();
+                    || entry.path().toString().contains(query)
+                    || entry.description().toLowerCase(Locale.ROOT).contains(query)
+                    || entry.codec().toLowerCase(Locale.ROOT).contains(query)
+                    || entry.supportedVersion().toLowerCase(Locale.ROOT).contains(query)).toList();
             visible.forEach(entry -> list.addItem(entry.name() + "   " + entry.path()));
             if (!visible.isEmpty()) list.setCurrentRow(0);
             else { description.clear(); metadata.setText("No available TLVs"); update.run(); }
         });
         search.textChanged.emit("");
+        if (editing != null) {
+            search.hide();
+            list.setEnabled(false);
+            list.setMaximumHeight(45);
+            resize(620, 340);
+            value.setText(editing.value());
+            value.setFocus();
+            value.selectAll();
+        }
     }
 
     Selection selection() { return new Selection(selected, value.text()); }

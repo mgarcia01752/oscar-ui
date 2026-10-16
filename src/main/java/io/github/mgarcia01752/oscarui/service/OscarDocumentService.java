@@ -180,6 +180,9 @@ public final class OscarDocumentService {
         int end = context.getStop().getStopIndex() + 1;
         int close = end - 1;
         String value = text.substring(context.getStart().getStopIndex() + 1, end - 1).strip();
+        if (context instanceof tlvParser.EmptyTLVContext) value = "";
+        if (context instanceof tlvParser.TlvContext scalar) value = scalar.typeValue().getStart().getText();
+        if (context instanceof tlvParser.STlvContext scalar) value = scalar.subTypeValue().getStart().getText();
         if (context instanceof tlvParser.SubContext container) {
             for (var child : container.subTLV()) {
                 children.add(node((ParserRuleContext) child.getChild(0), resolvedPath, type, text, reference));
@@ -279,6 +282,71 @@ public final class OscarDocumentService {
             throw new InspectionException("A value must not insert additional TLV statements.");
         }
         return changed;
+    }
+
+    public TlvDefinition definition(Document document, Node node) {
+        return catalogs.get(document.type().family()).registry().find(node.path());
+    }
+
+    public boolean canDelete(Document document, Node node) {
+        if (node == null || node.path().isEmpty() || !contains(document.root(), node)) return false;
+        var definition = definition(document, node);
+        return definition != null && editingIssue(document.type(), definition).isEmpty()
+                && node.children().stream().allMatch(child -> canDelete(document, child));
+    }
+
+    public boolean canEdit(Document document, Node node) {
+        return canDelete(document, node) && !node.container() && node.children().isEmpty();
+    }
+
+    public Document replaceValue(Document document, Node node, String value) throws InspectionException {
+        if (!canEdit(document, node)) throw new InspectionException("This TLV cannot be edited.");
+        String supplied = value.strip();
+        if (supplied.equals(node.value())) return document;
+        String issue = valueIssue(document.type(), definition(document, node), supplied);
+        if (!issue.isEmpty()) throw new InspectionException(issue + ".");
+        // Oscar scalar values occupy one lexer token. Replace that token only,
+        // leaving comments and whitespace on either side untouched.
+        var tokens = parser(document.text().substring(node.start(), node.end())).getTokenStream();
+        Token token = tokens.LT(2);
+        int start = node.start() + token.getStartIndex();
+        int end = node.start() + token.getStopIndex() + 1;
+        if (token.getType() == tlvParser.SEMICOLON) {
+            end = start;
+            supplied = " " + supplied;
+        }
+        Document changed = parse(document.path(), document.text().substring(0, start) + supplied
+                + document.text().substring(end), document.diskHash(), document.reference());
+        if (count(changed.root()) != count(document.root())) {
+            throw new InspectionException("Editing must preserve the number of TLV entries.");
+        }
+        return changed;
+    }
+
+    public Document delete(Document document, Node node) throws InspectionException {
+        if (!canDelete(document, node)) throw new InspectionException("This TLV cannot be deleted.");
+        Node parent = parentOf(document.root(), node);
+        String text = document.text();
+        if (!parent.path().isEmpty() && parent.children().size() == 1) {
+            // Oscar requires at least one child between braces. Convert the empty
+            // parent to its supported 'Parent;' form, retaining outside comments.
+            var tokens = parser(text.substring(parent.start(), parent.end())).getTokenStream();
+            int opening = parent.start() + tokens.LT(2).getStartIndex();
+            text = text.substring(0, opening) + text.substring(opening + 1, node.start())
+                    + text.substring(node.end(), parent.close()) + ";" + text.substring(parent.close() + 1);
+        } else {
+            text = text.substring(0, node.start()) + text.substring(node.end());
+        }
+        return parse(document.path(), text, document.diskHash(), document.reference());
+    }
+
+    private Node parentOf(Node root, Node target) {
+        for (Node child : root.children()) {
+            if (child == target) return root;
+            Node found = parentOf(child, target);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     private boolean contains(Node root, Node target) {

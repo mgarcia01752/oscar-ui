@@ -27,6 +27,7 @@ public final class DesktopApplication {
                 window.openFile(Path.of(args[1]));
                 smokeTimer.timeout.connect(() -> {
                     if (window.completed()) {
+                        smokeTimer.stop();
                         boolean success = window.succeeded() && verifyStarterMenus(window);
                         System.out.println(success ? "UI_SMOKE_OK Qt " + QLibraryInfo.version().toString() : "UI_SMOKE_FAILED");
                         QApplication.exit(success ? 0 : 1);
@@ -47,10 +48,11 @@ public final class DesktopApplication {
 
     private static boolean verifyStarterMenus(MainWindow window) {
         var menus = window.menuBar().actions();
-        if (menus.size() != 3
+        if (menus.size() != 4
             || !menus.get(0).text().equals("&File")
             || !menus.get(1).text().equals("&Edit")
-            || !menus.get(2).text().equals("&About")) return false;
+            || !menus.get(2).text().equals("&Settings")
+            || !menus.get(3).text().equals("&About")) return false;
         for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt"}) {
             var action = window.findChild(QAction.class, name);
             if (action == null || !action.isEnabled()) return false;

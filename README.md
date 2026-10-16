@@ -16,9 +16,23 @@ update together, preserving comments, repeated entries, and unrelated formatting
 	Successful Open and New operations offer an **Add TLV** dialog.
 - **Edit > Add TLV** and the tree context menu offer available children of the
 	selected container, with searchable names, paths, descriptions, and metadata.
-- **Save / Save As** write UTF-8 text using same-directory atomic replacement,
+- **Double-click a scalar TLV** (or **Edit > Edit TLV**) to open its current
+	value in the popup. Apply updates that entry; Cancel leaves it unchanged.
+- **Edit > Del TLV** and the tree context menu delete the selected entry after
+	confirmation. Deleting a container includes its children. Protected entries
+	remain read-only.
+- **Save / Save As > Text** write UTF-8 text using same-directory atomic replacement,
 	with overwrite confirmation and checks for external file changes.
 	New, Open, and Exit protect unsaved changes with Save/Discard/Cancel.
+	Save keyboard shortcuts offer a Binary/Text choice.
+- **Save / Save As > Binary** opens the **Check Config** preview. It reports
+	available draft checks and explicitly lists unfinished checks. **Save Binary
+	is disabled**: binary encoding and minimum valid-configuration rules are not
+	implemented yet. Opening or cancelling this preview does not save your edits.
+- **Settings > Secrets** provides masked **community string (commstring)** and
+	**shared secret** fields. Apply keeps values for this application session only;
+	Clear empties the fields and takes effect on Apply. Cancel keeps prior values.
+	No secrets are encrypted, persisted, or used in exports in this UI phase.
 
 All TLVs files include a reference-template comment, retained when saving.
 This allows reopening Oscar's unmapped legacy placeholders as read-only tree
@@ -26,8 +40,8 @@ entries. The adapter replaces Oscar's `PacketCable-X.X` template header with
 the selected supported header, without changing its generated body.
 
 This is **draft text editing**, not deployable-file validation. The text pane is
-read-only; editing currently adds entries, rather than modifying or deleting
-existing entries. Validation checks catalog membership, available instances,
+read-only; use the tree actions to add, edit, or delete entries. Validation checks
+catalog membership, available instances,
 scalar syntax, integer syntax, and unsigned codec width. Registry descriptions
 are not interpreted as enums, defaults, or complete validation rules. Length,
 dependency, integrity, and device-interoperability checks remain incomplete.
@@ -61,6 +75,35 @@ system prerequisites, without downloading or building anything.
 After a successful setup, launch with `./scripts/desktop.sh run`. A graphical
 desktop is required for normal use. Native installer packaging tools such as
 `rpm` and `fakeroot` are not part of development setup.
+
+### Run on this VM's desktop
+
+From a terminal opened inside the VM's graphical desktop:
+
+```bash
+cd /home/dev01/Projects/oscar-ui
+./scripts/desktop.sh run
+```
+
+From an SSH or agent terminal on this VM, run the following as `dev01` while
+that user is logged into the VM's graphical desktop. The window appears in
+the VM console. This reads the current desktop session's display and
+authorization file, whose name can change between logins:
+
+```bash
+cd /home/dev01/Projects/oscar-ui
+while IFS= read -r setting; do
+  case "$setting" in
+    DISPLAY=*|XAUTHORITY=*) export "$setting" ;;
+  esac
+done < <(systemctl --user show-environment)
+QT_QPA_PLATFORM=xcb ./scripts/desktop.sh run
+```
+
+Keep the terminal open while using the application; Ctrl+C stops it. After
+changing Java source, run `./scripts/desktop.sh build` before launching again
+because `run` uses the existing build. The application is still in development;
+see the current editing limitations above.
 
 ## Oscar dependency
 
@@ -105,6 +148,8 @@ QT_PLUGIN_PATH="$PWD/target/app/qt/plugins" \
 
 These tests cover New, All TLVs, Add TLV, first Save, cancellation, unsaved-close
 prompts, failed Open, overwrite refusal, and changes during overwrite confirmation.
+They also cover double-click editing, deletion/cancellation, CRLF selection,
+Binary/Text routing, and masked session-only Secrets settings.
 Native dialog tests are skipped in ordinary Maven runs without this opt-in.
 Service tests cover all discovered template types, nested insertion, text fidelity,
 safe-save failures, and external-change detection. Windows desktop behavior has

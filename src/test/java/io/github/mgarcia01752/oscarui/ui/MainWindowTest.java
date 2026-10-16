@@ -182,6 +182,145 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
+    @Test void doubleClickEditsCurrentValueAndDeleteHonorsCancellation() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            String source = "Docsis {\r\n MaxCPEAllowed 3;\r\n MaxCPEAllowed 004;\r\n}";
+            Path file = Files.writeString(temporary.resolve("edit.txt"), source);
+            window.openFile(file);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var view = window.findChild(QPlainTextEdit.class, "configurationText");
+            var item = tree.topLevelItem(0).child(1);
+            tree.setCurrentItem(item);
+            assertEquals("MaxCPEAllowed 004;", view.textCursor().selectedText());
+            var original = window.currentDocument();
+            respond(window, dialog -> {
+                assertEquals("editTlvDialog", dialog.objectName());
+                assertEquals("004", dialog.findChild(QLineEdit.class, "tlvValue").text());
+                dialog.reject();
+            });
+            tree.itemDoubleClicked.emit(item, 0);
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            respond(window, dialog -> {
+                var value = dialog.findChild(QLineEdit.class, "tlvValue");
+                assertEquals("004", value.text());
+                value.setText("5");
+                dialog.grab().save("target/ui-edit-tlv.png");
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            tree.itemDoubleClicked.emit(item, 0);
+            await(() -> window.completed() && window.currentDocument() != original);
+            assertEquals(source.replace("004", "5"), window.currentDocument().text());
+            assertEquals("5", tree.currentItem().text(1));
+            assertTrue(action(window, "fileSave").isEnabled());
+            var edited = window.currentDocument();
+            respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Cancel).click());
+            action(window, "deleteTlv").trigger();
+            assertCallback();
+            assertSame(edited, window.currentDocument());
+            respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Yes).click());
+            action(window, "deleteTlv").trigger();
+            await(() -> window.completed() && window.currentDocument() != edited);
+            assertEquals(1, tree.topLevelItem(0).childCount());
+            assertSame(tree.topLevelItem(0), tree.currentItem());
+            assertFalse(action(window, "deleteTlv").isEnabled());
+            assertEquals(source, Files.readString(file));
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void secretsAreMaskedSessionOnlyAndBinaryChecksCannotWrite() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            respond(window, dialog -> {
+                assertEquals("secretsDialog", dialog.objectName());
+                var community = dialog.findChild(QLineEdit.class, "communityString");
+                var shared = dialog.findChild(QLineEdit.class, "sharedSecret");
+                assertEquals(QLineEdit.EchoMode.Password, community.echoMode());
+                assertEquals(QLineEdit.EchoMode.Password, shared.echoMode());
+                community.setText("public-test-community");
+                shared.setText("public-test-key");
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            respond(window, dialog -> {
+                assertEquals("public-test-key", dialog.findChild(QLineEdit.class, "sharedSecret").text());
+                dialog.findChild(QPushButton.class, "clearSecrets").click();
+                dialog.reject();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            window.openFile(Files.writeString(temporary.resolve("binary.txt"), "Docsis { NetworkAccess 1; }"));
+            await(() -> window.completed() && window.succeeded());
+            var document = window.currentDocument();
+            respond(window, dialog -> {
+                assertEquals("binaryCheckDialog", dialog.objectName());
+                assertFalse(dialog.findChild(QPushButton.class, "saveBinary").isEnabled());
+                dialog.findChild(QPushButton.class, "checkConfig").click();
+                var checks = dialog.findChild(QTreeWidget.class, "configChecks");
+                boolean sharedSet = false;
+                for (int i = 0; i < checks.topLevelItemCount(); i++) {
+                    if (checks.topLevelItem(i).text(1).equals("shared-secret"))
+                        sharedSet = checks.topLevelItem(i).text(0).equals("SET");
+                }
+                assertTrue(sharedSet);
+                dialog.grab().save("target/ui-check-config.png");
+                dialog.reject();
+            });
+            action(window, "fileSaveBinary").trigger();
+            assertCallback();
+            assertSame(document, window.currentDocument());
+            assertFalse(action(window, "fileSave").isEnabled());
+            respond(window, dialog -> {
+                dialog.findChild(QPushButton.class, "clearSecrets").click();
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            respond(window, dialog -> {
+                assertTrue(dialog.findChild(QLineEdit.class, "sharedSecret").text().isEmpty());
+                dialog.grab().save("target/ui-secrets.png");
+                dialog.reject();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+        } finally { window.close(); window.dispose(); }
+        var next = new MainWindow(false);
+        try {
+            respond(next, dialog -> {
+                assertTrue(dialog.findChild(QLineEdit.class, "communityString").text().isEmpty());
+                assertTrue(dialog.findChild(QLineEdit.class, "sharedSecret").text().isEmpty());
+                dialog.reject();
+            });
+            action(next, "settingsSecrets").trigger();
+            assertCallback();
+        } finally { next.close(); next.dispose(); }
+    }
+
+    @Test void saveShortcutOffersFormatsAndRoutesTextSave() throws Exception {
+        var window = new MainWindow(false);
+        try {
+            var type = new OscarDocumentService().types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
+            window.createDocument(type, false);
+            await(() -> window.completed() && window.succeeded());
+            Path destination = temporary.resolve("shortcut.txt");
+            respond(window, dialog -> {
+                assertEquals("saveFormatDialog", dialog.objectName());
+                dialog.findChild(QPushButton.class, "chooseTextSave").click();
+                respond(window, chooser -> {
+                    chooser.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());
+                    chooser.accept();
+                });
+            });
+            action(window, "saveShortcut").trigger();
+            await(() -> window.completed() && destination.equals(window.currentDocument().path()));
+            assertEquals(window.currentDocument().text(), Files.readString(destination));
+        } finally { window.close(); window.dispose(); }
+    }
+
     private void saveAs(MainWindow window, Path destination, Consumer<QDialog> confirmation) {
         respond(window, dialog -> {
             dialog.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());

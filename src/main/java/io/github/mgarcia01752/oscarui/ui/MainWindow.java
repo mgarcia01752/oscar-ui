@@ -30,9 +30,19 @@ public final class MainWindow extends QMainWindow {
     private final Map<Node, Node> parents = new IdentityHashMap<>();
     private final QAction newFile = action("&New...", "fileNew", QKeySequence.StandardKey.New);
     private final QAction open = action("&Open...", "fileOpen", QKeySequence.StandardKey.Open);
-    private final QAction save = action("&Save", "fileSave", QKeySequence.StandardKey.Save);
-    private final QAction saveAs = action("Save &As...", "fileSaveAs", QKeySequence.StandardKey.SaveAs);
+    private final QAction save = action("&Text...", "fileSave", null);
+    private final QAction saveAs = action("&Text...", "fileSaveAs", null);
     private final QAction addTlv = action("Add &TLV...", "addTlv", null);
+    private final QAction deleteTlv = action("&Del TLV...", "deleteTlv", null);
+    private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
+    private final QAction binarySave = action("&Binary...", "fileSaveBinary", null);
+    private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
+    private final QAction saveShortcut = action("Save", "saveShortcut", QKeySequence.StandardKey.Save);
+    private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
+    private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
+    private final SessionSecrets secrets = new SessionSecrets();
+    private QMenu saveMenu;
+    private QMenu saveAsMenu;
     private final QTimer poller = new QTimer(this);
     private final boolean interactive;
     private Document document;
@@ -78,19 +88,26 @@ public final class MainWindow extends QMainWindow {
             Node node = nodes.get(current);
             if (node != null && !node.path().isEmpty()) {
                 var cursor = content.textCursor();
-                cursor.setPosition(node.start());
-                cursor.setPosition(node.end(), QTextCursor.MoveMode.KeepAnchor);
+                cursor.setPosition(textPosition(node.start()));
+                cursor.setPosition(textPosition(node.end()), QTextCursor.MoveMode.KeepAnchor);
                 content.setTextCursor(cursor);
                 content.ensureCursorVisible();
             }
             updateActions();
         });
+        tree.itemDoubleClicked.connect((item, column) -> {
+            tree.setCurrentItem(item);
+            editSelectedTlv();
+        });
         tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);
         tree.customContextMenuRequested.connect(point -> {
             var item = tree.itemAt(point);
-            if (item != null) tree.setCurrentItem(item);
+            if (item == null) return;
+            tree.setCurrentItem(item);
             var menu = new QMenu(tree);
             menu.addAction(addTlv);
+            menu.addAction(editTlv);
+            menu.addAction(deleteTlv);
             menu.exec(tree.viewport().mapToGlobal(point));
             menu.dispose();
         });
@@ -110,8 +127,18 @@ public final class MainWindow extends QMainWindow {
         var file = menuBar().addMenu("&File");
         file.addAction(newFile);
         file.addAction(open);
-        file.addAction(save);
-        file.addAction(saveAs);
+        saveMenu = file.addMenu("&Save");
+        saveMenu.addAction(binarySave);
+        saveMenu.addAction(save);
+        saveAsMenu = file.addMenu("Save &As");
+        saveAsMenu.addAction(binarySaveAs);
+        saveAsMenu.addAction(saveAs);
+        addAction(saveShortcut);
+        addAction(saveAsShortcut);
+        saveShortcut.triggered.connect(() -> chooseSaveFormat(false, () -> {}));
+        saveAsShortcut.triggered.connect(() -> chooseSaveFormat(true, () -> {}));
+        binarySave.triggered.connect(this::checkBinary);
+        binarySaveAs.triggered.connect(this::checkBinary);
         file.addSeparator();
         var exit = action("E&xit", "fileExit", QKeySequence.StandardKey.Quit);
         file.addAction(exit);
@@ -123,6 +150,10 @@ public final class MainWindow extends QMainWindow {
         var edit = menuBar().addMenu("&Edit");
         edit.addAction(addTlv);
         addTlv.triggered.connect(this::chooseTlv);
+        edit.addAction(editTlv);
+        edit.addAction(deleteTlv);
+        editTlv.triggered.connect(this::editSelectedTlv);
+        deleteTlv.triggered.connect(this::deleteSelectedTlv);
         edit.addSeparator();
         var copy = action("&Copy", "editCopy", QKeySequence.StandardKey.Copy);
         copy.setEnabled(false);
@@ -134,6 +165,9 @@ public final class MainWindow extends QMainWindow {
         selectAll.triggered.connect(content::selectAll);
         content.textChanged.connect(() -> selectAll.setEnabled(!content.toPlainText().isEmpty()));
         edit.addAction(selectAll);
+        var settings = menuBar().addMenu("&Settings");
+        settings.addAction(secretsAction);
+        secretsAction.triggered.connect(this::showSecrets);
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &Oscar Desktop", "aboutOscar", null);
         about.triggered.connect(() -> QMessageBox.about(this, "About Oscar Desktop",
@@ -169,14 +203,14 @@ public final class MainWindow extends QMainWindow {
         if (pending != null) return;
         submit(() -> service.open(path), loaded -> {
             display(loaded, false);
-            if (interactive) QTimer.singleShot(0, this::chooseTlv);
+            if (interactive) chooseTlv();
         });
     }
 
     public void createDocument(FileType type, boolean allTlvs) {
         submit(() -> service.create(type, allTlvs), created -> {
             display(created, true);
-            if (interactive) QTimer.singleShot(0, this::chooseTlv);
+            if (interactive) chooseTlv();
         });
     }
 
@@ -253,6 +287,95 @@ public final class MainWindow extends QMainWindow {
         });
     }
 
+    private int textPosition(int sourcePosition) {
+        // QTextDocument collapses CRLF to one paragraph separator.
+        int position = sourcePosition;
+        for (int index = 0; index < sourcePosition - 1; index++) {
+            if (document.text().charAt(index) == '\r' && document.text().charAt(index + 1) == '\n') position--;
+        }
+        return position;
+    }
+
+    private void selectCorresponding(Node previous) {
+        nodes.forEach((item, node) -> {
+            if (node.start() == previous.start() && node.path().equals(previous.path())) {
+                for (var ancestor = item.parent(); ancestor != null; ancestor = ancestor.parent()) ancestor.setExpanded(true);
+                tree.setCurrentItem(item);
+                tree.scrollToItem(item);
+            }
+        });
+    }
+
+    private void editSelectedTlv() {
+        Node selected = nodes.get(tree.currentItem());
+        if (pending != null || document == null || !service.canEdit(document, selected)) return;
+        Document original = document;
+        var dialog = new AddTlvDialog(this, service, original, parents.get(selected),
+                List.of(service.definition(original, selected)), selected);
+        try {
+            if (dialog.exec() != QDialog.DialogCode.Accepted.value()) return;
+            String value = dialog.selection().value();
+            submit(() -> service.replaceValue(original, selected, value), changed -> {
+                if (changed == original) return;
+                display(changed, true);
+                selectCorresponding(selected);
+            });
+        } finally { dialog.dispose(); }
+    }
+
+    private void deleteSelectedTlv() {
+        Node selected = nodes.get(tree.currentItem());
+        if (pending != null || document == null || !service.canDelete(document, selected)) return;
+        var answer = QMessageBox.question(this, "Del TLV", "Delete " + selected.name() + "?"
+                + (selected.children().isEmpty() ? "" : " All its descendants will also be deleted."),
+                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
+                QMessageBox.StandardButton.Cancel);
+        if (answer != QMessageBox.StandardButton.Yes) return;
+        Document original = document;
+        Node parent = parents.get(selected);
+        submit(() -> service.delete(original, selected), changed -> {
+            display(changed, true);
+            selectCorresponding(parent);
+        });
+    }
+
+    private void showSecrets() {
+        if (pending != null) return;
+        var dialog = new SecretsDialog(this, secrets);
+        try { dialog.exec(); } finally { dialog.dispose(); }
+    }
+
+    private void checkBinary() {
+        if (pending != null || document == null) return;
+        var dialog = new BinaryCheckDialog(this, service, document, secrets::hasShared, this::showSecrets);
+        try { dialog.exec(); } finally { dialog.dispose(); }
+    }
+
+    private void chooseSaveFormat(boolean choosePath, Runnable afterSave) {
+        if (pending != null || document == null) return;
+        var dialog = new QDialog(this);
+        dialog.setObjectName("saveFormatDialog");
+        dialog.setWindowTitle("Save configuration");
+        var layout = new QVBoxLayout(dialog);
+        layout.addWidget(new QLabel("Choose a save format. Binary checks are a preview; Text saves your edits."));
+        var buttons = new QDialogButtonBox();
+        var text = buttons.addButton("Text", QDialogButtonBox.ButtonRole.ActionRole);
+        text.setObjectName("chooseTextSave");
+        var binary = buttons.addButton("Binary", QDialogButtonBox.ButtonRole.ActionRole);
+        binary.setObjectName("chooseBinarySave");
+        boolean[] binarySelected = {false};
+        text.clicked.connect(dialog::accept);
+        binary.clicked.connect(() -> { binarySelected[0] = true; dialog.accept(); });
+        buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
+        buttons.rejected.connect(dialog::reject);
+        layout.addWidget(buttons);
+        int result;
+        try { result = dialog.exec(); } finally { dialog.dispose(); }
+        if (result != QDialog.DialogCode.Accepted.value()) return;
+        if (binarySelected[0]) checkBinary();
+        else saveDocument(choosePath, afterSave);
+    }
+
     private void saveDocument(boolean choosePath, Runnable afterSave) {
         if (document == null || pending != null) return;
         Path destination = document.path();
@@ -288,7 +411,7 @@ public final class MainWindow extends QMainWindow {
                 new QMessageBox.StandardButtons(QMessageBox.StandardButton.Save,
                         QMessageBox.StandardButton.Discard, QMessageBox.StandardButton.Cancel),
                 QMessageBox.StandardButton.Cancel);
-        if (answer == QMessageBox.StandardButton.Save) saveDocument(false, proceed);
+        if (answer == QMessageBox.StandardButton.Save) chooseSaveFormat(false, proceed);
         else if (answer == QMessageBox.StandardButton.Discard) proceed.run();
     }
 
@@ -341,6 +464,16 @@ public final class MainWindow extends QMainWindow {
         open.setEnabled(idle);
         save.setEnabled(idle && document != null && modified);
         saveAs.setEnabled(idle && document != null);
+        saveMenu.setEnabled(idle && document != null);
+        saveAsMenu.setEnabled(idle && document != null);
+        binarySave.setEnabled(idle && document != null);
+        binarySaveAs.setEnabled(idle && document != null);
+        saveShortcut.setEnabled(idle && document != null);
+        saveAsShortcut.setEnabled(idle && document != null);
+        secretsAction.setEnabled(idle);
+        Node selected = nodes.get(tree.currentItem());
+        deleteTlv.setEnabled(idle && document != null && service.canDelete(document, selected));
+        editTlv.setEnabled(idle && document != null && service.canEdit(document, selected));
         Node parent = insertionParent();
         addTlv.setEnabled(idle && parent != null && parent.container() && !parent.path().contains(-1));
     }
@@ -363,6 +496,7 @@ public final class MainWindow extends QMainWindow {
         poller.stop();
         if (pending != null) pending.cancel(true);
         worker.shutdownNow();
+        secrets.close();
         super.closeEvent(event);
     }
 }
