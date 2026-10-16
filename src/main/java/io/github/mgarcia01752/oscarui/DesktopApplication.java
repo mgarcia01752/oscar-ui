@@ -5,6 +5,9 @@ import io.qt.core.QTimer;
 import io.qt.core.QLibraryInfo;
 import io.qt.widgets.QApplication;
 import io.qt.widgets.QPlainTextEdit;
+import io.qt.widgets.QTreeWidget;
+import io.qt.widgets.QSplitter;
+import io.qt.gui.QAction;
 import java.nio.file.Path;
 
 public final class DesktopApplication {
@@ -17,7 +20,7 @@ public final class DesktopApplication {
         try {
             QApplication.initialize(new String[0]);
             QApplication.setApplicationName("Oscar Desktop");
-            var window = new MainWindow();
+            var window = new MainWindow(!smoke);
             window.show();
             QTimer smokeTimer = new QTimer(window);
             if (smoke) {
@@ -42,25 +45,34 @@ public final class DesktopApplication {
         }
     }
 
-        private static boolean verifyStarterMenus(MainWindow window) {
+    private static boolean verifyStarterMenus(MainWindow window) {
         var menus = window.menuBar().actions();
         if (menus.size() != 3
             || !menus.get(0).text().equals("&File")
             || !menus.get(1).text().equals("&Edit")
             || !menus.get(2).text().equals("&About")) return false;
-        var fileActions = menus.get(0).menu().actions();
-        var editActions = menus.get(1).menu().actions();
-        var aboutActions = menus.get(2).menu().actions();
-        if (fileActions.size() != 3 || !fileActions.get(0).isEnabled()
-            || !fileActions.get(2).isEnabled() || editActions.size() != 2
-            || aboutActions.size() != 2 || !aboutActions.get(0).isEnabled()
-            || !aboutActions.get(1).isEnabled()) return false;
-        var view = window.findChild(QPlainTextEdit.class);
-        if (view == null || !view.isReadOnly() || editActions.get(0).isEnabled()
-            || !editActions.get(1).isEnabled()) return false;
-        editActions.get(1).trigger();
-        if (!editActions.get(0).isEnabled()) return false;
-        editActions.get(0).trigger();
-        return QApplication.clipboard().text().equals(view.toPlainText());
+        for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt"}) {
+            var action = window.findChild(QAction.class, name);
+            if (action == null || !action.isEnabled()) return false;
         }
+        if (window.findChild(QAction.class, "fileSave").isEnabled()) return false;
+        var view = window.findChild(QPlainTextEdit.class, "configurationText");
+        var tree = window.findChild(QTreeWidget.class, "configurationTree");
+        var splitter = window.findChild(QSplitter.class);
+        if (view == null || !view.isReadOnly() || tree == null || splitter == null
+                || splitter.count() != 2 || tree.topLevelItemCount() != 1
+                || tree.topLevelItem(0).childCount() != window.currentDocument().root().children().size()) return false;
+        if (tree.topLevelItem(0).childCount() > 0) {
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            var node = window.currentDocument().root().children().get(0);
+            if (!view.textCursor().selectedText().equals(window.currentDocument().text().substring(node.start(), node.end()))) return false;
+        }
+        window.findChild(QAction.class, "editSelectAll").trigger();
+        var copy = window.findChild(QAction.class, "editCopy");
+        if (!copy.isEnabled()) return false;
+        copy.trigger();
+        boolean success = QApplication.clipboard().text().equals(view.toPlainText());
+        if (success) window.grab().save("target/ui-smoke.png");
+        return success;
+    }
 }
