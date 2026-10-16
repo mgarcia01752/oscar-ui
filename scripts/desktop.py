@@ -53,9 +53,9 @@ def build():
         shutil.copy2(ROOT / name, app)
     shutil.copytree(ROOT / 'licenses', app / 'licenses', dirs_exist_ok=True)
     # Keep the pinned original Oscar attribution alongside its unmodified library.
-    upstream = ROOT / '.tools/oscar-f7050e591e2f170cb00df7fdd501b2a88cc79860'
+    upstream = ROOT / '.tools/oscar-3.1.0'
     if not (upstream / 'LICENSE').exists():
-        raise RuntimeError('Run bootstrap-oscar first to provide the pinned upstream and notices.')
+        raise RuntimeError('Run bootstrap-oscar first to provide the pinned release and notices.')
     shutil.copy2(upstream / 'LICENSE', app / 'licenses/Oscar-LICENSE.txt')
     if (upstream / 'NOTICE').exists():
         shutil.copy2(upstream / 'NOTICE', app / 'licenses/Oscar-NOTICE.txt')
