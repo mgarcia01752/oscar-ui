@@ -1,4 +1,7 @@
 # oscar-ui
+
+**Work in progress.**
+
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
 ## Development setup
