@@ -22,3 +22,12 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Project-local downloaded tools, upstream checkout, and generated bundles
+.tools/
+.m2/
+target/
+dist/
+__pycache__/
+*.py[cod]
+*.log

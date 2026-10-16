@@ -1,0 +1,14 @@
+Oscar Desktop
+Copyright 2026 Oscar Desktop contributors.
+Original application code is licensed under Apache License 2.0.
+
+This product uses Comcast/Oscar, Copyright 2015-2026 Comcast Cable
+Communications Management, LLC and its contributors, under Apache License 2.0.
+Oscar's API and library are used without modifications.
+
+The Maven Wrapper scripts are from the Apache Maven project, licensed under
+Apache License 2.0, Copyright The Apache Software Foundation.
+
+Qt and Qt Jambi remain separate, dynamically loaded libraries under their
+respective licenses. See THIRD-PARTY-NOTICES.md and licenses/ in the bundle.
+This project is an independent interface, not an assertion of Comcast or Qt endorsement.
