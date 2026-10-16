@@ -1,5 +1,5 @@
 /* Public, synthetic example. No credentials. */
 Docsis {
     NetworkAccess 1;
-    MaxCPE 3;
+    MaxCPEAllowed 3;
 }

@@ -10,11 +10,11 @@ class OscarInspectionServiceTest {
     final OscarInspectionService service = new OscarInspectionService();
     Path input(String text) throws Exception { return Files.writeString(temporary.resolve("configuration.txt"), text); }
     @Test void inspectsRealOscarCatalogWithoutWritingFile() throws Exception {
-        Path file = input("Docsis { NetworkAccess 1; MaxCPE 3; }");
+        Path file = input("Docsis { NetworkAccess 1; MaxCPEAllowed 3; }");
         byte[] before = Files.readAllBytes(file);
         var result = service.inspect(file);
         assertTrue(result.summary().contains("2 top-level"));
-        assertTrue(result.content().contains("MaxCPE 3"));
+        assertTrue(result.content().contains("MaxCPEAllowed 3"));
         assertArrayEquals(before, Files.readAllBytes(file));
         try (var paths = Files.list(temporary)) { assertEquals(1, paths.count()); }
     }
