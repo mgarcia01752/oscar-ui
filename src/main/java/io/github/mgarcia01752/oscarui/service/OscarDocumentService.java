@@ -31,8 +31,19 @@ public final class OscarDocumentService {
                        int start, int end, int close, boolean container) {
         public Node { path = List.copyOf(path); children = List.copyOf(children); }
     }
+    public record BinaryOrigin(Path path, String diskHash, byte[] bytes) {
+        public BinaryOrigin { bytes = bytes.clone(); }
+        @Override public byte[] bytes() { return bytes.clone(); }
+    }
     public record Document(Path path, String text, FileType type, Node root, String diskHash,
-                           boolean reference) {}
+                           boolean reference, BinaryOrigin origin) {
+        public Document(Path path, String text, FileType type, Node root, String diskHash, boolean reference) {
+            this(path, text, type, root, diskHash, reference, null);
+        }
+        public Document withOrigin(BinaryOrigin origin) {
+            return new Document(path, text, type, root, diskHash, reference, origin);
+        }
+    }
     private record Catalog(String family, String edition, TlvRegistry registry) {}
     private Map<String, Catalog> catalogs;
     private List<FileType> types;
@@ -116,12 +127,19 @@ public final class OscarDocumentService {
                 throw new InspectionException("Select a nonempty configuration text file up to 1 MiB.");
             }
             String text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
-            if (text.indexOf('\0') >= 0) throw new InspectionException("Binary files are not supported.");
+            if (text.indexOf('\0') >= 0) throw new InspectionException("Expected UTF-8 text. Use File > Open > Binary for binary files.");
             String beginning = text.startsWith("\uFEFF") ? text.substring(1) : text;
             return parse(path.toAbsolutePath().normalize(), text, hash(bytes), beginning.startsWith(REFERENCE_MARKER));
         } catch (IOException error) {
-            throw new InspectionException("Cannot read UTF-8 configuration text. Check the file and permissions.", error);
+            throw new InspectionException("Cannot read UTF-8 text. Check permissions or use File > Open > Binary.", error);
         }
+    }
+
+    Document decoded(String text, FileType type, BinaryOrigin origin) throws InspectionException {
+        Token header = parser(text).getTokenStream().LT(1);
+        String normalized = text.substring(0, header.getStartIndex()) + type.header()
+                + text.substring(header.getStopIndex() + 1);
+        return parse(null, normalized, null, false).withOrigin(origin);
     }
 
     public Document create(FileType type, boolean allTlvs) throws InspectionException {
@@ -281,7 +299,7 @@ public final class OscarDocumentService {
         if (count(changed.root()) != count(document.root()) + 1) {
             throw new InspectionException("A value must not insert additional TLV statements.");
         }
-        return changed;
+        return changed.withOrigin(document.origin());
     }
 
     public TlvDefinition definition(Document document, Node node) {
@@ -320,7 +338,7 @@ public final class OscarDocumentService {
         if (count(changed.root()) != count(document.root())) {
             throw new InspectionException("Editing must preserve the number of TLV entries.");
         }
-        return changed;
+        return changed.withOrigin(document.origin());
     }
 
     public Document delete(Document document, Node node) throws InspectionException {
@@ -337,7 +355,7 @@ public final class OscarDocumentService {
         } else {
             text = text.substring(0, node.start()) + text.substring(node.end());
         }
-        return parse(document.path(), text, document.diskHash(), document.reference());
+        return parse(document.path(), text, document.diskHash(), document.reference()).withOrigin(document.origin());
     }
 
     private Node parentOf(Node root, Node target) {
@@ -375,9 +393,22 @@ public final class OscarDocumentService {
 
     public Document save(Document document, Path destination, String expectedHash) throws InspectionException {
         Path target = destination.toAbsolutePath().normalize();
+        rejectBinaryOrigin(document, target);
         byte[] bytes = document.text().getBytes(StandardCharsets.UTF_8);
         saveBytes(target, bytes, expectedHash);
-        return new Document(target, document.text(), document.type(), document.root(), hash(bytes), document.reference());
+        return new Document(target, document.text(), document.type(), document.root(), hash(bytes), document.reference(), document.origin());
+    }
+
+    void rejectBinaryOrigin(Document document, Path target) throws InspectionException {
+        if (document.origin() == null) return;
+        Path source = document.origin().path();
+        try {
+            if (source.equals(target) || Files.exists(source) && Files.exists(target) && Files.isSameFile(source, target)) {
+                throw new InspectionException("Choose a different destination; preserve the imported binary file.");
+            }
+        } catch (IOException error) {
+            throw new InspectionException("Cannot check the imported binary destination.", error);
+        }
     }
 
     /** Shared atomic writer for text documents and Oscar's encoded output. */

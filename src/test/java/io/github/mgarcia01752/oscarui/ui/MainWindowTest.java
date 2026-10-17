@@ -23,6 +23,106 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void opensBinaryThroughMenuAndSavesDecodedTextSeparately() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path input = Files.write(temporary.resolve("input.cfg"), java.util.HexFormat.of().parseHex("030101ff00"));
+            var types = new OscarDocumentService().types();
+            int index = java.util.stream.IntStream.range(0, types.size())
+                    .filter(position -> types.get(position).header().equals("Docsis")).findFirst().orElseThrow();
+            respond(window, chooser -> {
+                assertInstanceOf(QFileDialog.class, chooser);
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(input.toString());
+                chooser.accept();
+                respond(window, dialog -> {
+                    assertEquals("binaryTypeDialog", dialog.objectName());
+                    assertFalse(dialog.findChild(QPushButton.class, "confirmBinaryOpen").isEnabled());
+                    dialog.findChild(QComboBox.class, "binaryFileType").setCurrentIndex(index);
+                    dialog.findChild(QPushButton.class, "confirmBinaryOpen").click();
+                });
+            });
+            action(window, "fileOpenBinary").trigger();
+            await(() -> window.completed() && window.currentDocument() != null);
+            assertCallback();
+            var imported = window.currentDocument();
+            assertNull(imported.path());
+            assertEquals(input, imported.origin().path());
+            assertEquals("NetworkAccess", window.findChild(QTreeWidget.class, "configurationTree").topLevelItem(0).child(0).text(0));
+            assertEquals(imported.text(), window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
+            assertTrue(action(window, "fileSave").isEnabled());
+            window.grab().save("target/ui-binary-open.png");
+            respond(window, prompt -> ((QMessageBox) prompt).button(QMessageBox.StandardButton.Cancel).click());
+            action(window, "fileOpenText").trigger();
+            assertCallback();
+            assertSame(imported, window.currentDocument());
+            assertTrue(action(window, "fileSave").isEnabled());
+            Path text = temporary.resolve("decoded.txt");
+            respond(window, chooser -> {
+                assertInstanceOf(QFileDialog.class, chooser);
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
+                chooser.accept();
+            });
+            action(window, "fileSave").trigger();
+            await(() -> window.completed() && text.equals(window.currentDocument().path()));
+            assertCallback();
+            assertEquals(imported.text(), Files.readString(text));
+            assertFalse(action(window, "fileSave").isEnabled());
+            assertArrayEquals(java.util.HexFormat.of().parseHex("030101ff00"), Files.readAllBytes(input));
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void openFormatsCancellationAndFailedBinaryImportPreserveDocument() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path text = Files.writeString(temporary.resolve("text.bin"), "Docsis { NetworkAccess 1; }");
+            respond(window, chooser -> {
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
+                chooser.accept();
+            });
+            action(window, "fileOpenText").trigger();
+            await(() -> window.completed() && window.currentDocument() != null);
+            assertCallback();
+            var original = window.currentDocument();
+            assertEquals(text, original.path());
+            assertNull(original.origin());
+            respond(window, dialog -> {
+                assertEquals("openFormatDialog", dialog.objectName());
+                dialog.reject();
+            });
+            action(window, "fileOpen").trigger();
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            respond(window, dialog -> {
+                assertEquals("openFormatDialog", dialog.objectName());
+                respond(window, QDialog::reject);
+                dialog.findChild(QPushButton.class, "chooseTextOpen").click();
+            });
+            action(window, "fileOpen").trigger();
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            respond(window, QDialog::reject);
+            action(window, "fileOpenBinary").trigger();
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            respond(window, chooser -> {
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
+                chooser.accept();
+                respond(window, QDialog::reject);
+            });
+            action(window, "fileOpenBinary").trigger();
+            await(window::completed);
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            Path malformed = Files.write(temporary.resolve("broken.bin"), new byte[]{3, 10});
+            window.openBinaryFile(malformed, original.type());
+            await(() -> window.completed() && !window.succeeded());
+            assertSame(original, window.currentDocument());
+            assertFalse(action(window, "fileSave").isEnabled());
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void createsInsertsSavesAndPreservesDocumentOnCancellation() throws Exception {
         var window = new MainWindow(false);
         window.show();

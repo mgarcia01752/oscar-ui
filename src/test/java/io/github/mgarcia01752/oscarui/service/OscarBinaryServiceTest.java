@@ -21,6 +21,15 @@ class OscarBinaryServiceTest {
         return documents.open(Files.writeString(temporary.resolve("source.txt"), text));
     }
 
+    @Test void decodesInMemoryWithAnExplicitTypeWithoutCredentials() throws Exception {
+        var snapshot = new com.comcast.oscar.tlv.TlvBuilder();
+        snapshot.add(new com.comcast.oscar.utilities.HexString(HexFormat.of().parseHex("030101ff00")));
+        var exporter = new com.comcast.oscar.configurationfile.ConfigurationFileExport(snapshot, 4);
+        String text = exporter.toPrettyPrint(false, true);
+        assertEquals(4, exporter.getConfigurationFileType());
+        assertTrue(text.contains("NetworkAccess"));
+    }
+
     @Test void writesEncoderBytesWithIndependentlyCalculatedLegacyMics() throws Exception {
         var source = open("\uFEFF/* keep */ Docsis { NetworkAccess 1; }");
         byte[] encoded = binary.encode(source, LAB_KEY);

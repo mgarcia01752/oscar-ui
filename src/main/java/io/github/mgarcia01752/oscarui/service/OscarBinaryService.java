@@ -2,19 +2,100 @@ package io.github.mgarcia01752.oscarui.service;
 
 import com.comcast.oscar.configurationfile.ConfigurationFile;
 import com.comcast.oscar.configurationfile.ConfigurationFileImport;
+import com.comcast.oscar.configurationfile.ConfigurationFileExport;
+import com.comcast.oscar.dictionary.TlvDictionary;
+import com.comcast.oscar.tlv.TlvBuilder;
+import com.comcast.oscar.tlv.TlvVariableBinding;
+import io.github.mgarcia01752.oscarui.service.OscarDocumentService.BinaryOrigin;
+import io.github.mgarcia01752.oscarui.service.OscarDocumentService.FileType;
 import io.github.mgarcia01752.oscarui.service.OscarDocumentService.Document;
 import io.github.mgarcia01752.oscarui.service.OscarDocumentService.Node;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 
-/** Oscar encoder adapter with source-file protection and atomic binary writes. */
+/** Oscar binary adapter with source-file protection and atomic binary writes. */
 public final class OscarBinaryService {
     private final OscarDocumentService documents;
 
     public OscarBinaryService(OscarDocumentService documents) { this.documents = documents; }
+
+    public Document open(Path path, FileType type) throws InspectionException {
+        if (!documents.types().contains(type)) throw new InspectionException("Select a supported binary configuration type.");
+        try (var input = Files.newInputStream(path)) {
+            byte[] bytes = input.readNBytes(OscarInspectionService.MAX_BYTES + 1);
+            if (bytes.length == 0 || bytes.length > OscarInspectionService.MAX_BYTES) {
+                throw new InspectionException("Select a nonempty binary configuration up to 1 MiB.");
+            }
+            Configurator.setLevel("com.comcast.oscar", Level.OFF);
+            String table = switch (type.family()) {
+                case "docsis40" -> TlvDictionary.DOCSIS_40_DICTIONARY_TABLE_NAME;
+                case "packetcable" -> TlvDictionary.PACKET_CABLE_DICTIONARY_TABLE_NAME;
+                case "dpoe" -> TlvDictionary.DPOE_DICTIONARY_TABLE_NAME;
+                default -> TlvDictionary.DOCSIS_DICTIONARY_TABLE_NAME;
+            };
+            var dictionary = new TlvDictionary(table);
+            var lengths = dictionary.getTopLevelByteLength();
+            List<String> original = payloads(bytes, lengths);
+            for (String entry : original) {
+                int identifier = Integer.parseInt(entry.substring(0, 2), 16);
+                if (!dictionary.getTopLevelTLV().contains(identifier)) {
+                    throw new InspectionException("Unknown binary TLV; editable import would lose data.");
+                }
+                String name = dictionary.getTlvDefinition(identifier).getString("TlvName");
+                if (name.equals("Snmp11") || name.equals("Snmp64")) {
+                    throw new InspectionException("Editable binary import of SNMP statements is not supported yet.");
+                }
+            }
+            var snapshot = new TlvBuilder();
+            snapshot.add(new TlvVariableBinding(bytes, lengths));
+            var exporter = new ConfigurationFileExport(snapshot, type.id());
+            exporter.setDotTextOIDOutputFormat(false);
+            String text = exporter.toPrettyPrint(false, true);
+            if (text.length() > OscarInspectionService.MAX_BYTES) {
+                throw new InspectionException("The decoded configuration exceeds the text size limit.");
+            }
+            Path origin = path.toAbsolutePath().normalize();
+            var document = documents.decoded(text, type, new BinaryOrigin(origin,
+                    java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)), bytes));
+            if (containsSnmp(document.root())) throw new InspectionException("Editable binary import of SNMP statements is not supported yet.");
+            var imported = new ConfigurationFileImport(new StringBuilder(document.text()));
+            if (!original.equals(payloads(imported.toByteArray(), lengths))) {
+                throw new InspectionException("Oscar cannot preserve this binary configuration as editable text; import cancelled.");
+            }
+            return document;
+        } catch (IOException error) {
+            throw new InspectionException("Cannot read the binary configuration. Check the file and permissions.");
+        } catch (RuntimeException | LinkageError | com.comcast.oscar.tlv.TlvException error) {
+            throw new InspectionException("Oscar could not decode this binary configuration. Check its type and whether it is truncated or unsupported.");
+        } catch (java.security.NoSuchAlgorithmException error) {
+            throw new IllegalStateException(error);
+        }
+    }
+
+    private List<String> payloads(byte[] bytes, Map<Integer, Integer> lengths)
+            throws com.comcast.oscar.tlv.TlvException, InspectionException {
+        var entries = new ArrayList<String>();
+        for (int offset = 0; offset < bytes.length;) {
+            int type = Byte.toUnsignedInt(bytes[offset]);
+            if (type == 0) { offset++; continue; }
+            if (type == 255) {
+                for (int remaining = offset + 1; remaining < bytes.length; remaining++) {
+                    if (bytes[remaining] != 0) throw new InspectionException("Unexpected data after the binary end marker.");
+                }
+                break;
+            }
+            int next = TlvBuilder.nextTLVIndex(bytes, offset, lengths.getOrDefault(type, 1));
+            if (next <= offset || next > bytes.length) throw new InspectionException("Truncated binary TLV.");
+            entries.add(HexFormat.of().formatHex(Arrays.copyOfRange(bytes, offset, next)));
+            offset = next;
+        }
+        if (entries.isEmpty()) throw new InspectionException("No supported TLV entries in the binary configuration.");
+        return entries;
+    }
 
     public boolean requiresSharedSecret(Document document) {
         return !document.type().family().equals("packetcable");
@@ -64,6 +145,7 @@ public final class OscarBinaryService {
     }
 
     private void rejectTextDestination(Document document, Path target) throws InspectionException {
+        documents.rejectBinaryOrigin(document, target);
         if (document.path() == null) return;
         try {
             if (target.equals(document.path()) || (Files.exists(target) && Files.exists(document.path())
