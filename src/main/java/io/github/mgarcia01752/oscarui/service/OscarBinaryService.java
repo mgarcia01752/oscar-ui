@@ -23,13 +23,53 @@ public final class OscarBinaryService {
 
     public OscarBinaryService(OscarDocumentService documents) { this.documents = documents; }
 
-    public Document open(Path path, FileType type) throws InspectionException {
-        if (!documents.types().contains(type)) throw new InspectionException("Select a supported binary configuration type.");
+    /** Detect from content, never from the filename extension. Shared DOCSIS
+     * encodings use the legacy-compatible profile; this is not a modem-version claim. */
+    public Document openAuto(Path path) throws InspectionException {
+        byte[] bytes = read(path);
+        try {
+            String text = java.nio.charset.StandardCharsets.UTF_8.newDecoder()
+                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString();
+            if (text.codePoints().noneMatch(c -> Character.isISOControl(c)
+                    && c != '\n' && c != '\r' && c != '\t')) {
+                try { return documents.openText(path, bytes); }
+                catch (InspectionException ignored) { /* Printable binary can also be valid UTF-8. */ }
+            }
+        } catch (java.nio.charset.CharacterCodingException ignored) {
+            // Binary payloads need not be UTF-8.
+        }
+        var types = documents.types();
+        // Try complete, lossless decodes, including nested TLVs, in compatibility order.
+        for (String header : List.of("Docsis", "Docsis-4.0", "DPoE",
+                "PacketCable-1.0", "PacketCable-1.5", "PacketCable-2.0")) {
+            var type = types.stream().filter(entry -> entry.header().equals(header)).findFirst();
+            if (type.isEmpty()) continue;
+            try { return decode(path, bytes, type.get()); }
+            catch (InspectionException ignored) { /* Try the next catalog. */ }
+        }
+        throw new InspectionException("Cannot identify a supported configuration without losing TLV data. "
+                + "The file may be truncated or contain unsupported TLVs.");
+    }
+
+    private byte[] read(Path path) throws InspectionException {
         try (var input = Files.newInputStream(path)) {
             byte[] bytes = input.readNBytes(OscarInspectionService.MAX_BYTES + 1);
             if (bytes.length == 0 || bytes.length > OscarInspectionService.MAX_BYTES) {
-                throw new InspectionException("Select a nonempty binary configuration up to 1 MiB.");
+                throw new InspectionException("Select a nonempty configuration up to 1 MiB.");
             }
+            return bytes;
+        } catch (IOException error) {
+            throw new InspectionException("Cannot read the configuration. Check the file and permissions.");
+        }
+    }
+
+    public Document open(Path path, FileType type) throws InspectionException {
+        if (!documents.types().contains(type)) throw new InspectionException("Unsupported configuration type.");
+        return decode(path, read(path), type);
+    }
+
+    private Document decode(Path path, byte[] bytes, FileType type) throws InspectionException {
+        try {
             Configurator.setLevel("com.comcast.oscar", Level.OFF);
             String table = switch (type.family()) {
                 case "docsis40" -> TlvDictionary.DOCSIS_40_DICTIONARY_TABLE_NAME;
@@ -67,8 +107,6 @@ public final class OscarBinaryService {
                 throw new InspectionException("Oscar cannot preserve this binary configuration as editable text; import cancelled.");
             }
             return document;
-        } catch (IOException error) {
-            throw new InspectionException("Cannot read the binary configuration. Check the file and permissions.");
         } catch (RuntimeException | LinkageError | com.comcast.oscar.tlv.TlvException error) {
             throw new InspectionException("Oscar could not decode this binary configuration. Check its type and whether it is truncated or unsupported.");
         } catch (java.security.NoSuchAlgorithmException error) {
@@ -144,8 +182,24 @@ public final class OscarBinaryService {
         return target;
     }
 
+    /** Save the active binary, refreshing its snapshot only after an atomic write. */
+    public Document saveDocument(Document document, Path destination, String expectedHash, String sharedSecret)
+            throws InspectionException {
+        Path target = destination.toAbsolutePath().normalize();
+        rejectTextFile(document, target);
+        byte[] bytes = encode(document, sharedSecret);
+        Document saved = decode(target, bytes, document.type());
+        rejectTextFile(document, target);
+        documents.saveBytes(target, bytes, expectedHash);
+        return saved;
+    }
+
     private void rejectTextDestination(Document document, Path target) throws InspectionException {
         documents.rejectBinaryOrigin(document, target);
+        rejectTextFile(document, target);
+    }
+
+    private void rejectTextFile(Document document, Path target) throws InspectionException {
         if (document.path() == null) return;
         try {
             if (target.equals(document.path()) || (Files.exists(target) && Files.exists(document.path())

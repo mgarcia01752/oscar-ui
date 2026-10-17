@@ -13,19 +13,18 @@ and unrelated formatting.
 
 - **File > New** discovers text types from Oscar's grammar and bundled registries.
 	Choose **Empty** or **All TLVs**, generated through Oscar's template API.
-- **File > Open > Text** reads UTF-8 text, detects its header through Oscar,
-  and loads the matching catalog. **Open > Binary** asks for an explicit type
-  and decodes a bounded byte snapshot through Oscar, without an export secret.
-  Extensions are filters, not format/version evidence. The Open keyboard
-  shortcut offers Text / Binary. Successful Open and New offer **Add TLV**.
-  Binary imports become unsaved text drafts; first Text Save chooses a new
-  path. Original bytes remain separate, and neither save format can overwrite
-  the binary origin or its aliases. Decoded text cannot recover source comments
-  or formatting. SNMP-bearing inputs, unknown TLVs, malformed data, and imports
-  whose TLV payloads cannot be preserved are rejected without replacing the
-  current document. This currently includes Oscar's SNMP-bearing PacketCable
-  output. Input and decoded text are limited to 1 MiB; opening verifies neither
-  MICs nor complete configuration validity.
+- **File > Open** detects Text or Binary from content with one file picker.
+  Text headers select the Oscar catalog. Binary decoding tries compatible
+  catalogs and checks that every TLV payload survives the text representation,
+  including nested entries. The older DOCSIS profile is preferred for shared
+  encodings; 4.0-only supported TLVs select DOCSIS 4.0. This identifies a
+  compatible catalog, not the modem's exact version. No format/version prompt
+  is required, and filename extensions do not decide the format.
+  Binary files open as unmodified binary documents without needing a secret.
+  SNMP-bearing inputs, unknown TLVs, malformed data, and lossy imports are
+  rejected without replacing the current document. Input and decoded text
+  are limited to 1 MiB. Opening does not verify MICs or full configuration
+  validity. Successful Open and New offer **Add TLV**.
 - **Edit > Add TLV** and the tree context menu offer available children of the
 	selected container, with searchable names, paths, and descriptions. Add and Edit show the data
 	type with an input example or range instead of catalog metadata.
@@ -43,16 +42,21 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 - **Edit > Del TLV** and the tree context menu delete the selected entry after
 	confirmation. Deleting a container includes its children. Protected entries
 	remain read-only.
-- **Save / Save As > Text** write UTF-8 text using same-directory atomic replacement,
-	with overwrite confirmation and checks for external file changes.
-	New, Open, and Exit protect unsaved changes with Save/Discard/Cancel.
-	Save keyboard shortcuts offer a Binary/Text choice.
-- **Save / Save As > Binary** exports directly through Oscar, without a
-	Check Config gate. It prompts for a session shared secret when required, then
-	for a destination, and uses overwrite confirmation and atomic replacement.
-	The editable text file cannot be the binary destination. Export leaves the
-	source path and unsaved text edits unchanged. Oscar encoding errors still
-	block writing; successful export is not complete configuration validation.
+- **File > Save** and its shortcut save the current file in its known format
+  without a format or destination prompt. A new document defaults to Text and
+  asks for its first destination.
+- **File > Save As > Text / Binary** chooses a format and destination. The
+  Save As shortcut offers the same formats. Success changes the active file
+  and clears the modified state; later Save uses that file and format.
+  Both formats use atomic replacement and external-change checks; Save As
+  confirms overwrites. Text cannot replace an imported binary origin, and
+  binary output cannot replace the current text source or its aliases.
+- Binary saving uses Oscar directly, without a Check Config gate, and prompts
+  for a session shared secret only when required and missing. Saving an opened
+  binary writes back to that file and refreshes decoded text and generated MICs.
+  New, Open, and Exit use Save/Discard/Cancel; a successful Save in either
+  format completes the pending action. Encoding errors leave the file and
+  modified document unchanged. Successful encoding is not full validation.
 - **File > Check Config** remains an optional draft-check preview. Minimum
 	rules and complete value/length/dependency validation remain unfinished.
 - **Settings > Global > Show CM/CMTS MIC TLVs** is unchecked by default.

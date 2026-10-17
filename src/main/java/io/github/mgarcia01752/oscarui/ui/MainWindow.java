@@ -31,14 +31,11 @@ public final class MainWindow extends QMainWindow {
     private final Map<Node, Node> parents = new IdentityHashMap<>();
     private final QAction newFile = action("&New...", "fileNew", QKeySequence.StandardKey.New);
     private final QAction open = action("&Open...", "fileOpen", QKeySequence.StandardKey.Open);
-    private final QAction openText = action("&Text...", "fileOpenText", null);
-    private final QAction openBinary = action("&Binary...", "fileOpenBinary", null);
-    private final QAction save = action("&Text...", "fileSave", null);
+    private final QAction save = action("&Save", "fileSave", null);
     private final QAction saveAs = action("&Text...", "fileSaveAs", null);
     private final QAction addTlv = action("Add &TLV...", "addTlv", null);
     private final QAction deleteTlv = action("&Del TLV...", "deleteTlv", null);
     private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
-    private final QAction binarySave = action("&Binary...", "fileSaveBinary", null);
     private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
     private final QAction saveShortcut = action("Save", "saveShortcut", QKeySequence.StandardKey.Save);
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
@@ -46,9 +43,7 @@ public final class MainWindow extends QMainWindow {
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
     private final QAction showMicTlvs = action("Show CM/CMTS MIC TLVs", "showMicTlvs", null);
     private final SessionSecrets secrets = new SessionSecrets();
-    private QMenu saveMenu;
     private QMenu saveAsMenu;
-    private QMenu openMenu;
     private final QTimer poller = new QTimer(this);
     private final boolean interactive;
     private Document document;
@@ -137,33 +132,24 @@ public final class MainWindow extends QMainWindow {
     private void buildMenus() {
         var file = menuBar().addMenu("&File");
         file.addAction(newFile);
-        openMenu = file.addMenu("&Open");
-        openMenu.setObjectName("openMenu");
-        openMenu.addAction(openText);
-        openMenu.addAction(openBinary);
-        addAction(open);
-        saveMenu = file.addMenu("&Save");
-        saveMenu.addAction(binarySave);
-        saveMenu.addAction(save);
+        file.addAction(open);
+        file.addAction(save);
         saveAsMenu = file.addMenu("Save &As");
         saveAsMenu.addAction(binarySaveAs);
         saveAsMenu.addAction(saveAs);
         addAction(saveShortcut);
         addAction(saveAsShortcut);
-        saveShortcut.triggered.connect(() -> chooseSaveFormat(false, () -> {}));
-        saveAsShortcut.triggered.connect(() -> chooseSaveFormat(true, () -> {}));
-        binarySave.triggered.connect(this::saveBinary);
-        binarySaveAs.triggered.connect(this::saveBinary);
+        saveShortcut.triggered.connect(() -> saveCurrent(() -> {}));
+        saveAsShortcut.triggered.connect(this::chooseSaveFormat);
+        binarySaveAs.triggered.connect(() -> saveBinary(true, () -> {}));
         file.addAction(configChecks);
         configChecks.triggered.connect(this::checkBinary);
         file.addSeparator();
         var exit = action("E&xit", "fileExit", QKeySequence.StandardKey.Quit);
         file.addAction(exit);
         newFile.triggered.connect(() -> withDiscardPermission(this::chooseNew));
-        open.triggered.connect(this::chooseOpenFormat);
-        openText.triggered.connect(() -> chooseFile(false));
-        openBinary.triggered.connect(() -> chooseFile(true));
-        save.triggered.connect(() -> saveDocument(false, () -> {}));
+        open.triggered.connect(this::chooseFile);
+        save.triggered.connect(() -> saveCurrent(() -> {}));
         saveAs.triggered.connect(() -> saveDocument(true, () -> {}));
         exit.triggered.connect(() -> close());
         var edit = menuBar().addMenu("&Edit");
@@ -217,71 +203,14 @@ public final class MainWindow extends QMainWindow {
         aboutMenu.addAction(aboutQt);
     }
 
-    private void chooseOpenFormat() {
-        if (pending != null) return;
-        var dialog = new QDialog(this);
-        dialog.setObjectName("openFormatDialog");
-        dialog.setWindowTitle("Open configuration");
-        var layout = new QVBoxLayout(dialog);
-        var buttons = new QDialogButtonBox();
-        var text = buttons.addButton("Text", QDialogButtonBox.ButtonRole.ActionRole);
-        text.setObjectName("chooseTextOpen");
-        var binary = buttons.addButton("Binary", QDialogButtonBox.ButtonRole.ActionRole);
-        binary.setObjectName("chooseBinaryOpen");
-        boolean[] binarySelected = {false};
-        text.clicked.connect(dialog::accept);
-        binary.clicked.connect(() -> { binarySelected[0] = true; dialog.accept(); });
-        buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
-        buttons.rejected.connect(dialog::reject);
-        layout.addWidget(buttons);
-        int result;
-        try { result = dialog.exec(); } finally { dialog.dispose(); }
-        if (result == QDialog.DialogCode.Accepted.value()) chooseFile(binarySelected[0]);
-    }
-
-    private void chooseFile(boolean binary) {
+    private void chooseFile() {
         if (pending != null) return;
         withDiscardPermission(() -> {
-            var selection = QFileDialog.getOpenFileName(this, binary ? "Open binary configuration" : "Open configuration text", "",
-                    binary ? "Binary configuration (*.bin *.cm *.mta *.cfg);;All files (*)"
-                            : "Configuration text (*.txt *.conf *.cfg);;All files (*)");
+            var selection = QFileDialog.getOpenFileName(this, "Open configuration", "",
+                    "Configuration files (*.txt *.conf *.cfg *.bin *.cm *.mta);;All files (*)");
             if (selection != null && selection.result != null && !selection.result.isEmpty()) {
-                Path path = Path.of(selection.result);
-                if (binary) chooseBinaryType(path);
-                else openFile(path);
+                openFile(Path.of(selection.result));
             }
-        });
-    }
-
-    private void chooseBinaryType(Path path) {
-        submit(service::types, types -> {
-            var dialog = new QDialog(this);
-            dialog.setObjectName("binaryTypeDialog");
-            dialog.setWindowTitle("Binary configuration type");
-            dialog.setMinimumWidth(480);
-            var layout = new QVBoxLayout(dialog);
-            var form = new QFormLayout();
-            var type = new QComboBox();
-            type.setObjectName("binaryFileType");
-            types.forEach(entry -> type.addItem(entry.toString()));
-            type.setCurrentIndex(-1);
-            type.setPlaceholderText("Select type");
-            form.addRow("Configuration type", type);
-            layout.addLayout(form);
-            var buttons = new QDialogButtonBox();
-            var confirm = buttons.addButton("Open", QDialogButtonBox.ButtonRole.AcceptRole);
-            confirm.setObjectName("confirmBinaryOpen");
-            confirm.setEnabled(false);
-            type.currentIndexChanged.connect(index -> confirm.setEnabled(index >= 0));
-            buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
-            buttons.accepted.connect(dialog::accept);
-            buttons.rejected.connect(dialog::reject);
-            layout.addWidget(buttons);
-            try {
-                if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
-                    openBinaryFile(path, types.get(type.currentIndex()));
-                }
-            } finally { dialog.dispose(); }
         });
     }
 
@@ -298,7 +227,7 @@ public final class MainWindow extends QMainWindow {
 
     public void openFile(Path path) {
         if (pending != null) return;
-        submit(() -> service.open(path), loaded -> {
+        submit(() -> binaryService.openAuto(path), loaded -> {
             display(loaded, false);
             if (interactive) chooseTlv();
         });
@@ -307,7 +236,7 @@ public final class MainWindow extends QMainWindow {
     public void openBinaryFile(Path path, FileType type) {
         if (pending != null) return;
         submit(() -> binaryService.open(path, type), loaded -> {
-            display(loaded, true);
+            display(loaded, false);
             if (interactive) chooseTlv();
         });
     }
@@ -489,30 +418,45 @@ public final class MainWindow extends QMainWindow {
         try { dialog.exec(); } finally { dialog.dispose(); }
     }
 
-    private void saveBinary() {
+    private void saveCurrent(Runnable afterSave) {
+        if (document == null || pending != null) return;
+        if (document.path() == null && document.origin() != null) saveBinary(false, afterSave);
+        else saveDocument(false, afterSave);
+    }
+
+    private void saveBinary(boolean choosePath, Runnable afterSave) {
         if (pending != null || document == null) return;
         if (binaryService.requiresSharedSecret(document) && !secrets.hasShared()) {
             showSecrets();
             if (!secrets.hasShared()) return;
         }
         Document original = document;
-        var selection = QFileDialog.getSaveFileName(this, "Save configuration binary", "configuration.bin",
-                "Binary configuration (*.bin *.cm *.mta);;All files (*)", QFileDialog.Option.DontConfirmOverwrite);
-        if (selection == null || selection.result == null || selection.result.isEmpty()) return;
-        Path target = Path.of(selection.result).toAbsolutePath().normalize();
+        Path destination = original.path() == null && original.origin() != null ? original.origin().path() : null;
+        boolean pickedDestination = choosePath || destination == null;
+        if (pickedDestination) {
+            var selection = QFileDialog.getSaveFileName(this, "Save configuration binary",
+                    destination == null ? "configuration.bin" : destination.toString(),
+                    "Binary configuration (*.bin *.cm *.mta);;All files (*)", QFileDialog.Option.DontConfirmOverwrite);
+            if (selection == null || selection.result == null || selection.result.isEmpty()) return;
+            destination = Path.of(selection.result).toAbsolutePath().normalize();
+        }
+        Path target = destination;
         String sharedSecret = secrets.sharedValue();
         submit(() -> service.destinationHash(target), observedHash -> {
-            if (observedHash != null && QMessageBox.question(this, "Replace file?",
+            if (pickedDestination && observedHash != null && QMessageBox.question(this, "Replace file?",
                     "Replace " + target.getFileName() + "?",
                     new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No),
                     QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) return;
-            submit(() -> binaryService.save(original, target, observedHash, sharedSecret), saved -> {
-                showStatus("Binary saved.");
+            String expected = original.origin() != null && target.equals(original.origin().path())
+                    ? original.origin().diskHash() : observedHash;
+            submit(() -> binaryService.saveDocument(original, target, expected, sharedSecret), saved -> {
+                display(saved, false);
+                afterSave.run();
             });
         });
     }
 
-    private void chooseSaveFormat(boolean choosePath, Runnable afterSave) {
+    private void chooseSaveFormat() {
         if (pending != null || document == null) return;
         var dialog = new QDialog(this);
         dialog.setObjectName("saveFormatDialog");
@@ -533,8 +477,8 @@ public final class MainWindow extends QMainWindow {
         int result;
         try { result = dialog.exec(); } finally { dialog.dispose(); }
         if (result != QDialog.DialogCode.Accepted.value()) return;
-        if (binarySelected[0]) saveBinary();
-        else saveDocument(choosePath, afterSave);
+        if (binarySelected[0]) saveBinary(true, () -> {});
+        else saveDocument(true, () -> {});
     }
 
     private void saveDocument(boolean choosePath, Runnable afterSave) {
@@ -572,7 +516,7 @@ public final class MainWindow extends QMainWindow {
                 new QMessageBox.StandardButtons(QMessageBox.StandardButton.Save,
                         QMessageBox.StandardButton.Discard, QMessageBox.StandardButton.Cancel),
                 QMessageBox.StandardButton.Cancel);
-        if (answer == QMessageBox.StandardButton.Save) chooseSaveFormat(false, proceed);
+        if (answer == QMessageBox.StandardButton.Save) saveCurrent(proceed);
         else if (answer == QMessageBox.StandardButton.Discard) proceed.run();
     }
 
@@ -623,16 +567,11 @@ public final class MainWindow extends QMainWindow {
         boolean idle = pending == null;
         newFile.setEnabled(idle);
         open.setEnabled(idle);
-        openMenu.setEnabled(idle);
-        openText.setEnabled(idle);
-        openBinary.setEnabled(idle);
         save.setEnabled(idle && document != null && modified);
         saveAs.setEnabled(idle && document != null);
-        saveMenu.setEnabled(idle && document != null);
         saveAsMenu.setEnabled(idle && document != null);
-        binarySave.setEnabled(idle && document != null);
         binarySaveAs.setEnabled(idle && document != null);
-        saveShortcut.setEnabled(idle && document != null);
+        saveShortcut.setEnabled(idle && document != null && modified);
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
         configChecks.setEnabled(idle && document != null);

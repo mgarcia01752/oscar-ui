@@ -15,6 +15,39 @@ class BinaryOpeningTest {
         return documents.types().stream().filter(entry -> entry.header().equals(header)).findFirst().orElseThrow();
     }
 
+    @Test void detectsContentAndSelectsCompatibleDocsisCatalogIncludingNestedExtensions() throws Exception {
+        Path text = Files.writeString(temporary.resolve("text.bin"),
+                "\uFEFF/* source */ Docsis-4.0 { NetworkAccess 1; }");
+        assertEquals("Docsis-4.0", binary.openAuto(text).type().header());
+        assertEquals(text, binary.openAuto(text).path());
+        Path common = Files.write(temporary.resolve("common.txt"), HexFormat.of().parseHex("030101ff00"));
+        assertEquals("Docsis", binary.openAuto(common).type().header());
+        // Existing Oscar catalog fixtures: top-level 97 and nested 24.41.
+        for (String hex : List.of("610101ff00", "1803290101ff00")) {
+            Path newer = Files.write(temporary.resolve("newer.txt"), HexFormat.of().parseHex(hex));
+            assertEquals("Docsis-4.0", binary.openAuto(newer).type().header());
+        }
+        for (String hex : List.of("03", "fa0101ff00", "1803290201ff00")) {
+            Path broken = Files.write(temporary.resolve("broken.bin"), HexFormat.of().parseHex(hex));
+            assertThrows(InspectionException.class, () -> binary.openAuto(broken));
+        }
+    }
+
+    @Test void savesActiveBinaryAndDetectsExternalChanges() throws Exception {
+        Path file = Files.write(temporary.resolve("active.bin"), HexFormat.of().parseHex("030101ff00"));
+        var opened = binary.openAuto(file);
+        var edited = documents.replaceValue(opened, opened.root().children().getFirst(), "0");
+        var saved = binary.saveDocument(edited, file, opened.origin().diskHash(), "public-test-key");
+        assertEquals(file, saved.origin().path());
+        assertEquals(documents.destinationHash(file), saved.origin().diskHash());
+        assertArrayEquals(Files.readAllBytes(file), saved.origin().bytes());
+        assertEquals("0", binary.openAuto(file).root().children().getFirst().value());
+        Files.writeString(file, "external modification");
+        assertThrows(InspectionException.class, () ->
+                binary.saveDocument(saved, file, saved.origin().diskHash(), "public-test-key"));
+        assertEquals("external modification", Files.readString(file));
+    }
+
     @Test void opensIndependentNetworkAccessBytesForEachDocsisEdition() throws Exception {
         byte[] bytes = HexFormat.of().parseHex("030101ff00");
         Path source = Files.write(temporary.resolve("misleading.txt"), bytes);

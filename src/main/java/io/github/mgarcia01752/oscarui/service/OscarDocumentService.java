@@ -126,12 +126,20 @@ public final class OscarDocumentService {
             if (bytes.length == 0 || bytes.length > OscarInspectionService.MAX_BYTES) {
                 throw new InspectionException("Select a nonempty configuration text file up to 1 MiB.");
             }
+            return openText(path, bytes);
+        } catch (IOException error) {
+            throw new InspectionException("Cannot read UTF-8 text. Check the file and permissions.", error);
+        }
+    }
+
+    Document openText(Path path, byte[] bytes) throws InspectionException {
+        try {
             String text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
-            if (text.indexOf('\0') >= 0) throw new InspectionException("Expected UTF-8 text. Use File > Open > Binary for binary files.");
+            if (text.indexOf('\0') >= 0) throw new InspectionException("Expected UTF-8 configuration text.");
             String beginning = text.startsWith("\uFEFF") ? text.substring(1) : text;
             return parse(path.toAbsolutePath().normalize(), text, hash(bytes), beginning.startsWith(REFERENCE_MARKER));
-        } catch (IOException error) {
-            throw new InspectionException("Cannot read UTF-8 text. Check permissions or use File > Open > Binary.", error);
+        } catch (java.nio.charset.CharacterCodingException error) {
+            throw new InspectionException("Expected UTF-8 configuration text.");
         }
     }
 

@@ -127,21 +127,12 @@ class MainWindowTest {
         window.show();
         try {
             Path input = Files.write(temporary.resolve("input.cfg"), java.util.HexFormat.of().parseHex("030101ff00"));
-            var types = new OscarDocumentService().types();
-            int index = java.util.stream.IntStream.range(0, types.size())
-                    .filter(position -> types.get(position).header().equals("Docsis")).findFirst().orElseThrow();
             respond(window, chooser -> {
                 assertInstanceOf(QFileDialog.class, chooser);
                 chooser.findChild(QLineEdit.class, "fileNameEdit").setText(input.toString());
                 chooser.accept();
-                respond(window, dialog -> {
-                    assertEquals("binaryTypeDialog", dialog.objectName());
-                    assertFalse(dialog.findChild(QPushButton.class, "confirmBinaryOpen").isEnabled());
-                    dialog.findChild(QComboBox.class, "binaryFileType").setCurrentIndex(index);
-                    dialog.findChild(QPushButton.class, "confirmBinaryOpen").click();
-                });
             });
-            action(window, "fileOpenBinary").trigger();
+            action(window, "fileOpen").trigger();
             await(() -> window.completed() && window.currentDocument() != null);
             assertCallback();
             var imported = window.currentDocument();
@@ -153,20 +144,19 @@ class MainWindowTest {
             assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
             assertEquals("NetworkAccess", window.findChild(QTreeWidget.class, "configurationTree").topLevelItem(0).child(0).text(0));
             assertEquals(imported.text(), window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
-            assertTrue(action(window, "fileSave").isEnabled());
+            assertFalse(action(window, "fileSave").isEnabled());
             window.grab().save("target/ui-binary-open.png");
-            respond(window, prompt -> ((QMessageBox) prompt).button(QMessageBox.StandardButton.Cancel).click());
-            action(window, "fileOpenText").trigger();
+            respond(window, QDialog::reject);
+            action(window, "fileOpen").trigger();
             assertCallback();
             assertSame(imported, window.currentDocument());
-            assertTrue(action(window, "fileSave").isEnabled());
             Path text = temporary.resolve("decoded.txt");
             respond(window, chooser -> {
                 assertInstanceOf(QFileDialog.class, chooser);
                 chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
                 chooser.accept();
             });
-            action(window, "fileSave").trigger();
+            action(window, "fileSaveAs").trigger();
             await(() -> window.completed() && text.equals(window.currentDocument().path()));
             assertCallback();
             assertEquals(imported.text(), Files.readString(text));
@@ -178,51 +168,27 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
-    @Test void openFormatsCancellationAndFailedBinaryImportPreserveDocument() throws Exception {
+    @Test void openCancellationAndFailedDetectionPreserveDocument() throws Exception {
         var window = new MainWindow(false);
         window.show();
         try {
             Path text = Files.writeString(temporary.resolve("text.bin"), "Docsis { NetworkAccess 1; }");
             respond(window, chooser -> {
+                assertInstanceOf(QFileDialog.class, chooser);
                 chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
                 chooser.accept();
             });
-            action(window, "fileOpenText").trigger();
+            action(window, "fileOpen").trigger();
             await(() -> window.completed() && window.currentDocument() != null);
             assertCallback();
             var original = window.currentDocument();
             assertEquals(text, original.path());
-            assertNull(original.origin());
-            respond(window, dialog -> {
-                assertEquals("openFormatDialog", dialog.objectName());
-                dialog.reject();
-            });
-            action(window, "fileOpen").trigger();
-            assertCallback();
-            assertSame(original, window.currentDocument());
-            respond(window, dialog -> {
-                assertEquals("openFormatDialog", dialog.objectName());
-                respond(window, QDialog::reject);
-                dialog.findChild(QPushButton.class, "chooseTextOpen").click();
-            });
-            action(window, "fileOpen").trigger();
-            assertCallback();
-            assertSame(original, window.currentDocument());
             respond(window, QDialog::reject);
-            action(window, "fileOpenBinary").trigger();
-            assertCallback();
-            assertSame(original, window.currentDocument());
-            respond(window, chooser -> {
-                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(text.toString());
-                chooser.accept();
-                respond(window, QDialog::reject);
-            });
-            action(window, "fileOpenBinary").trigger();
-            await(window::completed);
+            action(window, "fileOpen").trigger();
             assertCallback();
             assertSame(original, window.currentDocument());
             Path malformed = Files.write(temporary.resolve("broken.bin"), new byte[]{3, 10});
-            window.openBinaryFile(malformed, original.type());
+            window.openFile(malformed);
             await(() -> window.completed() && !window.succeeded());
             assertSame(original, window.currentDocument());
             assertFalse(action(window, "fileSave").isEnabled());
@@ -504,20 +470,17 @@ class MainWindowTest {
         } finally { next.close(); next.dispose(); }
     }
 
-    @Test void saveShortcutOffersFormatsAndRoutesTextSave() throws Exception {
+    @Test void saveShortcutUsesTextWithoutFormatPrompt() throws Exception {
         var window = new MainWindow(false);
         try {
             var type = new OscarDocumentService().types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
             window.createDocument(type, false);
             await(() -> window.completed() && window.succeeded());
             Path destination = temporary.resolve("shortcut.txt");
-            respond(window, dialog -> {
-                assertEquals("saveFormatDialog", dialog.objectName());
-                dialog.findChild(QPushButton.class, "chooseTextSave").click();
-                respond(window, chooser -> {
-                    chooser.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());
-                    chooser.accept();
-                });
+            respond(window, chooser -> {
+                assertInstanceOf(QFileDialog.class, chooser);
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());
+                chooser.accept();
             });
             action(window, "saveShortcut").trigger();
             await(() -> window.completed() && destination.equals(window.currentDocument().path()));
@@ -525,27 +488,14 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
-    @Test void binarySaveSkipsChecksAndPreservesUnsavedText() throws Exception {
+    @Test void saveAsBinarySwitchesFormatAndSaveWritesBackWithoutPrompts() throws Exception {
         var window = new MainWindow(false);
         window.show();
         try {
-            Path source = Files.writeString(temporary.resolve("binary-source.txt"), "Docsis { NetworkAccess 1; }");
+            Path source = Files.writeString(temporary.resolve("source.txt"), "Docsis { NetworkAccess 1; }");
             window.openFile(source);
             await(() -> window.completed() && window.succeeded());
-            var tree = window.findChild(QTreeWidget.class, "configurationTree");
-            tree.setCurrentItem(tree.topLevelItem(0).child(0));
-            respond(window, dialog -> {
-                dialog.findChild(QLineEdit.class, "tlvValue").setText("0");
-                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
-            });
-            action(window, "editTlv").trigger();
-            await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
-            var edited = window.currentDocument();
-            respond(window, QDialog::reject);
-            action(window, "fileSaveAsBinary").trigger();
-            assertCallback();
-            assertSame(edited, window.currentDocument());
-            Path output = temporary.resolve("export.bin");
+            Path output = temporary.resolve("output.bin");
             respond(window, dialog -> {
                 assertEquals("secretsDialog", dialog.objectName());
                 dialog.findChild(QLineEdit.class, "sharedSecret").setText("public-test-key");
@@ -559,49 +509,60 @@ class MainWindowTest {
             action(window, "fileSaveAsBinary").trigger();
             await(() -> window.completed() && Files.exists(output));
             assertCallback();
-            byte[] firstOutput = Files.readAllBytes(output);
-            assertArrayEquals(new byte[]{3, 1, 0}, java.util.Arrays.copyOf(firstOutput, 3));
-            assertSame(edited, window.currentDocument());
-            assertTrue(action(window, "fileSave").isEnabled());
-            assertEquals("Docsis { NetworkAccess 1; }", Files.readString(source));
-            window.grab().save("target/ui-binary-saved.png");
-            respond(window, QDialog::reject);
-            action(window, "fileSaveBinary").trigger();
-            assertCallback();
-            assertArrayEquals(firstOutput, Files.readAllBytes(output));
-            boolean[] refused = {false};
-            chooseBinaryDestination(window, output, dialog -> {
-                ((QMessageBox) dialog).button(QMessageBox.StandardButton.No).click();
-                refused[0] = true;
+            assertNull(window.currentDocument().path());
+            assertEquals(output, window.currentDocument().origin().path());
+            assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
+            assertFalse(action(window, "fileSave").isEnabled());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            respond(window, dialog -> {
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("0");
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
             });
-            await(() -> refused[0] && window.completed());
-            assertArrayEquals(firstOutput, Files.readAllBytes(output));
-            chooseBinaryDestination(window, output, dialog -> {
-                try { Files.writeString(output, "changed during confirmation"); }
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
+            action(window, "saveShortcut").trigger();
+            await(() -> window.completed() && !action(window, "fileSave").isEnabled());
+            assertArrayEquals(new byte[]{3, 1, 0}, java.util.Arrays.copyOf(Files.readAllBytes(output), 3));
+            assertEquals("Docsis { NetworkAccess 1; }", Files.readString(source));
+            var saved = window.currentDocument();
+            respond(window, QDialog::reject);
+            action(window, "fileSaveAsBinary").trigger();
+            assertCallback();
+            assertSame(saved, window.currentDocument());
+            // Reopen the binary and save edits through the unsaved-change prompt.
+            window.openFile(output);
+            await(() -> window.completed() && window.succeeded());
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            respond(window, dialog -> {
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("1");
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 1"));
+            respond(window, prompt -> {
+                assertInstanceOf(QMessageBox.class, prompt);
+                ((QMessageBox) prompt).button(QMessageBox.StandardButton.Save).click();
+                respond(window, next -> {
+                    assertInstanceOf(NewDocumentDialog.class, next);
+                    next.reject();
+                });
+            });
+            action(window, "fileNew").trigger();
+            await(() -> window.completed() && !action(window, "fileSave").isEnabled());
+            await(() -> QApplication.activeModalWidget() == null);
+            assertCallback();
+            assertArrayEquals(new byte[]{3, 1, 1}, java.util.Arrays.copyOf(Files.readAllBytes(output), 3));
+            saved = window.currentDocument();
+            Path other = Files.write(temporary.resolve("other.bin"), new byte[]{1});
+            chooseBinaryDestination(window, other, dialog -> {
+                try { Files.writeString(other, "changed during confirmation"); }
                 catch (java.io.IOException error) { throw new java.io.UncheckedIOException(error); }
                 ((QMessageBox) dialog).button(QMessageBox.StandardButton.Yes).click();
             });
             await(() -> window.completed() && !window.succeeded());
-            assertEquals("changed during confirmation", Files.readString(output));
-            Path pendingExport = temporary.resolve("unsaved.bin");
-            respond(window, prompt -> {
-                respond(window, format -> {
-                    assertEquals("saveFormatDialog", format.objectName());
-                    respond(window, chooser -> {
-                        assertInstanceOf(QFileDialog.class, chooser);
-                        chooser.findChild(QLineEdit.class, "fileNameEdit").setText(pendingExport.toString());
-                        chooser.accept();
-                    });
-                    format.findChild(QPushButton.class, "chooseBinarySave").click();
-                });
-                ((QMessageBox) prompt).button(QMessageBox.StandardButton.Save).click();
-            });
-            action(window, "fileNew").trigger();
-            await(() -> window.completed() && Files.exists(pendingExport));
-            assertCallback();
-            assertSame(edited, window.currentDocument());
-            assertTrue(action(window, "fileSave").isEnabled());
-            assertEquals("Docsis { NetworkAccess 1; }", Files.readString(source));
+            assertEquals("changed during confirmation", Files.readString(other));
+            assertSame(saved, window.currentDocument());
         } finally { window.close(); window.dispose(); }
     }
 
