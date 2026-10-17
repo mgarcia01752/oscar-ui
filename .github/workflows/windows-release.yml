@@ -14,7 +14,8 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21.0.10+7'
+          # Use Adoptium's full SemVer, including its LTS build suffix.
+          java-version: '21.0.10+7.0.LTS'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
