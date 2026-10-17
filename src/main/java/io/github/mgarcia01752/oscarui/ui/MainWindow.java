@@ -74,9 +74,10 @@ public final class MainWindow extends QMainWindow {
         content.setReadOnly(true);
         content.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap);
         tree.setObjectName("configurationTree");
-        tree.setHeaderLabels(List.of("Configuration", "Value"));
+        tree.setHeaderLabels(List.of("Configuration", "TLV", "Value"));
         tree.setMinimumWidth(240);
         tree.setColumnWidth(0, 240);
+        tree.setColumnWidth(1, 100);
         tree.setAlternatingRowColors(true);
         var splitter = new QSplitter(Qt.Orientation.Horizontal);
         splitter.addWidget(tree);
@@ -196,7 +197,7 @@ public final class MainWindow extends QMainWindow {
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &Oscar Desktop", "aboutOscar", null);
         about.triggered.connect(() -> QMessageBox.about(this, "About Oscar Desktop",
-                "Oscar Desktop 0.1.0\nOscar 3.1.0\nQt Jambi 6.8.3\n\nApache License 2.0"));
+                "Oscar Desktop 0.1.0\nOscar 3.1.1\nQt Jambi 6.8.3\n\nApache License 2.0"));
         aboutMenu.addAction(about);
         var aboutQt = action("About &Qt", "aboutQt", null);
         aboutQt.triggered.connect(() -> QMessageBox.aboutQt(this));
@@ -255,7 +256,7 @@ public final class MainWindow extends QMainWindow {
         parents.clear();
         tree.clear();
         content.setPlainText(current.text());
-        var rootItem = new QTreeWidgetItem(List.of(current.root().name(), ""));
+        var rootItem = new QTreeWidgetItem(List.of(current.root().name(), "", ""));
         tree.addTopLevelItem(rootItem);
         populate(rootItem, current.root());
         updateMicVisibility();
@@ -267,9 +268,11 @@ public final class MainWindow extends QMainWindow {
 
     private void populate(QTreeWidgetItem item, Node node) {
         nodes.put(item, node);
+        item.setText(1, node.path().contains(-1) ? "" : node.path().stream()
+                .map(String::valueOf).collect(java.util.stream.Collectors.joining(".")));
         item.setToolTip(0, node.path().contains(-1) ? "Unmapped reference entry" : node.path().toString());
         for (Node child : node.children()) {
-            var childItem = new QTreeWidgetItem(List.of(child.name(), child.value()));
+            var childItem = new QTreeWidgetItem(List.of(child.name(), "", child.value()));
             item.addChild(childItem);
             parents.put(child, node);
             populate(childItem, child);
@@ -373,14 +376,23 @@ public final class MainWindow extends QMainWindow {
         });
     }
 
+    private boolean canOpenEditor(Node node) {
+        return document != null && node != null && (service.canEdit(document, node)
+                || node.container() && service.canDelete(document, node));
+    }
+
     private void editSelectedTlv() {
         Node selected = nodes.get(tree.currentItem());
-        if (pending != null || document == null || !service.canEdit(document, selected)) return;
+        if (pending != null || !canOpenEditor(selected)) return;
         Document original = document;
         var dialog = new AddTlvDialog(this, service, original, parents.get(selected),
                 List.of(service.definition(original, selected)), selected);
         try {
             if (dialog.exec() != QDialog.DialogCode.Accepted.value()) return;
+            if (dialog.deletionRequested()) {
+                deleteNode(original, selected);
+                return;
+            }
             String value = dialog.selection().value();
             submit(() -> service.replaceValue(original, selected, value), changed -> {
                 if (changed == original) return;
@@ -393,12 +405,11 @@ public final class MainWindow extends QMainWindow {
     private void deleteSelectedTlv() {
         Node selected = nodes.get(tree.currentItem());
         if (pending != null || document == null || !service.canDelete(document, selected)) return;
-        var answer = QMessageBox.question(this, "Del TLV", "Delete " + selected.name() + "?"
-                + (selected.children().isEmpty() ? "" : " All its descendants will also be deleted."),
-                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
-                QMessageBox.StandardButton.Cancel);
-        if (answer != QMessageBox.StandardButton.Yes) return;
-        Document original = document;
+        if (!AddTlvDialog.confirmDeletion(this, selected)) return;
+        deleteNode(document, selected);
+    }
+
+    private void deleteNode(Document original, Node selected) {
         Node parent = parents.get(selected);
         submit(() -> service.delete(original, selected), changed -> {
             display(changed, true);
@@ -577,7 +588,7 @@ public final class MainWindow extends QMainWindow {
         configChecks.setEnabled(idle && document != null);
         Node selected = nodes.get(tree.currentItem());
         deleteTlv.setEnabled(idle && document != null && service.canDelete(document, selected));
-        editTlv.setEnabled(idle && document != null && service.canEdit(document, selected));
+        editTlv.setEnabled(idle && canOpenEditor(selected));
         Node parent = insertionParent();
         addTlv.setEnabled(idle && parent != null && parent.container() && !parent.path().contains(-1));
     }

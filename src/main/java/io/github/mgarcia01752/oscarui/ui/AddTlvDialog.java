@@ -3,6 +3,7 @@ package io.github.mgarcia01752.oscarui.ui;
 import com.comcast.oscar.dictionary.TlvDefinition;
 import io.github.mgarcia01752.oscarui.service.OscarDocumentService;
 import io.qt.core.QRegularExpression;
+import io.qt.core.Qt;
 import io.qt.gui.QRegularExpressionValidator;
 import io.qt.widgets.*;
 import java.util.List;
@@ -11,9 +12,9 @@ import java.util.Locale;
 final class AddTlvDialog extends QDialog {
     record Selection(TlvDefinition definition, String value) {}
     private final QLineEdit value = new QLineEdit();
-    private final QListWidget list = new QListWidget();
-    private List<TlvDefinition> visible = List.of();
+    private final QTreeWidget list = new QTreeWidget();
     private TlvDefinition selected;
+    private boolean deletionRequested;
 
     AddTlvDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
                  OscarDocumentService.Node insertionParent, List<TlvDefinition> choices) {
@@ -34,6 +35,13 @@ final class AddTlvDialog extends QDialog {
         search.setPlaceholderText("Search TLVs");
         layout.addWidget(search);
         list.setObjectName("tlvChoices");
+        list.setHeaderLabels(List.of("TLV", "Name"));
+        list.setRootIsDecorated(false);
+        list.setColumnWidth(0, 110);
+        list.header().setSectionsClickable(true);
+        list.header().setSortIndicatorShown(true);
+        list.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder);
+        list.header().sortIndicatorChanged.connect((column, order) -> sortChoices());
         layout.addWidget(list, 1);
         var description = new QPlainTextEdit();
         description.setReadOnly(true);
@@ -56,6 +64,17 @@ final class AddTlvDialog extends QDialog {
         var add = buttons.addButton(editing == null ? "Add" : "Apply", QDialogButtonBox.ButtonRole.AcceptRole);
         add.setObjectName(editing == null ? "confirmAddTlv" : "confirmEditTlv");
         add.setEnabled(false);
+        if (editing != null) {
+            var delete = buttons.addButton("Delete TLV", QDialogButtonBox.ButtonRole.ActionRole);
+            delete.setObjectName("deleteEditedTlv");
+            delete.setEnabled(service.canDelete(document, editing));
+            delete.clicked.connect(() -> {
+                if (confirmDeletion(this, editing)) {
+                    deletionRequested = true;
+                    accept();
+                }
+            });
+        }
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(this::accept);
         buttons.rejected.connect(this::reject);
@@ -66,10 +85,10 @@ final class AddTlvDialog extends QDialog {
             value.setEnabled(supported && !container);
             String issue = selected == null ? "" : service.valueIssue(document.type(), selected, value.text());
             validation.setText(!value.text().isEmpty() || !supported ? issue : "");
-            add.setEnabled(supported && issue.isEmpty());
+            add.setEnabled(supported && issue.isEmpty() && (editing == null || !container));
         };
-        list.currentRowChanged.connect(index -> {
-            selected = index >= 0 && index < visible.size() ? visible.get(index) : null;
+        list.currentItemChanged.connect((current, previous) -> {
+            selected = current instanceof TlvItem item ? item.definition : null;
             value.clear();
             boolean numeric = selected != null && java.util.Set.of("integer", "unsigned_integer", "byte").contains(selected.codec());
             var oldValidator = value.validator();
@@ -86,24 +105,72 @@ final class AddTlvDialog extends QDialog {
             selected = null;
             list.clear();
             String query = text.toLowerCase(Locale.ROOT);
-            visible = choices.stream().filter(entry -> entry.name().toLowerCase(Locale.ROOT).contains(query)
-                    || entry.path().toString().contains(query)
+            var visible = choices.stream().filter(entry -> entry.name().toLowerCase(Locale.ROOT).contains(query)
+                    || pathText(entry).contains(query)
                     || entry.description().toLowerCase(Locale.ROOT).contains(query)
                     || entry.codec().toLowerCase(Locale.ROOT).contains(query)
                     || entry.supportedVersion().toLowerCase(Locale.ROOT).contains(query)).toList();
-            visible.forEach(entry -> list.addItem(entry.name() + "   " + entry.path()));
-            if (!visible.isEmpty()) list.setCurrentRow(0);
+            visible.forEach(entry -> list.addTopLevelItem(new TlvItem(entry)));
+            sortChoices();
+            if (!visible.isEmpty()) list.setCurrentItem(list.topLevelItem(0));
             else { description.clear(); metadata.setText("No available TLVs"); update.run(); }
         });
         search.textChanged.emit("");
         if (editing != null) {
             search.hide();
             list.setEnabled(false);
-            list.setMaximumHeight(45);
+            list.setMaximumHeight(75);
             resize(620, 340);
             value.setText(editing.value());
             value.setFocus();
             value.selectAll();
+        }
+    }
+
+    private void sortChoices() {
+        var items = new java.util.ArrayList<TlvItem>();
+        for (int index = 0; index < list.topLevelItemCount(); index++) {
+            items.add((TlvItem) list.topLevelItem(index));
+        }
+        items.sort((left, right) -> left.compareTo(right));
+        if (list.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder) {
+            java.util.Collections.reverse(items);
+        }
+        var current = list.currentItem();
+        boolean blocked = list.blockSignals(true);
+        try {
+            while (list.topLevelItemCount() > 0) list.takeTopLevelItem(0);
+            items.forEach(list::addTopLevelItem);
+            list.setCurrentItem(current);
+        } finally { list.blockSignals(blocked); }
+    }
+
+    private static String pathText(TlvDefinition definition) {
+        return definition.path().stream().map(String::valueOf)
+                .collect(java.util.stream.Collectors.joining("."));
+    }
+
+    private static final class TlvItem extends QTreeWidgetItem {
+        private final TlvDefinition definition;
+
+        TlvItem(TlvDefinition definition) {
+            super(List.of(pathText(definition), definition.name()));
+            this.definition = definition;
+        }
+
+        @Override public int compareTo(QTreeWidgetItem other) {
+            if (!(other instanceof TlvItem item)) return super.compareTo(other);
+            if (treeWidget().header().sortIndicatorSection() == 1) {
+                int names = definition.name().compareToIgnoreCase(item.definition.name());
+                if (names != 0) return names;
+            }
+            var left = definition.path();
+            var right = item.definition.path();
+            for (int index = 0; index < Math.min(left.size(), right.size()); index++) {
+                int order = Integer.compare(left.get(index), right.get(index));
+                if (order != 0) return order;
+            }
+            return Integer.compare(left.size(), right.size());
         }
     }
 
@@ -130,6 +197,16 @@ final class AddTlvDialog extends QDialog {
             default -> definition.codec().replace('_', ' ');
         };
     }
+
+    static boolean confirmDeletion(QWidget parent, OscarDocumentService.Node node) {
+        String message = "Delete " + node.name() + "?"
+                + (node.children().isEmpty() ? "" : "\nAll child TLVs will also be deleted.");
+        return QMessageBox.question(parent, "Delete TLV", message,
+                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
+                QMessageBox.StandardButton.Cancel) == QMessageBox.StandardButton.Yes;
+    }
+
+    boolean deletionRequested() { return deletionRequested; }
 
     Selection selection() { return new Selection(selected, value.text()); }
 }

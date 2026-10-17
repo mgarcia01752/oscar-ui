@@ -6,7 +6,9 @@ A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Li
 
 ## Current workspace
 
-The left pane displays an ordered configuration tree; the right pane displays
+The left pane displays an ordered configuration tree with Configuration, TLV,
+and Value columns. TLV paths use dotted notation (for example, `22.8.3`).
+The right pane displays
 original text or decoded binary text. Selecting an entry highlights its text.
 Both panes update together; text edits preserve comments, repeated entries,
 and unrelated formatting.
@@ -28,17 +30,21 @@ and unrelated formatting.
 - **Edit > Add TLV** and the tree context menu offer available children of the
 	selected container, with searchable names, paths, and descriptions. Add and Edit show the data
 	type with an input example or range instead of catalog metadata.
+	The TLV chooser has **TLV** and **Name** columns. Click a header to toggle
+	numeric or alphabetical sorting; TLV paths use dots without brackets.
 
 Adding a container also inserts its immediate registry children as blank
 placeholders. Nested containers stay empty until **Add TLV** or double-click
 explicitly populates that level. Delete unwanted children and enter supported
 values through the existing tree actions; selection alone never edits a file.
 Child counts follow the selected catalog, not fixed numeric ranges. Unsupported
-codecs and legacy spaced-name placeholders remain read-only but removable;
+codecs remain read-only but removable;
 deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 
 - **Double-click a scalar TLV** (or **Edit > Edit TLV**) to open its current
 	value in the popup. Apply updates that entry; Cancel leaves it unchanged.
+	The Edit popup also offers **Delete TLV** with confirmation. Containers can
+	be opened with **Edit TLV**; deleting one removes all its child TLVs.
 - **Edit > Del TLV** and the tree context menu delete the selected entry after
 	confirmation. Deleting a container includes its children. Protected entries
 	remain read-only.
@@ -164,10 +170,13 @@ see the current editing limitations above.
 ## Oscar dependency
 
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
-[Oscar v3.1.0](https://github.com/Comcast/Oscar/releases/tag/v3.1.0).
+[Oscar v3.1.1](https://github.com/Comcast/Oscar/releases/tag/v3.1.1).
 Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded
 Maven POM into this project's `.m2` cache. Dependencies still come from Maven
 Central; no Oscar source checkout or source build is required.
+Oscar 3.1.1 fixes the classifier-error names to ErroredParameter, ErrorCode,
+and ErrorMessage so those sub-TLVs can be edited. Older text templates with
+spaced spellings must update those names or be regenerated.
 
 Use Java 21. On Linux, bootstrap also requires `curl` and `sha256sum`:
 

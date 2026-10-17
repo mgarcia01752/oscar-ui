@@ -23,6 +23,116 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void tlvColumnsSortNumericallyAndAlphabeticallyWithoutChangingSelection() throws Exception {
+        var service = new OscarDocumentService();
+        var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+        var document = service.create(type, false);
+        var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family());
+        var choices = java.util.List.of(registry.find(java.util.List.of(18)),
+                registry.find(java.util.List.of(2)), registry.find(java.util.List.of(1)));
+        var dialog = new AddTlvDialog(null, service, document, document.root(), choices);
+        try {
+            dialog.show();
+            var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
+            assertEquals("TLV", table.headerItem().text(0));
+            assertEquals("Name", table.headerItem().text(1));
+            assertEquals(java.util.List.of("1", "2", "18"),
+                    java.util.stream.IntStream.range(0, 3).mapToObj(i -> table.topLevelItem(i).text(0)).toList());
+            table.setCurrentItem(table.topLevelItem(1));
+            var selected = dialog.selection().definition();
+            dialog.findChild(QLineEdit.class, "tlvValue").setText("1");
+            table.header().setSortIndicator(0, Qt.SortOrder.DescendingOrder);
+            assertEquals("18", table.topLevelItem(0).text(0));
+            table.header().setSortIndicator(1, Qt.SortOrder.AscendingOrder);
+            assertEquals("DownstreamFrequency", table.topLevelItem(0).text(1));
+            table.header().setSortIndicator(1, Qt.SortOrder.DescendingOrder);
+            assertEquals("UpstreamChannelID", table.topLevelItem(0).text(1));
+            assertEquals(selected, dialog.selection().definition());
+            assertEquals("1", dialog.selection().value());
+            dialog.findChild(QLineEdit.class, "tlvSearch").setText("MaxCPE");
+            assertEquals(1, table.topLevelItemCount());
+            assertEquals("18", table.topLevelItem(0).text(0));
+            assertEquals("MaxCPEAllowed", dialog.selection().definition().name());
+            dialog.grab().save("target/ui-add-tlv-columns.png");
+        } finally { dialog.close(); dialog.dispose(); }
+    }
+
+    @Test void deletesScalarAndWholeContainerFromEditorOnlyAfterConfirmation() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path file = Files.writeString(temporary.resolve("delete-editor.txt"),
+                    "Docsis-4.0 { UpstreamServiceFlow { ServiceFlowReference 1; QosParameterSetType 7; } NetworkAccess 1; }");
+            window.openFile(file);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            for (int remaining = 2; remaining > 0; remaining--) {
+                var original = window.currentDocument();
+                boolean container = remaining == 2;
+                tree.setCurrentItem(tree.topLevelItem(0).child(0));
+                assertTrue(action(window, "editTlv").isEnabled());
+                respond(window, editor -> {
+                    assertEquals("editTlvDialog", editor.objectName());
+                    assertEquals(!container, editor.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                    respond(window, confirmation -> {
+                        var question = (QMessageBox) confirmation;
+                        assertEquals(container, question.text().contains("All child TLVs"));
+                        question.button(QMessageBox.StandardButton.Cancel).click();
+                        assertSame(original, window.currentDocument());
+                        respond(window, sameEditor -> {
+                            assertSame(editor, sameEditor);
+                            respond(window, accepted -> ((QMessageBox) accepted)
+                                    .button(QMessageBox.StandardButton.Yes).click());
+                            sameEditor.findChild(QPushButton.class, "deleteEditedTlv").click();
+                        });
+                    });
+                    editor.findChild(QPushButton.class, "deleteEditedTlv").click();
+                });
+                action(window, "editTlv").trigger();
+                await(() -> window.completed() && window.currentDocument() != original);
+                assertCallback();
+                assertEquals(remaining - 1, window.currentDocument().root().children().size());
+                assertTrue(action(window, "fileSave").isEnabled());
+            }
+            assertFalse(window.currentDocument().text().contains("ServiceFlowReference"));
+            assertTrue(Files.readString(file).contains("ServiceFlowReference"));
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void editsClassifierErrorMessageWithOscar311Names() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path source = Files.writeString(temporary.resolve("error-message.txt"),
+                    "Docsis { UpstreamPacketClassification { ClassifierError { ErrorMessage; } } }");
+            window.openFile(source);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var entry = tree.topLevelItem(0).child(0).child(0).child(0);
+            assertEquals("ErrorMessage", entry.text(0));
+            respond(window, dialog -> {
+                assertEquals("editTlvDialog", dialog.objectName());
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("example");
+                assertTrue(dialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            tree.itemDoubleClicked.emit(entry, 0);
+            await(() -> window.completed() && window.currentDocument().text().contains("ErrorMessage example;"));
+            assertCallback();
+            action(window, "fileSave").trigger();
+            await(() -> window.completed() && !action(window, "fileSave").isEnabled());
+            assertTrue(Files.readString(source).contains("ErrorMessage example;"));
+            window.openFile(source);
+            await(() -> window.completed() && window.succeeded());
+            respond(window, dialog -> {
+                assertEquals("example", dialog.findChild(QLineEdit.class, "tlvValue").text());
+                dialog.reject();
+            });
+            tree.itemDoubleClicked.emit(tree.topLevelItem(0).child(0).child(0).child(0), 0);
+            assertCallback();
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void hidesGeneratedMicsUntilEnabledAndKeepsThemReadOnly() throws Exception {
         var window = new MainWindow(false);
         window.show();
@@ -104,7 +214,7 @@ class MainWindowTest {
             for (int remaining = childCount; remaining > 0; remaining--) {
                 var current = window.currentDocument();
                 tree.setCurrentItem(tree.topLevelItem(0).child(0).child(nestedIndex).child(0));
-                assertFalse(action(window, "editTlv").isEnabled());
+                assertTrue(action(window, "editTlv").isEnabled());
                 assertTrue(action(window, "deleteTlv").isEnabled());
                 respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Yes).click());
                 action(window, "deleteTlv").trigger();
@@ -386,7 +496,7 @@ class MainWindowTest {
             tree.itemDoubleClicked.emit(item, 0);
             await(() -> window.completed() && window.currentDocument() != original);
             assertEquals(source.replace("004", "5"), window.currentDocument().text());
-            assertEquals("5", tree.currentItem().text(1));
+            assertEquals("5", tree.currentItem().text(2));
             assertTrue(action(window, "fileSave").isEnabled());
             var edited = window.currentDocument();
             respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Cancel).click());

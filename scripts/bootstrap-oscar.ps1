@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
-$Version = '3.1.0'
-$Commit = '1767ba35b5d13b30d1d51745f709edbe8459dd68'
-$Sha256 = '6c53290c55a405017e2c79b56e239de063e25f5ed268283cfad7989d744c9e85'
+$Version = '3.1.1'
+$Commit = 'cd57cb91e3e550a7706251477c55e9747505d9e7'
+$Sha256 = 'a180245a430573682f3cc578e2ea004c31a0fd5755429c9ff9c5ab717434aba0'
 $Release = "$Root/.tools/oscar-$Version"
 New-Item -ItemType Directory -Force -Path $Release | Out-Null
 Invoke-WebRequest -Uri "https://github.com/Comcast/Oscar/releases/download/v$Version/oscar-thin.jar" -OutFile "$Release/oscar-thin.jar.download"
