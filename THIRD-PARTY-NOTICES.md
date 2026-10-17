@@ -30,15 +30,18 @@ For each redistributed binary release, distribute the exact corresponding
 Qt/Qt Jambi/ICU source archives (including patches, if any) alongside the binary,
 with required build instructions and license texts. Upstream source links alone
 are not a permanent source-delivery guarantee: mirror the corresponding source
-with each release. This repository does not publish binaries or make a source
-offer on behalf of an upstream vendor. Our binaries use unmodified Qt/Qt Jambi.
+with each release. The Windows release workflow attaches corresponding Qt, Qt Jambi, and JDK
+source archives alongside the application ZIP. Our binaries use unmodified Qt/Qt Jambi.
 The release checklist in docs/packaging.md includes source collection.
 
 Qt sources contain additional third-party license material under LICENSES/ and
 src/3rdparty/. Preserve these when distributing corresponding source. The bundled
-Java runtime's `legal/` directory must remain intact. Windows requires Microsoft's
-Visual C++ 2015-2022 x64 Redistributable; installation and redistribution are
-subject to Microsoft's terms. It is not relicensed by this project.
+Java runtime's `legal/` directory must remain intact. Windows portable bundles
+include app-local x64 Visual C++ runtime DLLs from the build host's Visual Studio
+redistributable directory. Redistribution is subject to Microsoft's terms;
+these DLLs are not relicensed by this project. Qt DLLs also appear beside the
+Windows executable for native dependency lookup; replace both copies when
+substituting compatible Qt builds.
 
 Official references:
 - https://raw.githubusercontent.com/OmixVisualization/qtjambi/v6.8.3/LICENSE.LGPLv21

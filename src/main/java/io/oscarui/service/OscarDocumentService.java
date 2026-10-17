@@ -25,7 +25,7 @@ public final class OscarDocumentService {
             "byte_array_ipv4_address", "byte_array_ipv6_address", "transport_address_ipv4_address",
             "transport_address_ipv6_address", "byte_array_inet_transport_address", "byte_array_inet_address");
     public record FileType(int id, String header, String family, String edition) {
-        @Override public String toString() { return header + " (" + edition + ")"; }
+        @Override public String toString() { return header; }
     }
     public record Node(List<Integer> path, String name, String value, List<Node> children,
                        int start, int end, int close, boolean container) {

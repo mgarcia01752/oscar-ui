@@ -7,11 +7,13 @@ import platform
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 WINDOWS = sys.platform == 'win32'
 QT_VERSION = '6.8.3'
-VERSION = '0.1.0'
+VERSION = ET.parse(ROOT / 'pom.xml').getroot().find(
+    '{http://maven.apache.org/POM/4.0.0}version').text
 
 
 def run(args, **kwargs):

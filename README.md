@@ -4,6 +4,23 @@
 
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
+## Windows download
+
+The Windows release workflow produces `Oscar-Desktop-<version>-windows-x64.zip`
+for GitHub Releases. Once a release is published:
+
+1. Open this repository's **Releases** page and download the Windows x64 ZIP
+   under **Assets** (not GitHub's source-code ZIP).
+2. Extract the entire ZIP.
+3. Open the extracted folder and double-click **Oscar Desktop.exe**.
+
+No repository checkout, Java, Python, Qt installation, or administrator setup
+is needed. Keep the executable, DLLs, `app`, and `runtime` folders together.
+The bundle is currently unsigned. Windows release validation is pending the
+first successful Windows workflow run and a clean-PC check.
+
+Maintainers: see [Windows release packaging](docs/packaging.md).
+
 ## Current workspace
 
 The left pane displays an ordered configuration tree with Configuration, TLV,
