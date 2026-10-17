@@ -1,5 +1,13 @@
 # oscar-ui
 
+[![CI status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/java-ci.yml?branch=main&label=CI)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![Java CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![Ubuntu 22.04 CI target](https://img.shields.io/badge/Ubuntu-22.04-E95420?logo=ubuntu&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![Ubuntu 24.04 CI target](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![macOS 15 CI target](https://img.shields.io/badge/macOS-15-000000?logo=apple&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![Java 21](https://img.shields.io/badge/Java-21-007396)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 **Work in progress.**
 
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
@@ -199,7 +207,8 @@ Oscar 3.1.1 fixes the classifier-error names to ErroredParameter, ErrorCode,
 and ErrorMessage so those sub-TLVs can be edited. Older text templates with
 spaced spellings must update those names or be regenerated.
 
-Use Java 21. On Linux, bootstrap also requires `curl` and `sha256sum`:
+Use Java 21. On Linux/macOS, bootstrap also requires `curl` and either `sha256sum`
+or `shasum` (available on macOS):
 
 ```sh
 scripts/bootstrap-oscar.sh
@@ -235,6 +244,17 @@ targets the repository containing the script, not the caller's directory;
 the neighboring Oscar repository's helper cannot save oscar-ui changes.
 
 ## Verification
+
+**Java CI** builds the JAR and runs service tests with Java 21 on Ubuntu 22.04,
+Ubuntu 24.04, and macOS 15 for pushes and pull requests, or on manual dispatch.
+The CI badge shows the latest `main` workflow result and becomes passing only
+when all three platform jobs succeed. The Java CI badge also links to the live
+workflow status; platform badges identify
+matrix targets. Each job uploads its JUnit reports, including on failure.
+Native Qt UI tests are excluded from this Java-only matrix. macOS coverage
+currently means Java compilation and service tests; macOS desktop packaging
+and native GUI support are not implemented.
+
 
 `./scripts/desktop.sh build` builds the desktop bundle and runs the service
 tests. `./scripts/desktop.sh smoke` stages Qt and checks the native workspace,
