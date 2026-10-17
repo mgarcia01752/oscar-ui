@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import com.comcast.oscar.configurationfile.ConfigurationFile;
 import com.comcast.oscar.configurationfile.ConfigurationFileImport;
@@ -6,10 +6,10 @@ import com.comcast.oscar.configurationfile.ConfigurationFileExport;
 import com.comcast.oscar.dictionary.TlvDictionary;
 import com.comcast.oscar.tlv.TlvBuilder;
 import com.comcast.oscar.tlv.TlvVariableBinding;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.BinaryOrigin;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.FileType;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.Document;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.Node;
+import io.oscarui.service.OscarDocumentService.BinaryOrigin;
+import io.oscarui.service.OscarDocumentService.FileType;
+import io.oscarui.service.OscarDocumentService.Document;
+import io.oscarui.service.OscarDocumentService.Node;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

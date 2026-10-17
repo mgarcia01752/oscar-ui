@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.*;
@@ -11,6 +11,30 @@ class DocumentEditingTest {
 
     private OscarDocumentService.Document open(String text) throws Exception {
         return service.open(Files.writeString(temporary.resolve("input.txt"), text));
+    }
+
+    @Test void duplicatesServiceFlowWithoutChangingOriginalOrSourceFile() throws Exception {
+        String flow = "DownstreamServiceFlow { /* keep */ ServiceFlowReference 1; QualityOfServiceParameterSetType 7; }";
+        String text = "Docsis {\r\n    " + flow + "\r\n    NetworkAccess 1;\r\n}";
+        var original = open(text);
+        var selected = original.root().children().getFirst();
+        assertTrue(service.canDuplicate(original, selected));
+        var changed = service.duplicate(original, selected);
+        assertEquals(text.replace(flow, flow + "\r\n    " + flow), changed.text());
+        assertEquals(3, changed.root().children().size());
+        var copy = changed.root().children().get(1);
+        assertEquals(2, copy.children().size());
+        var edited = service.replaceValue(changed, copy.children().getFirst(), "2");
+        assertEquals("1", edited.root().children().getFirst().children().getFirst().value());
+        assertEquals("2", edited.root().children().get(1).children().getFirst().value());
+        assertEquals(text, Files.readString(original.path()));
+        assertEquals(original.diskHash(), changed.diskHash());
+        assertFalse(service.canDuplicate(original, original.root()));
+        assertFalse(service.canDuplicate(original, selected.children().getFirst()));
+        assertFalse(service.canDuplicate(original, original.root().children().get(1)));
+        assertThrows(InspectionException.class, () -> service.duplicate(changed, selected));
+        var saved = service.save(edited, original.path(), original.diskHash());
+        assertEquals(edited.text(), service.open(saved.path()).text());
     }
 
     @Test void editsExactRepeatedInstanceAndPreservesCommentsBomAndCrLf() throws Exception {

@@ -1,7 +1,7 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
 import static org.junit.jupiter.api.Assertions.*;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService;
+import io.oscarui.service.OscarDocumentService;
 import io.qt.core.*;
 import io.qt.gui.QAction;
 import io.qt.widgets.*;
@@ -22,6 +22,31 @@ class MainWindowTest {
         QApplication.setQuitOnLastWindowClosed(false);
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
+
+    @Test void duplicatesServiceFlowAndSelectsCopy() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path file = Files.writeString(temporary.resolve("duplicate.txt"),
+                    "Docsis { DownstreamServiceFlow { ServiceFlowReference 1; QualityOfServiceParameterSetType 7; } }");
+            window.openFile(file);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            assertFalse(action(window, "duplicateTlv").isEnabled());
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            assertTrue(action(window, "duplicateTlv").isEnabled());
+            var original = window.currentDocument();
+            action(window, "duplicateTlv").trigger();
+            await(() -> window.completed() && window.currentDocument() != original);
+            assertEquals(2, tree.topLevelItem(0).childCount());
+            assertSame(tree.topLevelItem(0).child(1), tree.currentItem());
+            assertEquals(2, tree.currentItem().childCount());
+            assertTrue(tree.currentItem().isExpanded());
+            assertTrue(action(window, "fileSave").isEnabled());
+            tree.setCurrentItem(tree.currentItem().child(0));
+            assertFalse(action(window, "duplicateTlv").isEnabled());
+        } finally { window.close(); window.dispose(); }
+    }
 
     @Test void tlvColumnsSortNumericallyAndAlphabeticallyWithoutChangingSelection() throws Exception {
         var service = new OscarDocumentService();

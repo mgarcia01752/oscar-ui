@@ -45,6 +45,10 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	value in the popup. Apply updates that entry; Cancel leaves it unchanged.
 	The Edit popup also offers **Delete TLV** with confirmation. Containers can
 	be opened with **Edit TLV**; deleting one removes all its child TLVs.
+- **Edit > Duplicate TLV** or the tree context menu copies a selected top-level
+	TLV and all its children immediately after the original, then selects the copy.
+	Use this to reuse service flows; edit copied identifiers and values as needed.
+	Catalog instance limits and protected entries are respected. Save writes the changes.
 - **Edit > Del TLV** and the tree context menu delete the selected entry after
 	confirmation. Deleting a container includes its children. Protected entries
 	remain read-only.

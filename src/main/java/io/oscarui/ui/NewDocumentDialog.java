@@ -1,6 +1,6 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.FileType;
+import io.oscarui.service.OscarDocumentService.FileType;
 import io.qt.widgets.*;
 import java.util.List;
 

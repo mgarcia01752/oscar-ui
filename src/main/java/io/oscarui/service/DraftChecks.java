@@ -1,7 +1,7 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import java.util.*;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.*;
+import io.oscarui.service.OscarDocumentService.*;
 
 /** UI preview checks only. No encoder, protocol-minimum rules, or secret access. */
 public final class DraftChecks {

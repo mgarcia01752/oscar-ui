@@ -1,7 +1,7 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
-import io.github.mgarcia01752.oscarui.service.*;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService.*;
+import io.oscarui.service.*;
+import io.oscarui.service.OscarDocumentService.*;
 import io.qt.core.QTimer;
 import io.qt.core.Qt;
 import io.qt.gui.QAction;
@@ -34,6 +34,7 @@ public final class MainWindow extends QMainWindow {
     private final QAction save = action("&Save", "fileSave", null);
     private final QAction saveAs = action("&Text...", "fileSaveAs", null);
     private final QAction addTlv = action("Add &TLV...", "addTlv", null);
+    private final QAction duplicateTlv = action("Duplicate TLV", "duplicateTlv", null);
     private final QAction deleteTlv = action("&Del TLV...", "deleteTlv", null);
     private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
     private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
@@ -114,6 +115,7 @@ public final class MainWindow extends QMainWindow {
             var menu = new QMenu(tree);
             menu.addAction(addTlv);
             menu.addAction(editTlv);
+            menu.addAction(duplicateTlv);
             menu.addAction(deleteTlv);
             menu.exec(tree.viewport().mapToGlobal(point));
             menu.dispose();
@@ -157,6 +159,8 @@ public final class MainWindow extends QMainWindow {
         edit.addAction(addTlv);
         addTlv.triggered.connect(this::chooseTlv);
         edit.addAction(editTlv);
+        edit.addAction(duplicateTlv);
+        duplicateTlv.triggered.connect(this::duplicateSelectedTlv);
         edit.addAction(deleteTlv);
         editTlv.triggered.connect(this::editSelectedTlv);
         deleteTlv.triggered.connect(this::deleteSelectedTlv);
@@ -402,6 +406,18 @@ public final class MainWindow extends QMainWindow {
         } finally { dialog.dispose(); }
     }
 
+    private void duplicateSelectedTlv() {
+        Node selected = nodes.get(tree.currentItem());
+        if (pending != null || !service.canDuplicate(document, selected)) return;
+        Document original = document;
+        int index = original.root().children().indexOf(selected) + 1;
+        submit(() -> service.duplicate(original, selected), changed -> {
+            display(changed, true);
+            selectCorresponding(changed.root().children().get(index));
+            tree.currentItem().setExpanded(true);
+        });
+    }
+
     private void deleteSelectedTlv() {
         Node selected = nodes.get(tree.currentItem());
         if (pending != null || document == null || !service.canDelete(document, selected)) return;
@@ -587,6 +603,7 @@ public final class MainWindow extends QMainWindow {
         secretsAction.setEnabled(idle);
         configChecks.setEnabled(idle && document != null);
         Node selected = nodes.get(tree.currentItem());
+        duplicateTlv.setEnabled(idle && service.canDuplicate(document, selected));
         deleteTlv.setEnabled(idle && document != null && service.canDelete(document, selected));
         editTlv.setEnabled(idle && canOpenEditor(selected));
         Node parent = insertionParent();

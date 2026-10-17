@@ -1,7 +1,7 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
 import com.comcast.oscar.dictionary.TlvDefinition;
-import io.github.mgarcia01752.oscarui.service.OscarDocumentService;
+import io.oscarui.service.OscarDocumentService;
 import io.qt.core.QRegularExpression;
 import io.qt.core.Qt;
 import io.qt.gui.QRegularExpressionValidator;

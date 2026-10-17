@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
 import io.qt.gui.QPalette;
 import io.qt.widgets.QApplication;

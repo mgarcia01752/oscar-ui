@@ -130,7 +130,7 @@ def package(kind):
         raise RuntimeError(f'Output already exists: {destination}; move or delete it before rebuilding.')
     args = [java_tool('jpackage'), '--type', kind, '--name', 'Oscar Desktop', '--app-version', VERSION,
             '--vendor', 'Oscar Desktop contributors', '--input', app, '--dest', destination,
-            '--main-jar', f'oscar-ui-{VERSION}.jar', '--main-class', 'io.github.mgarcia01752.oscarui.DesktopApplication',
+            '--main-jar', f'oscar-ui-{VERSION}.jar', '--main-class', 'io.oscarui.DesktopApplication',
             '--add-modules', 'java.base,java.desktop,java.logging,java.xml,java.sql,java.naming,java.management,jdk.unsupported,jdk.crypto.ec',
             '--java-options', '-Djava.library.path=$APPDIR/qt/lib',
             '--java-options', '-Dio.qt.pluginpath=$APPDIR/qt/plugins']

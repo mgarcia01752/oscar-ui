@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import com.comcast.oscar.configurationfile.ConfigurationFileImport;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.*;

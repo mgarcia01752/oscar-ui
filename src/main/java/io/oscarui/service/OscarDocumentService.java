@@ -1,4 +1,4 @@
-package io.github.mgarcia01752.oscarui.service;
+package io.oscarui.service;
 
 import com.comcast.oscar.configurationfile.ConfigurationFileExport;
 import com.comcast.oscar.dictionary.TlvDefinition;
@@ -403,6 +403,26 @@ public final class OscarDocumentService {
             throw new InspectionException("Editing must preserve the number of TLV entries.");
         }
         return changed.withOrigin(document.origin());
+    }
+
+    public boolean canDuplicate(Document document, Node node) {
+        if (document == null || !canDelete(document, node)
+                || !document.root().children().contains(node)) return false;
+        int limit = definition(document, node).maxInstances();
+        return limit < 0 || document.root().children().stream()
+                .filter(child -> child.path().equals(node.path())).count() < limit;
+    }
+
+    public Document duplicate(Document document, Node node) throws InspectionException {
+        if (!canDuplicate(document, node)) {
+            throw new InspectionException("This top-level TLV cannot be duplicated or has reached its instance limit.");
+        }
+        String text = document.text();
+        String newline = text.contains("\r\n") ? "\r\n" : "\n";
+        String addition = newline + "    " + text.substring(node.start(), node.end());
+        return parse(document.path(), text.substring(0, node.end()) + addition
+                + text.substring(node.end()), document.diskHash(), document.reference())
+                .withOrigin(document.origin());
     }
 
     public Document delete(Document document, Node node) throws InspectionException {

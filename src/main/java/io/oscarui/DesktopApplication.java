@@ -1,6 +1,6 @@
-package io.github.mgarcia01752.oscarui;
+package io.oscarui;
 
-import io.github.mgarcia01752.oscarui.ui.MainWindow;
+import io.oscarui.ui.MainWindow;
 import io.qt.core.QTimer;
 import io.qt.core.QLibraryInfo;
 import io.qt.widgets.QApplication;

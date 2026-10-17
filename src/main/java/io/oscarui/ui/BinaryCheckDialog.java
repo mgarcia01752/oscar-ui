@@ -1,6 +1,6 @@
-package io.github.mgarcia01752.oscarui.ui;
+package io.oscarui.ui;
 
-import io.github.mgarcia01752.oscarui.service.*;
+import io.oscarui.service.*;
 import io.qt.widgets.*;
 import java.util.List;
 import java.util.function.BooleanSupplier;
