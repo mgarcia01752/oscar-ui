@@ -102,7 +102,9 @@ public final class MainWindow extends QMainWindow {
         });
         tree.itemDoubleClicked.connect((item, column) -> {
             tree.setCurrentItem(item);
-            editSelectedTlv();
+            Node selected = nodes.get(item);
+            if (document != null && service.canPopulate(document, selected)) populateContainer(selected);
+            else editSelectedTlv();
         });
         tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);
         tree.customContextMenuRequested.connect(point -> {
@@ -343,6 +345,10 @@ public final class MainWindow extends QMainWindow {
         if (document == null || pending != null) return;
         Document original = document;
         Node parent = insertionParent();
+        if (service.canPopulate(original, parent)) {
+            populateContainer(parent);
+            return;
+        }
         submit(() -> service.choices(original, parent), choices -> {
             var dialog = new AddTlvDialog(this, service, original, parent, choices);
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
@@ -357,6 +363,7 @@ public final class MainWindow extends QMainWindow {
                             nodes.forEach((item, node) -> {
                                 if (node == inserted) {
                                     for (var ancestor = item.parent(); ancestor != null; ancestor = ancestor.parent()) ancestor.setExpanded(true);
+                                    item.setExpanded(true);
                                     tree.setCurrentItem(item);
                                     tree.scrollToItem(item);
                                 }
@@ -364,6 +371,17 @@ public final class MainWindow extends QMainWindow {
                         });
             }
             dialog.dispose();
+        });
+    }
+
+    private void populateContainer(Node container) {
+        if (document == null || pending != null || !service.canPopulate(document, container)) return;
+        Document original = document;
+        submit(() -> service.populate(original, container), changed -> {
+            display(changed, true);
+            selectCorresponding(container);
+            var selected = tree.currentItem();
+            if (selected != null) selected.setExpanded(true);
         });
     }
 

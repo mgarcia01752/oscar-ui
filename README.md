@@ -28,6 +28,15 @@ and unrelated formatting.
   MICs nor complete configuration validity.
 - **Edit > Add TLV** and the tree context menu offer available children of the
 	selected container, with searchable names, paths, descriptions, and metadata.
+
+Adding a container also inserts its immediate registry children as blank
+placeholders. Nested containers stay empty until **Add TLV** or double-click
+explicitly populates that level. Delete unwanted children and enter supported
+values through the existing tree actions; selection alone never edits a file.
+Child counts follow the selected catalog, not fixed numeric ranges. Unsupported
+codecs and legacy spaced-name placeholders remain read-only but removable;
+deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
+
 - **Double-click a scalar TLV** (or **Edit > Edit TLV**) to open its current
 	value in the popup. Apply updates that entry; Cancel leaves it unchanged.
 - **Edit > Del TLV** and the tree context menu delete the selected entry after
@@ -210,6 +219,9 @@ preservation of the current document. Service fixtures also cover DOCSIS edition
 isolation, DPoE decoding, unsupported PacketCable SNMP, repeated entry order,
 origin retention during edits, aliases, and input size limits.
 Native dialog tests are skipped in ordinary Maven runs without this opt-in.
+Container tests cover immediate-only scaffolding, explicit nested population,
+registry/version isolation, placeholder deletion, no selection-triggered edits,
+last-child removal without automatic refill, and text fidelity.
 Service tests cover all discovered template types, nested insertion, text fidelity,
 safe-save failures, and external-change detection. Windows desktop behavior has
 not yet been verified.

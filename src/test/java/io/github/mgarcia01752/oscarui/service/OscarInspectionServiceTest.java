@@ -111,7 +111,7 @@ class OscarInspectionServiceTest {
         var empty = documents.create(type, false);
         var container = documents.choices(empty, empty.root()).stream().filter(entry -> entry.path().equals(java.util.List.of(17)))
                 .findFirst().orElseThrow();
-        var withContainer = documents.insert(empty, empty.root(), container, "");
+        var withContainer = documents.open(input(type.header() + " { " + container.name() + "; }"));
         var parent = withContainer.root().children().get(0);
         var child = documents.choices(withContainer, parent).stream().filter(entry -> entry.path().equals(java.util.List.of(17, 1)))
                 .findFirst().orElseThrow();

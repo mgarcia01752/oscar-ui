@@ -43,7 +43,7 @@ class DocumentEditingTest {
         var empty = service.create(type, false);
         var parentDefinition = service.choices(empty, empty.root()).stream()
                 .filter(d -> d.path().equals(java.util.List.of(17))).findFirst().orElseThrow();
-        var withParent = service.insert(empty, empty.root(), parentDefinition, "");
+        var withParent = open(type.header() + " { " + parentDefinition.name() + "; }");
         var parent = withParent.root().children().getFirst();
         var childDefinition = service.choices(withParent, parent).stream()
                 .filter(d -> d.path().equals(java.util.List.of(17, 1))).findFirst().orElseThrow();
@@ -67,5 +67,49 @@ class DocumentEditingTest {
         var checks = DraftChecks.inspect(service, document, false);
         assertTrue(checks.stream().anyMatch(c -> c.id().equals("minimum-rules") && c.status().equals("NOT IMPLEMENTED")));
         assertTrue(checks.stream().anyMatch(c -> c.id().equals("shared-secret") && c.status().equals("MISSING")));
+    }
+
+    @Test void scaffoldsImmediateRegistryChildrenAndPopulatesNestedContainersExplicitly() throws Exception {
+        for (String header : java.util.List.of("Docsis", "Docsis-4.0")) {
+            var type = service.types().stream().filter(entry -> entry.header().equals(header)).findFirst().orElseThrow();
+            var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family());
+            String text = "\uFEFF/* keep */\r\n" + header + " {\r\n}\r\n";
+            var original = open(text);
+            var classifier = registry.find(java.util.List.of(22));
+                if (classifier == null) {
+                classifier = service.choices(original, original.root()).stream()
+                    .filter(entry -> registry.children(entry.path()).stream()
+                        .anyMatch(child -> service.isContainer(type, child)
+                            && service.editingIssue(type, child).isEmpty()))
+                    .findFirst().orElseThrow();
+                }
+            var changed = service.insert(original, original.root(), classifier, "");
+            var parent = changed.root().children().getFirst();
+            var expected = registry.children(classifier.path()).stream()
+                    .filter(child -> !service.editingIssue(type, child).equals("Deferred editing scope"))
+                    .filter(child -> child.maxInstances() != 0).map(com.comcast.oscar.dictionary.TlvDefinition::path).toList();
+            assertEquals(expected, parent.children().stream().map(OscarDocumentService.Node::path).toList());
+            assertTrue(parent.children().stream().allMatch(child -> child.children().isEmpty() && child.value().isEmpty()));
+            assertTrue(parent.children().stream().allMatch(child -> service.canDelete(changed, child)));
+            assertTrue(changed.text().startsWith("\uFEFF/* keep */\r\n"));
+            assertFalse(changed.text().replace("\r\n", "").contains("\n"));
+            assertEquals(text, Files.readString(original.path()));
+                var nested = parent.children().stream().filter(OscarDocumentService.Node::container)
+                    .findFirst().orElseThrow();
+            assertTrue(service.canPopulate(changed, nested));
+            var populated = service.populate(changed, nested);
+            var updatedNested = populated.root().children().getFirst().children().stream()
+                    .filter(child -> child.path().equals(nested.path())).findFirst().orElseThrow();
+            assertEquals(registry.children(nested.path()).stream()
+                            .filter(child -> !service.editingIssue(type, child).equals("Deferred editing scope"))
+                            .filter(child -> child.maxInstances() != 0)
+                            .map(com.comcast.oscar.dictionary.TlvDefinition::path).toList(),
+                    updatedNested.children().stream().map(OscarDocumentService.Node::path).toList());
+            assertFalse(service.canPopulate(populated, updatedNested));
+            assertThrows(InspectionException.class, () -> service.populate(populated, nested));
+            assertThrows(InspectionException.class, () -> service.populate(populated, updatedNested));
+            var saved = service.save(populated, temporary.resolve(header + "-scaffold.txt"), null);
+            assertEquals(populated.text(), service.open(saved.path()).text());
+        }
     }
 }

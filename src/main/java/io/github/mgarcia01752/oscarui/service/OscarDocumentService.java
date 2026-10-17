@@ -189,6 +189,13 @@ public final class OscarDocumentService {
         var registry = catalogs.get(type.family()).registry();
         var definition = registry.children(parent).stream().filter(entry -> entry.name().equalsIgnoreCase(name))
             .findFirst().orElse(null);
+        boolean namedPlaceholder = false;
+        if (definition == null) {
+            String statement = text.substring(context.getStart().getStartIndex(), context.getStop().getStopIndex()).strip();
+            definition = registry.children(parent).stream().filter(entry -> entry.name().equalsIgnoreCase(statement))
+                    .findFirst().orElse(null);
+            namedPlaceholder = definition != null;
+        }
         if (definition == null && !reference) throw new IllegalArgumentException("Unknown TLV");
         var definitionPath = new ArrayList<>(parent);
         definitionPath.add(-1);
@@ -201,6 +208,7 @@ public final class OscarDocumentService {
         if (context instanceof tlvParser.EmptyTLVContext) value = "";
         if (context instanceof tlvParser.TlvContext scalar) value = scalar.typeValue().getStart().getText();
         if (context instanceof tlvParser.STlvContext scalar) value = scalar.subTypeValue().getStart().getText();
+        if (namedPlaceholder) value = "";
         if (context instanceof tlvParser.SubContext container) {
             for (var child : container.subTLV()) {
                 children.add(node((ParserRuleContext) child.getChild(0), resolvedPath, type, text, reference));
@@ -208,7 +216,7 @@ public final class OscarDocumentService {
             close = container.RBRACE().getSymbol().getStartIndex();
             value = "";
         }
-        return new Node(resolvedPath, name, value, children, start, end, close,
+        return new Node(resolvedPath, definition == null ? name : definition.name(), value, children, start, end, close,
             definition != null && !registry.children(resolvedPath).isEmpty());
     }
 
@@ -240,6 +248,7 @@ public final class OscarDocumentService {
                 }
             }
         }
+        if (definition.name().chars().anyMatch(Character::isWhitespace)) return "Unsupported text name";
         return isContainer(type, definition) || VALUE_CODECS.contains(definition.codec()) ? "" : "Unsupported encoding";
     }
 
@@ -274,19 +283,21 @@ public final class OscarDocumentService {
         String supplied = value.strip();
         String issue = valueIssue(document.type(), definition, value);
         if (!issue.isEmpty()) throw new InspectionException(issue + ".");
-        String entry = definition.name() + (container ? "" : " " + supplied) + ";";
+        int depth = parent.path().size() + 1;
+        String newline = document.text().contains("\r\n") ? "\r\n" : "\n";
+        var children = container ? scaffoldChildren(document.type(), definition.path()) : List.<TlvDefinition>of();
+        String entry = container ? definition.name() + scaffoldBody(children, depth, newline)
+                : definition.name() + " " + supplied + ";";
         var probe = parser(entry);
         try {
             var parsed = probe.startTLV();
             if (probe.getTokenStream().LA(1) != Token.EOF
-                    || !parsed.getStart().getText().equals(definition.name()) || parsed.sub() != null) {
+                    || !parsed.getStart().getText().equals(definition.name()) || !container && parsed.sub() != null) {
                 throw new IllegalArgumentException();
             }
         } catch (RuntimeException error) {
             throw new InspectionException("The value does not match Oscar's text syntax.", error);
         }
-        int depth = parent.path().size() + 1;
-        String newline = document.text().contains("\r\n") ? "\r\n" : "\n";
         String addition = newline + "    ".repeat(depth) + entry + newline + "    ".repeat(depth - 1);
         String text;
         if (!parent.path().isEmpty() && document.text().charAt(parent.close()) == ';') {
@@ -296,8 +307,43 @@ public final class OscarDocumentService {
             text = document.text().substring(0, parent.close()) + addition + document.text().substring(parent.close());
         }
         Document changed = parse(document.path(), text, document.diskHash(), document.reference());
-        if (count(changed.root()) != count(document.root()) + 1) {
+        if (count(changed.root()) != count(document.root()) + 1 + children.size()) {
             throw new InspectionException("A value must not insert additional TLV statements.");
+        }
+        return changed.withOrigin(document.origin());
+    }
+
+    private List<TlvDefinition> scaffoldChildren(FileType type, List<Integer> path) {
+        return catalogs.get(type.family()).registry().children(path).stream()
+                .filter(child -> !editingIssue(type, child).equals("Deferred editing scope"))
+                .filter(child -> child.maxInstances() != 0).toList();
+    }
+
+    private String scaffoldBody(List<TlvDefinition> children, int depth, String newline) {
+        if (children.isEmpty()) return ";";
+        return " {" + newline + children.stream()
+                .map(child -> "    ".repeat(depth + 1) + child.name() + ";")
+                .collect(java.util.stream.Collectors.joining(newline))
+                + newline + "    ".repeat(depth) + "}";
+    }
+
+    public boolean canPopulate(Document document, Node node) {
+        return node != null && !node.path().isEmpty() && node.container() && node.children().isEmpty()
+                && contains(document.root(), node) && definition(document, node) != null
+                && editingIssue(document.type(), definition(document, node)).isEmpty()
+                && !scaffoldChildren(document.type(), node.path()).isEmpty();
+    }
+
+    public Document populate(Document document, Node container) throws InspectionException {
+        if (!canPopulate(document, container)) throw new InspectionException("Select an empty supported TLV container.");
+        var children = scaffoldChildren(document.type(), container.path());
+        String newline = document.text().contains("\r\n") ? "\r\n" : "\n";
+        String text = document.text().substring(0, container.close())
+                + scaffoldBody(children, container.path().size(), newline)
+                + document.text().substring(container.end());
+        var changed = parse(document.path(), text, document.diskHash(), document.reference());
+        if (count(changed.root()) != count(document.root()) + children.size()) {
+            throw new InspectionException("Container population must preserve existing TLV entries.");
         }
         return changed.withOrigin(document.origin());
     }
@@ -309,12 +355,15 @@ public final class OscarDocumentService {
     public boolean canDelete(Document document, Node node) {
         if (node == null || node.path().isEmpty() || !contains(document.root(), node)) return false;
         var definition = definition(document, node);
-        return definition != null && editingIssue(document.type(), definition).isEmpty()
+        return definition != null && (editingIssue(document.type(), definition).isEmpty()
+            || node.value().isEmpty() && node.children().isEmpty()
+                && Set.of("Unsupported encoding", "Unsupported text name").contains(editingIssue(document.type(), definition)))
                 && node.children().stream().allMatch(child -> canDelete(document, child));
     }
 
     public boolean canEdit(Document document, Node node) {
-        return canDelete(document, node) && !node.container() && node.children().isEmpty();
+        return canDelete(document, node) && !node.container() && node.children().isEmpty()
+            && editingIssue(document.type(), definition(document, node)).isEmpty();
     }
 
     public Document replaceValue(Document document, Node node, String value) throws InspectionException {

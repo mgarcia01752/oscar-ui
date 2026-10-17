@@ -23,6 +23,66 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void addsImmediateChildrenAndPopulatesNestedContainersOnlyOnExplicitAction() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            var service = new OscarDocumentService();
+            var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+            var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family());
+            var definition = registry.find(java.util.List.of(22));
+            window.createDocument(type, false);
+            await(() -> window.completed() && window.currentDocument() != null);
+            respond(window, dialog -> {
+                dialog.findChild(QLineEdit.class, "tlvSearch").setText(definition.name());
+                assertTrue(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
+                dialog.findChild(QPushButton.class, "confirmAddTlv").click();
+            });
+            action(window, "addTlv").trigger();
+            await(() -> window.completed() && !window.currentDocument().root().children().isEmpty());
+            assertCallback();
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var classifier = tree.topLevelItem(0).child(0);
+            assertEquals(registry.children(definition.path()).size(), classifier.childCount());
+            assertTrue(classifier.isExpanded());
+            assertSame(classifier, tree.currentItem());
+            int nestedIndex = java.util.stream.IntStream.range(0, classifier.childCount())
+                    .filter(index -> classifier.child(index).text(0).equals(registry.find(java.util.List.of(22, 8)).name()))
+                    .findFirst().orElseThrow();
+            var nested = classifier.child(nestedIndex);
+            var original = window.currentDocument();
+            tree.setCurrentItem(nested);
+            nested.setExpanded(true);
+            QApplication.processEvents();
+            assertSame(original, window.currentDocument());
+            assertEquals(0, nested.childCount());
+            tree.itemDoubleClicked.emit(nested, 0);
+            await(() -> window.completed() && window.currentDocument() != original);
+            int childCount = registry.children(java.util.List.of(22, 8)).size();
+            assertEquals(childCount, tree.topLevelItem(0).child(0).child(nestedIndex).childCount());
+            assertTrue(tree.currentItem().isExpanded());
+            window.grab().save("target/ui-container-scaffold.png");
+            for (int remaining = childCount; remaining > 0; remaining--) {
+                var current = window.currentDocument();
+                tree.setCurrentItem(tree.topLevelItem(0).child(0).child(nestedIndex).child(0));
+                assertFalse(action(window, "editTlv").isEnabled());
+                assertTrue(action(window, "deleteTlv").isEnabled());
+                respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Yes).click());
+                action(window, "deleteTlv").trigger();
+                await(() -> window.completed() && window.currentDocument() != current);
+                assertCallback();
+            }
+            assertEquals(0, tree.topLevelItem(0).child(0).child(nestedIndex).childCount());
+            var emptied = window.currentDocument();
+            QApplication.processEvents();
+            assertSame(emptied, window.currentDocument());
+            action(window, "addTlv").trigger();
+            await(() -> window.completed() && window.currentDocument() != emptied);
+            assertEquals(childCount, tree.topLevelItem(0).child(0).child(nestedIndex).childCount());
+            assertEquals(window.currentDocument().text(), window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void opensBinaryThroughMenuAndSavesDecodedTextSeparately() throws Exception {
         var window = new MainWindow(false);
         window.show();
