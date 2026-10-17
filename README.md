@@ -27,7 +27,8 @@ and unrelated formatting.
   output. Input and decoded text are limited to 1 MiB; opening verifies neither
   MICs nor complete configuration validity.
 - **Edit > Add TLV** and the tree context menu offer available children of the
-	selected container, with searchable names, paths, descriptions, and metadata.
+	selected container, with searchable names, paths, and descriptions. Add and Edit show the data
+	type with an input example or range instead of catalog metadata.
 
 Adding a container also inserts its immediate registry children as blank
 placeholders. Nested containers stay empty until **Add TLV** or double-click
@@ -233,3 +234,7 @@ last-child removal without automatic refill, and text fidelity.
 Service tests cover all discovered template types, nested insertion, text fidelity,
 safe-save failures, and external-change detection. Windows desktop behavior has
 not yet been verified.
+
+The workspace heading shows only the filename, with **Text** or **Binary** on
+the right. Binary imports use their original filename until saved as text.
+The bottom area shows operation feedback only; the draft summary is omitted.

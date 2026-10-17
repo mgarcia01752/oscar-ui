@@ -147,6 +147,10 @@ class MainWindowTest {
             var imported = window.currentDocument();
             assertNull(imported.path());
             assertEquals(input, imported.origin().path());
+            assertEquals("input.cfg", window.findChild(QLabel.class, "documentName").text());
+            assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
+            assertFalse(window.windowTitle().contains("Untitled"));
+            assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
             assertEquals("NetworkAccess", window.findChild(QTreeWidget.class, "configurationTree").topLevelItem(0).child(0).text(0));
             assertEquals(imported.text(), window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
             assertTrue(action(window, "fileSave").isEnabled());
@@ -166,6 +170,9 @@ class MainWindowTest {
             await(() -> window.completed() && text.equals(window.currentDocument().path()));
             assertCallback();
             assertEquals(imported.text(), Files.readString(text));
+            assertEquals("decoded.txt", window.findChild(QLabel.class, "documentName").text());
+            assertEquals("Text", window.findChild(QLabel.class, "documentType").text());
+            assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
             assertFalse(action(window, "fileSave").isEnabled());
             assertArrayEquals(java.util.HexFormat.of().parseHex("030101ff00"), Files.readAllBytes(input));
         } finally { window.close(); window.dispose(); }

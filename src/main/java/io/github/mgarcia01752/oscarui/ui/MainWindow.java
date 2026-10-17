@@ -22,11 +22,11 @@ public final class MainWindow extends QMainWindow {
         thread.setDaemon(true);
         return thread;
     });
-    private final QLabel pathLabel = new QLabel("No file selected");
+    private final QLabel fileLabel = new QLabel("No file selected");
     private final QLabel typeLabel = new QLabel();
     private final QPlainTextEdit content = new QPlainTextEdit();
     private final QTreeWidget tree = new QTreeWidget();
-    private final QLabel status = new QLabel("Ready");
+    private final QLabel status = new QLabel();
     private final Map<QTreeWidgetItem, Node> nodes = new HashMap<>();
     private final Map<Node, Node> parents = new IdentityHashMap<>();
     private final QAction newFile = action("&New...", "fileNew", QKeySequence.StandardKey.New);
@@ -66,12 +66,15 @@ public final class MainWindow extends QMainWindow {
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
         var heading = new QHBoxLayout();
-        pathLabel.setWordWrap(true);
+        fileLabel.setWordWrap(true);
+        fileLabel.setObjectName("documentName");
         typeLabel.setObjectName("documentType");
-        heading.addWidget(pathLabel, 1);
+        heading.addWidget(fileLabel, 1);
         heading.addWidget(typeLabel);
         layout.addLayout(heading);
         status.setWordWrap(true);
+        status.setObjectName("operationStatus");
+        status.setVisible(false);
         content.setObjectName("configurationText");
         content.setReadOnly(true);
         content.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap);
@@ -329,7 +332,6 @@ public final class MainWindow extends QMainWindow {
         updateMicVisibility();
         rootItem.setExpanded(true);
         tree.setCurrentItem(rootItem);
-        typeLabel.setText(current.type().header());
         updateDocumentLabels();
         updateActions();
     }
@@ -358,14 +360,18 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void updateDocumentLabels() {
-        String path = document.path() == null ? "Untitled" : document.path().toString();
-        pathLabel.setText(path + (document.origin() == null ? "" : " | Decoded from: " + document.origin().path()));
-        setWindowTitle((document.path() == null ? "Untitled" : document.path().getFileName().toString())
-                + (modified ? " *" : "") + " - Oscar Desktop");
-        status.setText(OscarDocumentService.count(document.root()) + " entries | "
-                + (document.reference() ? "Reference template - not validated" : "Draft - syntax/catalog inspection only")
-                + (document.origin() == null ? "" : " | Decoded binary; integrity unverified")
-                + (modified ? " | Modified" : ""));
+        var file = document.path() != null ? document.path()
+                : document.origin() == null ? null : document.origin().path();
+        String name = file == null ? "Untitled" : file.getFileName().toString();
+        fileLabel.setText(name);
+        typeLabel.setText(document.path() == null && document.origin() != null ? "Binary" : "Text");
+        setWindowTitle(name + (modified ? " *" : "") + " - Oscar Desktop");
+        showStatus("");
+    }
+
+    private void showStatus(String message) {
+        status.setText(message);
+        status.setVisible(!message.isEmpty());
     }
 
     private Node insertionParent() {
@@ -501,7 +507,7 @@ public final class MainWindow extends QMainWindow {
                     new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No),
                     QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) return;
             submit(() -> binaryService.save(original, target, observedHash, sharedSecret), saved -> {
-                status.setText("Binary saved: " + saved + " | Checks skipped; text edits remain unchanged.");
+                showStatus("Binary saved.");
             });
         });
     }
@@ -578,7 +584,7 @@ public final class MainWindow extends QMainWindow {
             Result result = operation.call();
             return () -> apply.accept(result);
         });
-        status.setText("Working...");
+        showStatus("Working...");
         updateActions();
     }
 
@@ -591,7 +597,7 @@ public final class MainWindow extends QMainWindow {
             succeeded = true;
             updateActions();
             if (document != null) updateDocumentLabels();
-            else status.setText("Ready");
+            else showStatus("");
             apply.run();
         } catch (ExecutionException | RuntimeException error) {
             pending = null;
@@ -601,7 +607,7 @@ public final class MainWindow extends QMainWindow {
             Throwable cause = error instanceof ExecutionException ? error.getCause() : error;
             String message = cause instanceof InspectionException ? cause.getMessage()
                     : "The document operation failed. Check the file and Oscar dependencies.";
-            status.setText(message);
+            showStatus(message);
             if (interactive) QMessageBox.warning(this, "Document operation failed", message);
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();
@@ -609,7 +615,7 @@ public final class MainWindow extends QMainWindow {
             completed = true;
             succeeded = false;
             updateActions();
-            status.setText("Operation interrupted.");
+            showStatus("Operation interrupted.");
         }
     }
 
@@ -644,7 +650,7 @@ public final class MainWindow extends QMainWindow {
     @Override protected void closeEvent(QCloseEvent event) {
         if (interactive && pending != null) {
             event.ignore();
-            status.setText("Wait for the current operation to finish.");
+            showStatus("Wait for the current operation to finish.");
             return;
         }
         if (interactive && modified) {

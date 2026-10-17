@@ -40,6 +40,7 @@ final class AddTlvDialog extends QDialog {
         description.setMaximumHeight(135);
         layout.addWidget(description);
         var metadata = new QLabel();
+        metadata.setObjectName("tlvValueHelp");
         metadata.setWordWrap(true);
         layout.addWidget(metadata);
         var form = new QFormLayout();
@@ -76,12 +77,8 @@ final class AddTlvDialog extends QDialog {
             if (oldValidator != null) oldValidator.dispose();
             valueLabel.setText(numeric ? "Decimal value" : "Value");
             description.setPlainText(selected == null ? "" : selected.description());
-            metadata.setText(selected == null ? "No available TLVs" : selected.codec() + " | Length: "
-                    + selected.lengthMin() + "-" + selected.lengthMax() + " | Version: "
-                    + selected.supportedVersion() + " | Instances: "
-                    + (selected.maxInstances() < 0 ? "Unlimited" : selected.maxInstances())
-                    + (service.editingIssue(document.type(), selected).isEmpty() ? ""
-                    : " | " + service.editingIssue(document.type(), selected)));
+            metadata.setText(selected == null ? "No available TLVs"
+                    : valueHelp(selected, service.isContainer(document.type(), selected)));
             update.run();
         });
         value.textChanged.connect(text -> update.run());
@@ -108,6 +105,30 @@ final class AddTlvDialog extends QDialog {
             value.setFocus();
             value.selectAll();
         }
+    }
+
+    static String valueHelp(TlvDefinition definition, boolean container) {
+        if (container) return "Container | Add values to its child TLVs";
+        return switch (definition.codec()) {
+            case "unsigned_integer" -> "Unsigned integer | Range: 0 to "
+                    + java.math.BigInteger.ONE.shiftLeft(definition.lengthMax() * 8)
+                        .subtract(java.math.BigInteger.ONE);
+            case "integer" -> "Integer | Example: 1 (decimal)";
+            case "byte" -> "Byte | Example: 1 (decimal)";
+            case "string" -> "Text | Example: \"example\"";
+            case "string_null_terminated" -> "Null-terminated text | Example: \"example\"";
+            case "string_bits" -> "Bit string | Example: (00000001)";
+            case "byte_array" -> "Hex bytes | Example: [00:01:FF]";
+            case "double_byte_array" -> "Byte pairs | Example: (1,2)(3,4)";
+            case "mac_address" -> "MAC address | Example: 00:11:22:33:44:55";
+            case "byte_array_ipv4_address" -> "IPv4 address | Example: 192.0.2.1";
+            case "byte_array_ipv6_address" -> "IPv6 address | Example: 2001:db8:0:0:0:0:0:1";
+            case "transport_address_ipv4_address" -> "IPv4 address and port | Example: 192.0.2.1(161)";
+            case "transport_address_ipv6_address" -> "IPv6 address and port | Example: 2001:db8:0:0:0:0:0:1(161)";
+            case "byte_array_inet_transport_address" -> "IP address and port | Example: 192.0.2.1(161)";
+            case "byte_array_inet_address" -> "IP address | Example: 192.0.2.1";
+            default -> definition.codec().replace('_', ' ');
+        };
     }
 
     Selection selection() { return new Selection(selected, value.text()); }
