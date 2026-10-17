@@ -23,6 +23,45 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void hidesGeneratedMicsUntilEnabledAndKeepsThemReadOnly() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            String source = "Docsis { NetworkAccess 1; CmMic [00]; CmtsMic [00]; }";
+            window.openFile(Files.writeString(temporary.resolve("mic.txt"), source));
+            await(() -> window.completed() && window.currentDocument() != null);
+            var original = window.currentDocument();
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var root = tree.topLevelItem(0);
+            var toggle = action(window, "showMicTlvs");
+            assertTrue(toggle.isCheckable());
+            assertFalse(toggle.isChecked());
+            assertFalse(root.child(0).isHidden());
+            assertTrue(root.child(1).isHidden());
+            assertTrue(root.child(2).isHidden());
+            toggle.trigger();
+            for (int index = 1; index <= 2; index++) {
+                var mic = root.child(index);
+                assertFalse(mic.isHidden());
+                tree.setCurrentItem(mic);
+                assertFalse(action(window, "editTlv").isEnabled());
+                assertFalse(action(window, "deleteTlv").isEnabled());
+                tree.itemDoubleClicked.emit(mic, 0);
+                assertSame(original, window.currentDocument());
+            }
+            toggle.trigger();
+            assertSame(root, tree.currentItem());
+            assertSame(original, window.currentDocument());
+            assertEquals(source, window.currentDocument().text());
+            var service = new OscarDocumentService();
+            service.types();
+            assertTrue(service.choices(original, original.root()).stream()
+                    .noneMatch(entry -> service.isGeneratedMic(original.type(), entry.path())));
+            assertFalse(service.isGeneratedMic(original.type(), java.util.List.of(24, 6)));
+            assertFalse(window.windowTitle().contains("*"));
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void addsImmediateChildrenAndPopulatesNestedContainersOnlyOnExplicitAction() throws Exception {
         var window = new MainWindow(false);
         window.show();
@@ -397,11 +436,9 @@ class MainWindowTest {
         try {
             respond(window, dialog -> {
                 assertEquals("secretsDialog", dialog.objectName());
-                var community = dialog.findChild(QLineEdit.class, "communityString");
+                assertNull(dialog.findChild(QLineEdit.class, "communityString"));
                 var shared = dialog.findChild(QLineEdit.class, "sharedSecret");
-                assertEquals(QLineEdit.EchoMode.Password, community.echoMode());
                 assertEquals(QLineEdit.EchoMode.Password, shared.echoMode());
-                community.setText("public-test-community");
                 shared.setText("public-test-key");
                 dialog.findChild(QPushButton.class, "applySecrets").click();
             });
@@ -451,7 +488,7 @@ class MainWindowTest {
         var next = new MainWindow(false);
         try {
             respond(next, dialog -> {
-                assertTrue(dialog.findChild(QLineEdit.class, "communityString").text().isEmpty());
+                assertNull(dialog.findChild(QLineEdit.class, "communityString"));
                 assertTrue(dialog.findChild(QLineEdit.class, "sharedSecret").text().isEmpty());
                 dialog.reject();
             });
@@ -587,7 +624,6 @@ class MainWindowTest {
                 var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");
                 assertFalse(hash.isChecked());
                 hash.setChecked(true);
-                dialog.findChild(QLineEdit.class, "communityString").setText("public-community");
                 dialog.findChild(QLineEdit.class, "sharedSecret").setText("public-key");
                 assertTrue(dialog.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
                 dialog.grab().save("target/ui-global-secrets-dark.png");
@@ -602,7 +638,7 @@ class MainWindowTest {
             respond(window, dialog -> {
                 var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");
                 assertTrue(hash.isChecked());
-                assertEquals("public-community", dialog.findChild(QLineEdit.class, "communityString").text());
+                assertNull(dialog.findChild(QLineEdit.class, "communityString"));
                 assertEquals("public-key", dialog.findChild(QLineEdit.class, "sharedSecret").text());
                 dialog.grab().save("target/ui-global-secrets-light.png");
                 hash.setChecked(false);

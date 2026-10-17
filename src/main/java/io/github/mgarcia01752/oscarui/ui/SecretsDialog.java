@@ -10,13 +10,11 @@ final class SecretsDialog extends QDialog {
         setMinimumWidth(500);
         var layout = new QVBoxLayout(this);
         var note = new QLabel("Session only: values are forgotten when you close Oscar Desktop. "
-                + "The shared secret is used for binary export. The community string is not yet used. Encrypted storage is not implemented.");
+                + "The shared secret is used for binary export. Encrypted storage is not implemented.");
         note.setWordWrap(true);
         layout.addWidget(note);
         var form = new QFormLayout();
-        var community = field("communityString", secrets.communityValue());
         var shared = field("sharedSecret", secrets.sharedValue());
-        form.addRow("Community string (commstring)", community);
         form.addRow("Shared secret", shared);
         layout.addLayout(form);
         var hashCommunity = new QCheckBox("Hash community strings");
@@ -26,20 +24,20 @@ final class SecretsDialog extends QDialog {
         var hashingNote = new QLabel("Hashing preference only for now; the algorithm and export behavior are not implemented.");
         hashingNote.setWordWrap(true);
         layout.addWidget(hashingNote);
-        var clear = new QPushButton("Clear both fields");
+        var clear = new QPushButton("Clear shared secret");
         clear.setObjectName("clearSecrets");
-        clear.clicked.connect(() -> { community.clear(); shared.clear(); });
+        clear.clicked.connect(shared::clear);
         layout.addWidget(clear);
         var buttons = new QDialogButtonBox();
         var apply = buttons.addButton("Apply for Session", QDialogButtonBox.ButtonRole.AcceptRole);
         apply.setObjectName("applySecrets");
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(() -> {
-            secrets.replace(community.text(), shared.text(), hashCommunity.isChecked());
+            secrets.replace(shared.text(), hashCommunity.isChecked());
             accept();
         });
         buttons.rejected.connect(this::reject);
-        finished.connect(result -> { community.clear(); shared.clear(); });
+        finished.connect(result -> shared.clear());
         layout.addWidget(buttons);
     }
 

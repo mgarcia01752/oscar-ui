@@ -224,10 +224,16 @@ public final class OscarDocumentService {
         types();
         if (!contains(document.root(), parent) || !parent.container() || parent.path().contains(-1)) return List.of();
         return catalogs.get(document.type().family()).registry().children(parent.path()).stream()
+            .filter(definition -> !isGeneratedMic(document.type(), definition.path()))
             .filter(definition -> editingIssue(document.type(), definition).isEmpty())
                 .filter(definition -> definition.maxInstances() < 0 || parent.children().stream()
                         .filter(child -> child.path().equals(definition.path())).count() < definition.maxInstances())
                 .toList();
+    }
+
+    public boolean isGeneratedMic(FileType type, List<Integer> path) {
+        return Set.of("docsis", "docsis40", "dpoe").contains(type.family())
+                && (path.equals(List.of(6)) || path.equals(List.of(7)));
     }
 
     public boolean isContainer(FileType type, TlvDefinition definition) {
@@ -353,7 +359,8 @@ public final class OscarDocumentService {
     }
 
     public boolean canDelete(Document document, Node node) {
-        if (node == null || node.path().isEmpty() || !contains(document.root(), node)) return false;
+        if (node == null || node.path().isEmpty() || !contains(document.root(), node)
+                || isGeneratedMic(document.type(), node.path())) return false;
         var definition = definition(document, node);
         return definition != null && (editingIssue(document.type(), definition).isEmpty()
             || node.value().isEmpty() && node.children().isEmpty()

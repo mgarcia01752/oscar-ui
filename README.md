@@ -54,9 +54,12 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	block writing; successful export is not complete configuration validation.
 - **File > Check Config** remains an optional draft-check preview. Minimum
 	rules and complete value/length/dependency validation remain unfinished.
-- **Settings > Global > Secrets** provides masked **community string (commstring)** and
-	**shared secret** fields. Apply keeps values for this application session only;
-	Clear empties the fields and takes effect on Apply. Cancel keeps prior values.
+- **Settings > Global > Show CM/CMTS MIC TLVs** is unchecked by default.
+  Enable it to view the generated, read-only MIC entries in the configuration
+  tree. This session preference does not change source text or binary export.
+- **Settings > Global > Secrets** provides a masked **shared secret** field.
+	Apply keeps its value for this application session only;
+	Clear empties the field and takes effect on Apply. Cancel keeps prior values.
 	No secrets are encrypted or persisted. Binary export uses the session shared
 	secret where required; the community string is not automatically injected.
 	The **Hash community strings** checkbox keeps a session-only preference;

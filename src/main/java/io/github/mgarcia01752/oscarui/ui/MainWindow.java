@@ -44,6 +44,7 @@ public final class MainWindow extends QMainWindow {
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
     private final QAction configChecks = action("Check Config...", "configChecks", null);
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
+    private final QAction showMicTlvs = action("Show CM/CMTS MIC TLVs", "showMicTlvs", null);
     private final SessionSecrets secrets = new SessionSecrets();
     private QMenu saveMenu;
     private QMenu saveAsMenu;
@@ -183,6 +184,9 @@ public final class MainWindow extends QMainWindow {
         var settings = menuBar().addMenu("&Settings");
         var global = settings.addMenu("&Global");
         global.setObjectName("globalSettings");
+        showMicTlvs.setCheckable(true);
+        global.addAction(showMicTlvs);
+        showMicTlvs.toggled.connect(checked -> updateMicVisibility());
         global.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
         var appearance = global.addMenu("&Appearance");
@@ -322,6 +326,7 @@ public final class MainWindow extends QMainWindow {
         var rootItem = new QTreeWidgetItem(List.of(current.root().name(), ""));
         tree.addTopLevelItem(rootItem);
         populate(rootItem, current.root());
+        updateMicVisibility();
         rootItem.setExpanded(true);
         tree.setCurrentItem(rootItem);
         typeLabel.setText(current.type().header());
@@ -338,6 +343,18 @@ public final class MainWindow extends QMainWindow {
             parents.put(child, node);
             populate(childItem, child);
         }
+    }
+
+    private void updateMicVisibility() {
+        if (document == null) return;
+        nodes.forEach((item, node) -> {
+            if (!service.isGeneratedMic(document.type(), node.path())) return;
+            if (!showMicTlvs.isChecked() && tree.currentItem() == item) {
+                tree.setCurrentItem(item.parent());
+            }
+            item.setHidden(!showMicTlvs.isChecked());
+            item.setToolTip(0, node.path() + " — Generated integrity field (read-only)");
+        });
     }
 
     private void updateDocumentLabels() {
