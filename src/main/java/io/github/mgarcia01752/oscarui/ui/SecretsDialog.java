@@ -6,7 +6,7 @@ final class SecretsDialog extends QDialog {
     SecretsDialog(QWidget parent, SessionSecrets secrets) {
         super(parent);
         setObjectName("secretsDialog");
-        setWindowTitle("Settings - Secrets");
+        setWindowTitle("Settings - Global - Secrets");
         setMinimumWidth(500);
         var layout = new QVBoxLayout(this);
         var note = new QLabel("Session only: values are forgotten when you close Oscar Desktop. "
@@ -19,6 +19,13 @@ final class SecretsDialog extends QDialog {
         form.addRow("Community string (commstring)", community);
         form.addRow("Shared secret", shared);
         layout.addLayout(form);
+        var hashCommunity = new QCheckBox("Hash community strings");
+        hashCommunity.setObjectName("hashCommunityStrings");
+        hashCommunity.setChecked(secrets.hashCommunityStrings());
+        layout.addWidget(hashCommunity);
+        var hashingNote = new QLabel("Hashing preference only for now; the algorithm and export behavior are not implemented.");
+        hashingNote.setWordWrap(true);
+        layout.addWidget(hashingNote);
         var clear = new QPushButton("Clear both fields");
         clear.setObjectName("clearSecrets");
         clear.clicked.connect(() -> { community.clear(); shared.clear(); });
@@ -28,7 +35,7 @@ final class SecretsDialog extends QDialog {
         apply.setObjectName("applySecrets");
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(() -> {
-            secrets.replace(community.text(), shared.text());
+            secrets.replace(community.text(), shared.text(), hashCommunity.isChecked());
             accept();
         });
         buttons.rejected.connect(this::reject);

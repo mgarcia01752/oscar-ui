@@ -103,7 +103,7 @@ public final class OscarBinaryService {
 
     public byte[] encode(Document document, String sharedSecret) throws InspectionException {
         if (requiresSharedSecret(document) && (sharedSecret == null || sharedSecret.isEmpty())) {
-            throw new InspectionException("Set the shared secret in Settings > Secrets before saving binary.");
+            throw new InspectionException("Set the shared secret in Settings > Global > Secrets before saving binary.");
         }
         if (containsSnmp(document.root())) {
             throw new InspectionException("Binary export of SNMP statements is not supported yet.");

@@ -33,7 +33,7 @@ final class BinaryCheckDialog extends QDialog {
         var recheck = buttons.addButton("Check Config", QDialogButtonBox.ButtonRole.ActionRole);
         recheck.setObjectName("checkConfig");
         recheck.clicked.connect(check::run);
-        var secrets = buttons.addButton("Settings / Secrets", QDialogButtonBox.ButtonRole.ActionRole);
+        var secrets = buttons.addButton("Global Secrets", QDialogButtonBox.ButtonRole.ActionRole);
         secrets.setObjectName("binarySecrets");
         secrets.clicked.connect(() -> { settings.run(); check.run(); });
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);

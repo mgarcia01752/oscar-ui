@@ -54,11 +54,16 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	block writing; successful export is not complete configuration validation.
 - **File > Check Config** remains an optional draft-check preview. Minimum
 	rules and complete value/length/dependency validation remain unfinished.
-- **Settings > Secrets** provides masked **community string (commstring)** and
+- **Settings > Global > Secrets** provides masked **community string (commstring)** and
 	**shared secret** fields. Apply keeps values for this application session only;
 	Clear empties the fields and takes effect on Apply. Cancel keeps prior values.
 	No secrets are encrypted or persisted. Binary export uses the session shared
 	secret where required; the community string is not automatically injected.
+	The **Hash community strings** checkbox keeps a session-only preference;
+	it does not hash or transform values yet. Its algorithm and export behavior
+	remain requirements to define.
+- **Settings > Global > Appearance > Dark / Light** switches the application
+	and its dialogs immediately. The mode applies for this session only.
 
 The binary adapter has lab tests with public test keys and independently
 calculated legacy CM/CMTS MICs: CM-SP-MULPIv3.1-I21-201020, D.1.3.1 / D.2.1,

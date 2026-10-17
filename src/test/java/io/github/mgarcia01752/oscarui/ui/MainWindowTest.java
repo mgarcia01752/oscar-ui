@@ -571,6 +571,59 @@ class MainWindowTest {
         action(window, "fileSaveAsBinary").trigger();
     }
 
+    @Test void globalSettingsRetainHashCheckboxAndSwitchThemes() throws Exception {
+        var originalPalette = QApplication.palette();
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            var global = window.findChild(QMenu.class, "globalSettings");
+            assertNotNull(global);
+            assertTrue(global.actions().contains(action(window, "settingsSecrets")));
+            action(window, "darkMode").trigger();
+            assertTrue(action(window, "darkMode").isChecked());
+            assertFalse(action(window, "lightMode").isChecked());
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+            respond(window, dialog -> {
+                var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");
+                assertFalse(hash.isChecked());
+                hash.setChecked(true);
+                dialog.findChild(QLineEdit.class, "communityString").setText("public-community");
+                dialog.findChild(QLineEdit.class, "sharedSecret").setText("public-key");
+                assertTrue(dialog.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+                dialog.grab().save("target/ui-global-secrets-dark.png");
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            action(window, "lightMode").trigger();
+            assertTrue(action(window, "lightMode").isChecked());
+            assertFalse(action(window, "darkMode").isChecked());
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() > 128);
+            respond(window, dialog -> {
+                var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");
+                assertTrue(hash.isChecked());
+                assertEquals("public-community", dialog.findChild(QLineEdit.class, "communityString").text());
+                assertEquals("public-key", dialog.findChild(QLineEdit.class, "sharedSecret").text());
+                dialog.grab().save("target/ui-global-secrets-light.png");
+                hash.setChecked(false);
+                dialog.reject();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            respond(window, dialog -> {
+                assertTrue(dialog.findChild(QCheckBox.class, "hashCommunityStrings").isChecked());
+                dialog.reject();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+        } finally {
+            window.close();
+            window.dispose();
+            QApplication.setPalette(originalPalette);
+            originalPalette.dispose();
+        }
+    }
+
     private void saveAs(MainWindow window, Path destination, Consumer<QDialog> confirmation) {
         respond(window, dialog -> {
             dialog.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());

@@ -181,8 +181,25 @@ public final class MainWindow extends QMainWindow {
         content.textChanged.connect(() -> selectAll.setEnabled(!content.toPlainText().isEmpty()));
         edit.addAction(selectAll);
         var settings = menuBar().addMenu("&Settings");
-        settings.addAction(secretsAction);
+        var global = settings.addMenu("&Global");
+        global.setObjectName("globalSettings");
+        global.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
+        var appearance = global.addMenu("&Appearance");
+        var modes = new io.qt.gui.QActionGroup(this);
+        modes.setExclusive(true);
+        var light = action("&Light", "lightMode", null);
+        var dark = action("&Dark", "darkMode", null);
+        for (var mode : List.of(light, dark)) {
+            mode.setCheckable(true);
+            modes.addAction(mode);
+            appearance.addAction(mode);
+        }
+        boolean darkPalette = QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128;
+        dark.setChecked(darkPalette);
+        light.setChecked(!darkPalette);
+        light.triggered.connect(() -> DesktopTheme.apply(false));
+        dark.triggered.connect(() -> DesktopTheme.apply(true));
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &Oscar Desktop", "aboutOscar", null);
         about.triggered.connect(() -> QMessageBox.about(this, "About Oscar Desktop",
