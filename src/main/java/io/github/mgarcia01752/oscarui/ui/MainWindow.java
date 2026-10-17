@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 
 public final class MainWindow extends QMainWindow {
     private final OscarDocumentService service = new OscarDocumentService();
+    private final OscarBinaryService binaryService = new OscarBinaryService(service);
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
         Thread thread = new Thread(task, "oscar-document");
         thread.setDaemon(true);
@@ -39,6 +40,7 @@ public final class MainWindow extends QMainWindow {
     private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
     private final QAction saveShortcut = action("Save", "saveShortcut", QKeySequence.StandardKey.Save);
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
+    private final QAction configChecks = action("Check Config...", "configChecks", null);
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
     private final SessionSecrets secrets = new SessionSecrets();
     private QMenu saveMenu;
@@ -137,8 +139,10 @@ public final class MainWindow extends QMainWindow {
         addAction(saveAsShortcut);
         saveShortcut.triggered.connect(() -> chooseSaveFormat(false, () -> {}));
         saveAsShortcut.triggered.connect(() -> chooseSaveFormat(true, () -> {}));
-        binarySave.triggered.connect(this::checkBinary);
-        binarySaveAs.triggered.connect(this::checkBinary);
+        binarySave.triggered.connect(this::saveBinary);
+        binarySaveAs.triggered.connect(this::saveBinary);
+        file.addAction(configChecks);
+        configChecks.triggered.connect(this::checkBinary);
         file.addSeparator();
         var exit = action("E&xit", "fileExit", QKeySequence.StandardKey.Quit);
         file.addAction(exit);
@@ -351,13 +355,36 @@ public final class MainWindow extends QMainWindow {
         try { dialog.exec(); } finally { dialog.dispose(); }
     }
 
+    private void saveBinary() {
+        if (pending != null || document == null) return;
+        if (binaryService.requiresSharedSecret(document) && !secrets.hasShared()) {
+            showSecrets();
+            if (!secrets.hasShared()) return;
+        }
+        Document original = document;
+        var selection = QFileDialog.getSaveFileName(this, "Save configuration binary", "configuration.bin",
+                "Binary configuration (*.bin *.cm *.mta);;All files (*)", QFileDialog.Option.DontConfirmOverwrite);
+        if (selection == null || selection.result == null || selection.result.isEmpty()) return;
+        Path target = Path.of(selection.result).toAbsolutePath().normalize();
+        String sharedSecret = secrets.sharedValue();
+        submit(() -> service.destinationHash(target), observedHash -> {
+            if (observedHash != null && QMessageBox.question(this, "Replace file?",
+                    "Replace " + target.getFileName() + "?",
+                    new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No),
+                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) return;
+            submit(() -> binaryService.save(original, target, observedHash, sharedSecret), saved -> {
+                status.setText("Binary saved: " + saved + " | Checks skipped; text edits remain unchanged.");
+            });
+        });
+    }
+
     private void chooseSaveFormat(boolean choosePath, Runnable afterSave) {
         if (pending != null || document == null) return;
         var dialog = new QDialog(this);
         dialog.setObjectName("saveFormatDialog");
         dialog.setWindowTitle("Save configuration");
         var layout = new QVBoxLayout(dialog);
-        layout.addWidget(new QLabel("Choose a save format. Binary checks are a preview; Text saves your edits."));
+        layout.addWidget(new QLabel("Choose a save format. Binary exports through Oscar; Text preserves editable source."));
         var buttons = new QDialogButtonBox();
         var text = buttons.addButton("Text", QDialogButtonBox.ButtonRole.ActionRole);
         text.setObjectName("chooseTextSave");
@@ -372,7 +399,7 @@ public final class MainWindow extends QMainWindow {
         int result;
         try { result = dialog.exec(); } finally { dialog.dispose(); }
         if (result != QDialog.DialogCode.Accepted.value()) return;
-        if (binarySelected[0]) checkBinary();
+        if (binarySelected[0]) saveBinary();
         else saveDocument(choosePath, afterSave);
     }
 
@@ -471,6 +498,7 @@ public final class MainWindow extends QMainWindow {
         saveShortcut.setEnabled(idle && document != null);
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
+        configChecks.setEnabled(idle && document != null);
         Node selected = nodes.get(tree.currentItem());
         deleteTlv.setEnabled(idle && document != null && service.canDelete(document, selected));
         editTlv.setEnabled(idle && document != null && service.canEdit(document, selected));

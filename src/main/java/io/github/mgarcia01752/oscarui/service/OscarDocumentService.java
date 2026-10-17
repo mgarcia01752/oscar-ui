@@ -375,13 +375,21 @@ public final class OscarDocumentService {
 
     public Document save(Document document, Path destination, String expectedHash) throws InspectionException {
         Path target = destination.toAbsolutePath().normalize();
+        byte[] bytes = document.text().getBytes(StandardCharsets.UTF_8);
+        saveBytes(target, bytes, expectedHash);
+        return new Document(target, document.text(), document.type(), document.root(), hash(bytes), document.reference());
+    }
+
+    /** Shared atomic writer for text documents and Oscar's encoded output. */
+    void saveBytes(Path destination, byte[] bytes, String expectedHash) throws InspectionException {
+        Path target = destination.toAbsolutePath().normalize();
         Path temporary = null;
         try {
             if (!Objects.equals(destinationHash(target), expectedHash)) {
                 throw new InspectionException("The destination changed on disk. Use Save As or reopen it.");
             }
             temporary = Files.createTempFile(target.getParent(), ".oscar-ui-", ".tmp");
-            Files.writeString(temporary, document.text(), StandardCharsets.UTF_8);
+            Files.write(temporary, bytes);
             if (Files.exists(target) && Files.getFileStore(target).supportsFileAttributeView("posix")) {
                 Files.setPosixFilePermissions(temporary, Files.getPosixFilePermissions(target));
             }
@@ -389,10 +397,8 @@ public final class OscarDocumentService {
                 throw new InspectionException("The destination changed during saving.");
             }
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            return new Document(target, document.text(), document.type(), document.root(),
-                    hash(document.text().getBytes(StandardCharsets.UTF_8)), document.reference());
         } catch (IOException error) {
-            throw new InspectionException("Cannot safely save the text file. Check its path and permissions.", error);
+            throw new InspectionException("Cannot safely save the file. Check its path and permissions.", error);
         } finally {
             if (temporary != null) {
                 try { Files.deleteIfExists(temporary); } catch (IOException ignored) {}

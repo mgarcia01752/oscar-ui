@@ -2,7 +2,7 @@ package io.github.mgarcia01752.oscarui.ui;
 
 import java.util.Arrays;
 
-/** Session-only values. Never serialized, logged, or passed to an encoder. */
+/** Session-only values. Never serialized or logged; shared key is supplied to Oscar. */
 final class SessionSecrets implements AutoCloseable {
     private char[] community = new char[0];
     private char[] shared = new char[0];

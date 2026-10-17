@@ -14,12 +14,18 @@ public final class DraftChecks {
                 document.root().children().isEmpty() ? "Document has no TLV entries" : "Document contains TLV entries"));
         if (document.reference()) result.add(new Check("reference", "UNVERIFIED", "Reference-template values need review"));
         inspectNodes(service, document, document.root(), result);
-        result.add(new Check("shared-secret", sharedSecretSet ? "SET" : "MISSING",
-                "Shared secret for this session (not used by this preview)"));
+        boolean requiresSecret = !document.type().family().equals("packetcable");
+        result.add(new Check("shared-secret", !requiresSecret ? "NOT REQUIRED" : sharedSecretSet ? "SET" : "MISSING",
+            "Shared secret for this session; PacketCable does not use the DOCSIS shared secret"));
         result.add(new Check("minimum-rules", "NOT IMPLEMENTED", "Required TLVs and dependencies for this configuration type"));
         result.add(new Check("encoded-values", "NOT IMPLEMENTED", "Encoded lengths and complete value constraints"));
-        result.add(new Check("binary-output", "NOT IMPLEMENTED", "Binary encoding and integrity generation"));
+        result.add(new Check("binary-output", "UNVERIFIED", "Oscar encoder integration exists; checked encoding and integrity coverage remain unverified"));
         return List.copyOf(result);
+    }
+
+    public static boolean permitsBinarySave(List<Check> checks) {
+        return !checks.isEmpty() && checks.stream().allMatch(check ->
+                Set.of("PASS", "SET", "NOT REQUIRED").contains(check.status()));
     }
 
     private static void inspectNodes(OscarDocumentService service, Document document, Node parent, List<Check> result) {

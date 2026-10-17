@@ -25,14 +25,29 @@ update together, preserving comments, repeated entries, and unrelated formatting
 	with overwrite confirmation and checks for external file changes.
 	New, Open, and Exit protect unsaved changes with Save/Discard/Cancel.
 	Save keyboard shortcuts offer a Binary/Text choice.
-- **Save / Save As > Binary** opens the **Check Config** preview. It reports
-	available draft checks and explicitly lists unfinished checks. **Save Binary
-	is disabled**: binary encoding and minimum valid-configuration rules are not
-	implemented yet. Opening or cancelling this preview does not save your edits.
+- **Save / Save As > Binary** exports directly through Oscar, without a
+	Check Config gate. It prompts for a session shared secret when required, then
+	for a destination, and uses overwrite confirmation and atomic replacement.
+	The editable text file cannot be the binary destination. Export leaves the
+	source path and unsaved text edits unchanged. Oscar encoding errors still
+	block writing; successful export is not complete configuration validation.
+- **File > Check Config** remains an optional draft-check preview. Minimum
+	rules and complete value/length/dependency validation remain unfinished.
 - **Settings > Secrets** provides masked **community string (commstring)** and
 	**shared secret** fields. Apply keeps values for this application session only;
 	Clear empties the fields and takes effect on Apply. Cancel keeps prior values.
-	No secrets are encrypted, persisted, or used in exports in this UI phase.
+	No secrets are encrypted or persisted. Binary export uses the session shared
+	secret where required; the community string is not automatically injected.
+
+The binary adapter has lab tests with public test keys and independently
+calculated legacy CM/CMTS MICs: CM-SP-MULPIv3.1-I21-201020, D.1.3.1 / D.2.1,
+printed pp. 736-738; and CM-SP-MULPIv4.0-I12-261014, D.1.3.1 / D.2.1,
+printed pp. 860-862. End/pad markers follow C.1.2.1 / C.1.2.2 in each issue.
+The pinned Oscar compiler emits an explicit zero pad byte after the end marker
+before word alignment; fixture expectations preserve that implementation detail,
+not a requirement to add that byte to every conforming file. These limited
+fixtures do not establish complete-file validity or device interoperability.
+DPoE and PacketCable adapter tests establish API dispatch, not protocol conformance.
 
 All TLVs files include a reference-template comment, retained when saving.
 This allows reopening Oscar's unmapped legacy placeholders as read-only tree
@@ -45,8 +60,9 @@ catalog membership, available instances,
 scalar syntax, integer syntax, and unsigned codec width. Registry descriptions
 are not interpreted as enums, defaults, or complete validation rules. Length,
 dependency, integrity, and device-interoperability checks remain incomplete.
-Unsupported codecs, SNMP insertion, binary import/export, signing, and automatic
-MIC generation are unavailable. DOCSIS 4.0 L2VPN and eDOCSIS/eSAFE editing remain
+Unsupported codecs, SNMP insertion/export, binary import, and certificate signing
+are unavailable. Binary export delegates supported integrity generation to Oscar;
+it does not establish complete integrity coverage. DOCSIS 4.0 L2VPN and eDOCSIS/eSAFE editing remain
 deferred. Existing values and generated placeholders are not endorsed as valid
 deployment settings. The DOCSIS 4.0 catalog is used as supplied by Oscar, not
 merged with its separate legacy DOCSIS catalog.
@@ -150,6 +166,9 @@ These tests cover New, All TLVs, Add TLV, first Save, cancellation, unsaved-clos
 prompts, failed Open, overwrite refusal, and changes during overwrite confirmation.
 They also cover double-click editing, deletion/cancellation, CRLF selection,
 Binary/Text routing, and masked session-only Secrets settings.
+Binary-save tests also cover direct exports, required secrets, cancellation,
+overwrite conflicts, source protection, and retention of unsaved text edits
+after binary export during a pending replacement prompt.
 Native dialog tests are skipped in ordinary Maven runs without this opt-in.
 Service tests cover all discovered template types, nested insertion, text fidelity,
 safe-save failures, and external-change detection. Windows desktop behavior has
