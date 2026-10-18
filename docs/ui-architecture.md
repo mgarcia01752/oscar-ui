@@ -38,6 +38,14 @@ Follow [coding-style](../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
 [development guide](development.md) after moving UI responsibilities.
 
+## TLV editor terminology
+
+Add and Edit dialogs label a TLV that contains child TLVs as **Parent TLV**,
+using the help text **Parent TLV | Add values to its child TLVs**. Use this
+user-facing term instead of **Container**. Values are entered on the child
+TLVs; the parent does not expose an editable scalar value. Internal container
+identifiers and Oscar APIs retain their existing names.
+
 ## Binary inspection
 
 Inspect follows Settings in the menu bar. The menu itself and its HexDump and
