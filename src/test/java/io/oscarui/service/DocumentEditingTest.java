@@ -14,7 +14,7 @@ class DocumentEditingTest {
     }
 
     @Test void duplicatesServiceFlowWithoutChangingOriginalOrSourceFile() throws Exception {
-        String flow = "DownstreamServiceFlow { /* keep */ ServiceFlowReference 1; QualityOfServiceParameterSetType 7; }";
+        String flow = "DownstreamServiceFlow { /* keep */ ServiceFlowReference 1; QualityOfServiceParameterSetType 07; }";
         String text = "Docsis {\r\n    " + flow + "\r\n    NetworkAccess 1;\r\n}";
         var original = open(text);
         var selected = original.root().childTlvs().getFirst();
@@ -41,7 +41,7 @@ class DocumentEditingTest {
         String text = "\uFEFFDocsis {\r\n MaxCPEAllowed 3;\r\n MaxCPEAllowed /* before */ 004 /* after */;\r\n}";
         var original = open(text);
         var selected = original.root().childTlvs().get(1);
-        assertEquals("004", selected.encodedValueText());
+        assertEquals("4", selected.encodedValueText());
         assertSame(original, service.replaceValue(original, selected, "004"));
         var changed = service.replaceValue(original, selected, "5");
         assertEquals(text.replace("004", "5"), changed.text());

@@ -97,7 +97,7 @@ class OscarBinaryServiceTest {
             assertThrows(InspectionException.class, () -> binary.save(source, symlink, documents.destinationHash(output), LAB_KEY));
         }
         assertEquals(source.text(), Files.readString(source.path()));
-        var snmp = open("Docsis { Snmp11 sysName.0 OctetString \"public\"; }");
+        var snmp = open("Docsis { Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"public\"; }");
         assertThrows(InspectionException.class, () -> binary.encode(snmp, LAB_KEY));
         assertFalse(Files.exists(temporary.resolve("db")));
         try (var files = Files.list(temporary)) {

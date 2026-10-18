@@ -577,6 +577,9 @@ public final class OscarDocumentService {
         // leaving comments and whitespace on either side untouched.
         var tokens = parser(document.text().substring(node.sourceStartOffset(), node.sourceEndExclusive())).getTokenStream();
         Token token = tokens.LT(2);
+        if (supplied.equals(token.getText())) {
+            return document;
+        }
         int sourceStartOffset = node.sourceStartOffset() + token.getStartIndex();
         int sourceEndExclusive = node.sourceStartOffset() + token.getStopIndex() + 1;
         if (token.getType() == tlvParser.SEMICOLON) {
@@ -719,6 +722,28 @@ public final class OscarDocumentService {
         return new Document(target, document.text(), document.configurationType(), document.root(), hash(bytes), document.reference(), document.origin());
     }
 
+    /**
+     * Reports whether the document tree is backed by successfully encoded TLVs.
+     *
+     * @param document current document snapshot
+     * @return false for empty drafts and reference or incomplete placeholders
+     */
+    public boolean hasBinaryTree(Document document) {
+        return !document.reference() && !document.root().childTlvs().isEmpty() && !hasPlaceholder(document.root());
+    }
+
+    Document parseDecodedTree(String text, FileType configurationType) throws InspectionException {
+        Token header = parser(text).getTokenStream().LT(1);
+        String normalized = text.substring(0, header.getStartIndex()) + configurationType.header()
+                + text.substring(header.getStopIndex() + 1);
+        return parseSource(null, normalized, null, false);
+    }
+
+    Document openCompiledText(Path path, String text, byte[] sourceBytes, byte[] encoded) throws InspectionException {
+        Document source = parseSource(path.toAbsolutePath().normalize(), text, hash(sourceBytes), false);
+        return new BinaryTreeProjection(this).project(source, encoded);
+    }
+
     Document openText(Path path, byte[] bytes) throws InspectionException {
         try {
             String text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
@@ -813,30 +838,55 @@ public final class OscarDocumentService {
     }
 
     private Document parse(Path path, String text, String diskHash, boolean reference) throws InspectionException {
+        Document source = parseSource(path, text, diskHash, reference);
+        if (!hasBinaryTree(source)) {
+            return source;
+        }
+        return new BinaryTreeProjection(this).project(source, OscarTextCompileCheck.compile(text));
+    }
+
+    private boolean hasPlaceholder(Node node) {
+        if (!node.tlvPath().isEmpty() && node.childTlvs().isEmpty() && node.encodedValueText().isEmpty()) {
+            return true;
+        }
+        return node.childTlvs().stream().anyMatch(this::hasPlaceholder);
+    }
+
+    private Document parseSource(Path path, String text, String diskHash, boolean reference) throws InspectionException {
         try {
             types();
             if (text.getBytes(StandardCharsets.UTF_8).length > OscarInspectionService.MAX_BYTES) {
                 throw new IllegalArgumentException();
             }
             var parser = parser(text.startsWith("\uFEFF") ? " " + text.substring(1) : text);
-            String header = parser.configType().getText();
+            // Use the same enclosing grammar rule as Oscar's compiler. Calling
+            // startTLV in isolation lets its SNMP wildcard consume later statements.
+            var tokens = parser.getTokenStream();
+            parser.configType();
+            boolean emptyDraft = tokens.LA(1) == tlvParser.LBRACE
+                    && tokens.LA(2) == tlvParser.RBRACE;
+            tokens.seek(0);
+            String header;
+            Token closing;
+            var nodes = new ArrayList<Node>();
+            if (emptyDraft) {
+                header = parser.configType().getText();
+                tokens.consume();
+                closing = parser.getCurrentToken();
+                tokens.consume();
+            } else {
+                var configuration = parser.begin();
+                header = configuration.configType().getText();
+                closing = configuration.RBRACE().getSymbol();
+                FileType parsedType = types.stream().filter(entry -> entry.header().equals(header))
+                        .findFirst().orElseThrow(() -> new IllegalArgumentException("Unsupported header"));
+                for (var statement : configuration.startTLV()) {
+                    nodes.add(node((ParserRuleContext) statement.getChild(0), List.of(), parsedType, text, reference));
+                }
+            }
             FileType configurationType = types.stream().filter(entry -> entry.header().equals(header)).findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Unsupported header"));
-            if (parser.getTokenStream().LA(1) != tlvParser.LBRACE) {
-                throw new IllegalArgumentException("Missing opening brace");
-            }
-            parser.getTokenStream().consume();
-            var nodes = new ArrayList<Node>();
-            while (parser.getTokenStream().LA(1) != tlvParser.RBRACE
-                    && parser.getTokenStream().LA(1) != Token.EOF) {
-                nodes.add(node((ParserRuleContext) parser.startTLV().getChild(0), List.of(), configurationType, text, reference));
-            }
-            Token closing = parser.getCurrentToken();
-            if (closing.getType() != tlvParser.RBRACE) {
-                throw new IllegalArgumentException("Missing closing brace");
-            }
-            parser.getTokenStream().consume();
-            if (parser.getTokenStream().LA(1) != Token.EOF) {
+            if (tokens.LA(1) != Token.EOF) {
                 throw new IllegalArgumentException("Trailing input");
             }
             var root = new Node(List.of(), header, "", nodes, 0, text.length(), closing.getStartIndex(), true);
@@ -869,6 +919,11 @@ public final class OscarDocumentService {
         int sourceEndExclusive = context.getStop().getStopIndex() + 1;
         int terminatorOffset = sourceEndExclusive - 1;
         String value = text.substring(context.getStart().getStopIndex() + 1, sourceEndExclusive - 1).strip();
+        if (context instanceof tlvParser.SnmpContext snmp) {
+            terminatorOffset = snmp.SEMICOLON().getSymbol().getStartIndex();
+            sourceEndExclusive = terminatorOffset + 1;
+            value = text.substring(context.getStart().getStopIndex() + 1, terminatorOffset).strip();
+        }
         if (context instanceof tlvParser.EmptyTLVContext) {
             value = "";
         }

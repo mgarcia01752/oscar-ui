@@ -23,6 +23,50 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void selectsAppendedSourceChildWhenBinaryOrderDiffers() throws Exception {
+        var documents = new OscarDocumentService();
+        var document = documents.open(Files.writeString(temporary.resolve("child-order.txt"),
+                "Docsis { DownstreamServiceFlow { MaxTrafficBurst 6; ServiceFlowReference 2; } }"));
+        var pane = new ConfigurationTreePane();
+        try {
+            pane.displayRoot(document.root(), true);
+            pane.selectLastChild(document.root().childTlvs().getFirst());
+            assertEquals("ServiceFlowReference", pane.selectedTlv().tlvName());
+        } finally {
+            pane.dispose();
+        }
+    }
+
+    @Test void displaysCompiledCommunityRowsAndHighlightsOnlySelectedStatement() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            window.openFile(Path.of("cm-config/examples/docsis/1gbps-ds-100mbps-us.txt"));
+            await(window::completed);
+            assertTrue(window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var root = tree.topLevelItem(0);
+            assertEquals(16, root.childCount());
+            for (int index = 1; index <= 12; index++) {
+                assertEquals("Snmp11", root.child(index).text(0));
+                assertEquals("11", root.child(index).text(1));
+                assertFalse(root.child(index).text(2).contains("/*"));
+                assertFalse(root.child(index).text(2).contains("Snmp11"));
+            }
+            tree.setCurrentItem(root.child(9));
+            var text = window.findChild(QPlainTextEdit.class, "configurationText");
+            String selected = text.textCursor().selectedText();
+            assertTrue(selected.startsWith("Snmp11 "));
+            assertTrue(selected.contains("private"));
+            assertFalse(selected.contains("/*"));
+            window.resize(1200, 700);
+            window.grab().save("target/binary-tlv-tree.png");
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void failedTextCompilationKeepsTheDisplayedDocument() throws Exception {
         var window = new MainWindow(false);
         window.show();
@@ -782,7 +826,7 @@ class MainWindowTest {
             var original = window.currentDocument();
             respond(window, dialog -> {
                 assertEquals("editTlvDialog", dialog.objectName());
-                assertEquals("004", dialog.findChild(QLineEdit.class, "tlvValue").text());
+                assertEquals("4", dialog.findChild(QLineEdit.class, "tlvValue").text());
                 dialog.reject();
             });
             tree.itemDoubleClicked.emit(item, 0);
@@ -790,7 +834,7 @@ class MainWindowTest {
             assertSame(original, window.currentDocument());
             respond(window, dialog -> {
                 var value = dialog.findChild(QLineEdit.class, "tlvValue");
-                assertEquals("004", value.text());
+                assertEquals("4", value.text());
                 value.setText("5");
                 dialog.grab().save("target/ui-edit-tlv.png");
                 dialog.findChild(QPushButton.class, "confirmEditTlv").click();

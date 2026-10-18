@@ -48,12 +48,12 @@ final class ConfigurationTreePane extends QTreeWidget {
         });
     }
 
-    void displayRoot(Node rootTlv) {
+    void displayRoot(Node rootTlv, boolean binaryBacked) {
         tlvsByItem.clear();
         parentsByTlv.clear();
         documentRoot = rootTlv;
         clear();
-        var rootItem = new QTreeWidgetItem(List.of(rootTlv.tlvName(), "", ""));
+        var rootItem = new QTreeWidgetItem(List.of(rootTlv.tlvName(), "", binaryBacked ? "" : "Draft — not compiled"));
         addTopLevelItem(rootItem);
         populate(rootItem, rootTlv);
         rootItem.setExpanded(true);
@@ -105,7 +105,9 @@ final class ConfigurationTreePane extends QTreeWidget {
                 .filter(tlvNode -> tlvNode.sourceStartOffset() == previousParent.sourceStartOffset()
                         && tlvNode.tlvPath().equals(previousParent.tlvPath()))
                 .findFirst().orElse(documentRoot);
-        Node insertedTlv = updatedParent.childTlvs().getLast();
+        // Insert appends in source order; Oscar may reorder encoded children.
+        Node insertedTlv = updatedParent.childTlvs().stream()
+                .max(java.util.Comparator.comparingInt(Node::sourceStartOffset)).orElseThrow();
         selectCorresponding(insertedTlv);
         expandSelection();
     }

@@ -498,7 +498,7 @@ public final class MainWindow extends QMainWindow {
         document = current;
         modified = changed;
         configurationTextPane.displaySource(current.text(), showTextTlvNumbers);
-        configurationTreePane.displayRoot(current.root());
+        configurationTreePane.displayRoot(current.root(), documentService.hasBinaryTree(current));
         updateMicVisibility();
         updateDocumentLabels();
         updateActions();

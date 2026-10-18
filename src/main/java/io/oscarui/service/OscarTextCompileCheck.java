@@ -14,7 +14,11 @@ final class OscarTextCompileCheck {
 
     private OscarTextCompileCheck() {}
 
-    static synchronized void validate(String source) throws InspectionException {
+    static void validate(String source) throws InspectionException {
+        compile(source);
+    }
+
+    static synchronized byte[] compile(String source) throws InspectionException {
         Configurator.setLevel("com.comcast.oscar", Level.OFF);
         var diagnostics = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
@@ -55,6 +59,7 @@ final class OscarTextCompileCheck {
             }
             throw new InspectionException("OSCAR text compilation failed:\n" + reported);
         }
+        return encoded;
     }
 
     private static final class DiagnosticOutput extends OutputStream {

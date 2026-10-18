@@ -239,10 +239,29 @@ open a description; expansion remains available through the tree arrows.
 Opening UTF-8 configuration text first runs OSCAR's
 `ConfigurationFileImport.toByteArray()` on the existing worker. This checks
 syntax and unsigned TLV encoding without a shared secret, MIC generation, file
-writes, or export/reordering. Only after success does the UI display the original
-source and parse its tree. Comments, whitespace, repeated instances, and nested
-TLV order are preserved exactly. This is an encoder check, not modem/CMTS
-admission validation or a signed deployment binary.
+writes, or source rewriting. `BinaryTreeProjection` retains the encoded result
+and walks its physical instances using OSCAR's registry length widths and TLV
+boundary APIs. OSCAR exports each top-level instance separately to decode its
+values; this prevents the whole-file exporter from grouping repeated types.
+Child rows follow the actual binary byte order. OSCAR may order children by
+its dictionary rather than their source positions; the original text remains
+unchanged and each row still targets its corresponding source occurrence.
+If OSCAR collapses repeated child instances, import fails rather than silently
+omitting them.
+
+The source mapping uses OSCAR's full `begin()` grammar, just as its importer
+does. Calling `startTLV()` outside that enclosing rule allowed SNMP values to
+consume later statements and comments. Binary instances are matched to source
+occurrences with count/type checks; a mismatch fails instead of showing
+misleading rows. Displayed scalar values come from the binary decode, while
+source offsets retain exact edit, delete, duplicate, and highlight targets.
+SNMP source spans end at their semicolon, excluding trailing remarks. The right
+pane preserves original comments, whitespace, spelling, and TLV order exactly.
+Completed edits rebuild the binary projection on the existing worker. Empty or
+incomplete drafts and reference templates retain their editing scaffold with
+an explicit **Draft — not compiled** label; they are not a binary preview.
+This is an encoder check, not modem/CMTS admission validation or a signed
+deployment binary.
 
 `OscarTextCompileCheck` captures OSCAR exceptions and printed encoder failures,
 including failures swallowed upstream. Diagnostics are bounded and shown to the
@@ -257,3 +276,7 @@ OSCAR cannot encode them; creating/editing new drafts remains available.
 - [x] Preserve original source and repeated/nested TLV ordering.
 - [x] Display OSCAR diagnostics and retain the prior document on failure.
 - [x] Validate the example containing SNMP read/write communities.
+- [x] Build loaded TLV rows from OSCAR-encoded instances and decoded values.
+- [x] Keep all twelve example SNMP statements separate from remarks.
+- [x] Verify binary child order and source targeting after edits.
+- [x] Label incomplete editing scaffolds as uncompiled drafts.
