@@ -7,6 +7,8 @@ import java.util.List;
 
 /** Read-only hierarchical hex view of one selected TLV instance. */
 final class TlvHexDialog extends QDialog {
+    private final java.util.Map<QTreeWidgetItem, HexNode> nodesByItem = new java.util.HashMap<>();
+
     TlvHexDialog(QWidget parent, HexNode selected) {
         super(parent);
         setObjectName("tlvHexDialog");
@@ -22,6 +24,18 @@ final class TlvHexDialog extends QDialog {
         tree.setHeaderLabels(List.of("Name", "Hex"));
         tree.setAlternatingRowColors(true);
         tree.setColumnWidth(0, 280);
+        tree.setExpandsOnDoubleClick(false);
+        tree.itemDoubleClicked.connect((item, column) -> {
+            if (column == 0) {
+                var node = nodesByItem.get(item);
+                var dialog = new TlvDescriptionDialog(this, node.name(), node.description());
+                try {
+                    dialog.exec();
+                } finally {
+                    dialog.dispose();
+                }
+            }
+        });
         tree.addTopLevelItem(row(selected));
         tree.expandAll();
         layout.addWidget(tree);
@@ -33,6 +47,8 @@ final class TlvHexDialog extends QDialog {
 
     private QTreeWidgetItem row(HexNode node) {
         var item = new QTreeWidgetItem(List.of(node.name(), node.hex()));
+        nodesByItem.put(item, node);
+        item.setToolTip(0, "Double-click for the TLV description");
         item.setFont(1, QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont));
         item.setToolTip(1, node.hex());
         for (HexNode child : node.children()) {

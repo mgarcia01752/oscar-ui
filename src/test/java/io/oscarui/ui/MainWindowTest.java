@@ -46,6 +46,17 @@ class MainWindowTest {
                 assertEquals("01:02:00:02", parent.child(0).text(1));
                 assertTrue(parent.isExpanded());
                 dialog.grab().save("target/selected-tlv-hex.png");
+                respond(window, descriptionDialog -> {
+                    assertEquals("tlvDescriptionDialog", descriptionDialog.objectName());
+                    assertEquals("Description - ServiceFlowReference", descriptionDialog.windowTitle());
+                    var description = descriptionDialog.findChild(QPlainTextEdit.class, "tlvDescriptionText");
+                    assertTrue(description.isReadOnly());
+                    assertFalse(description.toPlainText().isBlank());
+                    assertFalse(description.toPlainText().contains("No description is available"));
+                    descriptionDialog.reject();
+                });
+                hexTree.itemDoubleClicked.emit(parent.child(0), 0);
+                assertTrue(parent.isExpanded());
                 dialog.reject();
                 closed.set(true);
             });

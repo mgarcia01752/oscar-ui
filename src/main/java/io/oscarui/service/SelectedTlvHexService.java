@@ -19,14 +19,16 @@ public final class SelectedTlvHexService {
      * One encoded TLV and its ordered descendants.
      *
      * @param name registry display name
+     * @param description Oscar registry description
      * @param hex complete type, length, and value bytes in hexadecimal
      * @param children immediate children in source order
      */
-    public record HexNode(String name, String hex, List<HexNode> children) {
+    public record HexNode(String name, String description, String hex, List<HexNode> children) {
         /**
          * Creates an immutable row tree.
          *
          * @param name TLV name
+         * @param description Oscar registry description
          * @param hex complete encoded TLV bytes
          * @param children ordered child rows, copied defensively
          */
@@ -101,7 +103,7 @@ public final class SelectedTlvHexService {
                 throw new InspectionException("Oscar returned unexpected child TLV bytes.");
             }
         }
-        return new HexNode(node.tlvName(), new HexString(encoded).toString(":"), children);
+        return new HexNode(node.tlvName(), definition.description(), new HexString(encoded).toString(":"), children);
     }
 
     private void validate(byte[] encoded, int tlvTypeCode, int lengthBytes) throws TlvException, InspectionException {

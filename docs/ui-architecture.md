@@ -225,3 +225,11 @@ one row. Encoding runs on the existing worker, keeping the UI responsive.
 - [x] Preserve repeated-instance selection and current edits.
 - [x] Support scalar selection and OSCAR's DOCSIS 4.0 length widths.
 - [x] Disable the action while busy and for non-TLV selections.
+
+Double-clicking the **Name** column in the TLV hex popup opens a separate,
+read-only description dialog for that exact row, including nested children.
+Descriptions come from OSCAR's registry and use the shared paragraph formatter.
+Missing descriptions show an explicit fallback. Double-clicking Hex does not
+open a description; expansion remains available through the tree arrows.
+
+- [x] Open the selected hex row's OSCAR description on name double-click.
