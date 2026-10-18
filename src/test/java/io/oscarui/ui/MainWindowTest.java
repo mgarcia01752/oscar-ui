@@ -23,6 +23,48 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void editsSnmp11AfterTextIsSavedAsBinaryWithMasking() throws Exception {
+        var documents = new OscarDocumentService();
+        var binary = new io.oscarui.service.OscarBinaryService(documents);
+        var textPath = Files.writeString(temporary.resolve("snmp.txt"),
+                "Docsis { Snmp11 1.3.6.1.2.1.69.1.2.1.4.1 OctetString \"lab-community\"; }");
+        var binaryPath = temporary.resolve("snmp.bin");
+        binary.saveDocument(binary.openAuto(textPath), binaryPath, null, "public-test-key");
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            window.openFile(binaryPath);
+            await(() -> window.completed() && window.succeeded());
+            respond(window, dialog -> {
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(true);
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var snmp = tree.topLevelItem(0).child(0);
+            tree.setCurrentItem(snmp);
+            assertTrue(action(window, "editTlv").isEnabled());
+            respond(window, dialog -> {
+                var value = dialog.findChild(QLineEdit.class, "tlvValue");
+                assertEquals("", value.text());
+                assertEquals(QLineEdit.EchoMode.Password, value.echoMode());
+                value.setText("1.3.6.1.2.1.69.1.2.1.4.1 OctetString \"replacement-lab\"");
+                assertTrue(dialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.succeeded());
+            assertCallback();
+            assertTrue(window.currentDocument().text().contains("replacement-lab"));
+            assertFalse(window.findChild(QPlainTextEdit.class, "configurationText")
+                    .toPlainText().contains("replacement-lab"));
+            binary.saveDocument(window.currentDocument(), binaryPath,
+                    window.currentDocument().origin().diskHash(), "public-test-key");
+            assertTrue(binary.openAuto(binaryPath).text().contains("replacement-lab"));
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void snmpMaskingRefreshesTextTreeClipboardHexAndEditorWithoutChangingSource() throws Exception {
         var window = new MainWindow(false);
         window.show();

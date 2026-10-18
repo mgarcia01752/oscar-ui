@@ -374,3 +374,17 @@ Editable PacketCable import with generated SNMP remains deferred in
 - [x] Save/reopen the community, USM, and VACM fixture without storing masks.
 - [x] Preserve compiled bytes after masked preview and repeated binary saves.
 - [x] Preserve the existing destination when SNMP compilation fails.
+
+## SNMP statement editing
+
+Snmp11/Snmp64 entries using OSCAR's `oid` codec accept one compound value:
+OID, SNMP type, and quoted value. OSCAR parses and compiles the proposed
+statement before acceptance. Replacing it updates the complete value span,
+not just the first token, and preserves neighboring TLVs and binary origin.
+Sensitive existing entries remain hidden in the editor while masking is on;
+leaving the field blank keeps the original statement. Enter the full compound
+value to replace it. Validation messages do not echo supplied credentials.
+
+- [x] Edit Snmp11 after text-to-binary saving and save/reopen the changed binary.
+- [x] Keep the editor and preview masked while retaining real output values.
+- [x] Reject additional statements in a proposed SNMP value.

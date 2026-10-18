@@ -71,6 +71,20 @@ class OscarBinaryServiceTest {
         assertTrue(reopened.text().contains("public"));
         assertTrue(reopened.text().contains("private"));
         assertFalse(reopened.text().contains("********"));
+        var community = saved.root().childTlvs().stream()
+                .filter(node -> node.encodedValueText().contains("\"public\"")).findFirst().orElseThrow();
+        assertTrue(documents.canEdit(saved, community));
+        var edited = documents.replaceValue(saved, community,
+                community.encodedValueText().replace("\"public\"", "\"updated-lab\""));
+        assertTrue(edited.text().contains("updated-lab"));
+        assertTrue(edited.text().contains("\"private\""));
+        assertEquals(saved.root().childTlvs().size(), edited.root().childTlvs().size());
+        var editedPath = temporary.resolve("edited-snmp.bin");
+        binary.saveDocument(edited, editedPath, null, LAB_KEY);
+        assertTrue(binary.openAuto(editedPath).text().contains("updated-lab"));
+        assertThrows(InspectionException.class, () -> documents.replaceValue(saved, community,
+                "1.3.6.1.2.1.1.5.0 OctetString \"x\"; NetworkAccess 0"));
+
         var invalid = new OscarDocumentService.Document(source.path(),
                 source.text().replace("IpAddress \"0.0.0.0\"", "IpAddress \"not-an-address\""),
                 source.configurationType(), source.root(), source.diskHash(), false);

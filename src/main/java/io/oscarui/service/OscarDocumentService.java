@@ -362,7 +362,8 @@ public final class OscarDocumentService {
         if (definition.name().chars().anyMatch(Character::isWhitespace)) {
             return "Unsupported text name";
         }
-        return isContainer(configurationType, definition) || EDITABLE_VALUE_CODECS.contains(definition.codec()) ? "" : "Unsupported encoding";
+        return isContainer(configurationType, definition) || isSnmpValue(definition)
+                || EDITABLE_VALUE_CODECS.contains(definition.codec()) ? "" : "Unsupported encoding";
     }
 
     /**
@@ -389,6 +390,20 @@ public final class OscarDocumentService {
         }
         if (supplied.indexOf('\n') >= 0 || supplied.indexOf('\r') >= 0) {
             return "Enter a single TLV value";
+        }
+        if (isSnmpValue(definition)) {
+            try {
+                String source = configurationType.header() + " { " + definition.name() + " " + supplied + "; }";
+                var probe = parseDecodedTree(source, configurationType);
+                if (probe.root().childTlvs().size() != 1
+                        || !probe.root().childTlvs().getFirst().tlvPath().equals(definition.path())) {
+                    return "Enter one SNMP OID, type, and value";
+                }
+                OscarTextCompileCheck.validate(source);
+                return "";
+            } catch (InspectionException | RuntimeException error) {
+                return "Enter a valid SNMP OID, type, and quoted value";
+            }
         }
         if (Set.of("integer", "unsigned_integer", "byte").contains(definition.codec())) {
             try {
@@ -551,7 +566,7 @@ public final class OscarDocumentService {
     }
 
     /**
-     * Replaces only the selected scalar token in the configuration text.
+     * Replaces the selected scalar token or complete SNMP value in configuration text.
      *
      * <p>Preserves surrounding comments and whitespace and verifies the node count.
      *
@@ -573,8 +588,8 @@ public final class OscarDocumentService {
         if (!issue.isEmpty()) {
             throw new InspectionException(issue + ".");
         }
-        // Oscar scalar values occupy one lexer token. Replace that token only,
-        // leaving comments and whitespace on either side untouched.
+        // Ordinary scalar values occupy one token; SNMP values span the OID,
+        // type, and quoted value up to the statement terminator.
         var tokens = parser(document.text().substring(node.sourceStartOffset(), node.sourceEndExclusive())).getTokenStream();
         Token token = tokens.LT(2);
         if (supplied.equals(token.getText())) {
@@ -582,6 +597,9 @@ public final class OscarDocumentService {
         }
         int sourceStartOffset = node.sourceStartOffset() + token.getStartIndex();
         int sourceEndExclusive = node.sourceStartOffset() + token.getStopIndex() + 1;
+        if (isSnmpValue(definition(document, node))) {
+            sourceEndExclusive = node.terminatorOffset();
+        }
         if (token.getType() == tlvParser.SEMICOLON) {
             sourceEndExclusive = sourceStartOffset;
             supplied = " " + supplied;
@@ -803,6 +821,11 @@ public final class OscarDocumentService {
                 try { Files.deleteIfExists(temporary); } catch (IOException ignored) {}
             }
         }
+    }
+
+    private boolean isSnmpValue(TlvDefinition definition) {
+        return definition.codec().equals("oid")
+                && Set.of("Snmp11", "Snmp64").contains(definition.name());
     }
 
     private Map<RegistryFamily, Catalog> discoverCatalogs() throws IOException {

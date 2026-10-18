@@ -209,6 +209,7 @@ final class TlvEditorDialog extends QDialog {
             return "Parent TLV | Add values to its child TLVs";
         }
         return switch (definition.codec()) {
+            case "oid" -> "SNMP OID, type, and quoted value | Example: 1.3.6.1.2.1.1.5.0 OctetString \"lab-name\"";
             case "unsigned_integer" -> "Unsigned integer | Range: 0 to "
                     + java.math.BigInteger.ONE.shiftLeft(definition.lengthMax() * 8)
                         .subtract(java.math.BigInteger.ONE);
