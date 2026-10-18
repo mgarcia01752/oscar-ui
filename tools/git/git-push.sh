@@ -39,7 +39,8 @@ Modes: --master | --branch | --tag TAG | --tag-major | --tag-minor | --tag-patch
 --tag-patch        Bump patch, commit, tag, and push branch plus new tag.
 
 Requires committed changes and installs the repository-local pre-push hook.
-The hook runs all local checks and blocks upload if any check fails.
+Already-published refs skip checks. Behind/diverged branches fail early.
+The hook runs all local checks before an actual push and blocks failures.
 Never force-pushes. Branch/existing-tag modes do not create commits or tags.
 Release-bump modes delegate to push-release.sh and run its preflight checks.
 A tag push can trigger release CI and publication after required checks pass.
@@ -72,6 +73,25 @@ fi
 if [[ "$(git -C "$ROOT" config --bool --get remote.origin.mirror || true)" == true ]]; then
   echo 'Refusing origin configured as a mirror; this helper pushes only one ref.' >&2
   exit 1
+fi
+echo "[git-push] Checking whether origin needs $REF."
+REMOTE_REF="$(git -C "$ROOT" ls-remote --refs origin "$REF")"
+LOCAL_OID="$(git -C "$ROOT" rev-parse "$REF")"
+if [[ -n "$REMOTE_REF" ]]; then
+  REMOTE_OID="${REMOTE_REF%%$'\t'*}"
+  if [[ "$REMOTE_OID" == "$LOCAL_OID" ]]; then
+    echo "[git-push] Nothing to push: origin already has $REF. Checks skipped."
+    exit 0
+  fi
+  if [[ "$MODE" == tag ]]; then
+    echo 'Remote tag differs; refusing to overwrite it. Checks skipped.' >&2
+    exit 1
+  fi
+  git -C "$ROOT" fetch --no-tags origin "$REF"
+  if ! git -C "$ROOT" merge-base --is-ancestor FETCH_HEAD "$REF"; then
+    echo 'Branch is behind or diverged from origin; reconcile it first. Checks skipped.' >&2
+    exit 1
+  fi
 fi
 echo '[git-push] Enabling local validation hook.'
 python3 "$ROOT/tools/git/install-hooks.py"

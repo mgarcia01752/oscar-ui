@@ -18,7 +18,10 @@ tools/git/git-push.sh --tag v0.2.5
 ```
 
 `--branch` is an alias for `--master`. Choose exactly one mode. The helper
-requires a clean checkout, enables the local pre-push hook, and lets that hook
+requires a clean checkout and queries origin before starting build/test checks.
+If the selected branch or tag already matches origin, it exits successfully with
+“Nothing to push” and skips validation. Behind/diverged branches and conflicting
+tags fail early. Otherwise it enables the local pre-push hook and lets that hook
 run all checks before uploading. Failures stop the push. These two modes do not create
 commits or tags, bump versions, force-push, or push other refs. Tag mode also
 requires the tag to match `pom.xml`; replace the example with your actual tag.
@@ -36,7 +39,12 @@ tools/git/git-push.sh --tag-patch
 These options delegate to `push-release.sh --push-major`, `--push-minor`, or
 `--push-patch`. They run preflight checks, update the version, commit, create the
 new tag, and push the branch and tag atomically. The pre-push hook checks the
-final commit again. There is no default bump and modes cannot be combined.
+final commit again. Before validation, release mode checks the current POM
+version's tag: if it already publishes HEAD, it reports “Nothing to release”
+and skips the bump and checks. If that tag is only local at HEAD, it stops and
+asks you to push the existing release instead of creating another version.
+Commits after that tag remain releasable even if already pushed to main.
+There is no default bump and modes cannot be combined.
 See [Release packaging](packaging.md). Conflicting existing hooks are preserved;
 resolve the reported conflict rather than bypassing checks.
 

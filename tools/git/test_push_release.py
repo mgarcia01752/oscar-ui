@@ -51,6 +51,34 @@ class PushReleaseTest(unittest.TestCase):
         self.assertEqual(refs.count(self.git('rev-parse', 'HEAD')), 2)
         self.assertEqual(self.git('status', '--porcelain'), '')
 
+    def test_published_current_commit_skips_checks_and_version_bump(self):
+        """Avoid empty releases when the current version already tags HEAD remotely.
+
+        Remote tags must be checked even if the local tag was not fetched.
+        """
+        self.git('tag', '-a', 'v0.1.0', '-m', 'Published')
+        self.git('push', 'origin', 'refs/tags/v0.1.0')
+        self.git('tag', '-d', 'v0.1.0')
+        before = self.git('rev-parse', 'HEAD')
+        result = self.run_release()
+        self.assertIn('Nothing to release', result.stdout)
+        self.assertNotIn('Fixture checks passed', result.stdout)
+        self.assertEqual(before, self.git('rev-parse', 'HEAD'))
+        self.assertEqual('', self.git('tag'))
+
+    def test_commits_after_release_still_release_when_branch_is_pushed(self):
+        """Permit a release of changes already uploaded to the main branch.
+
+        The release baseline is the current version tag, not origin/main.
+        """
+        self.git('tag', '-a', 'v0.1.0', '-m', 'Published')
+        self.git('push', 'origin', 'refs/tags/v0.1.0')
+        self.git('commit', '--allow-empty', '-m', 'New work')
+        self.git('push', 'origin', 'main')
+        result = self.run_release()
+        self.assertIn('Fixture checks passed', result.stdout)
+        self.assertIn('v0.1.1', self.git('tag'))
+
     def test_preview_changes_nothing(self):
         before = self.git('rev-parse', 'HEAD')
         result = self.run_release('--push-minor', '--dry-run')

@@ -259,3 +259,9 @@ allows the old package to be removed:
 sudo install -d -m 755 /usr/share/desktop-directories
 sudo apt-get remove oscar-ui
 ```
+
+Release helpers skip a new version when HEAD already matches the published tag
+for the current POM version. This check runs before local build/test validation.
+A matching local-only tag blocks another bump; push that existing release first.
+Changes already pushed to main can still be released if they follow the current
+version tag. See [push checks](pre-push-checks.md).

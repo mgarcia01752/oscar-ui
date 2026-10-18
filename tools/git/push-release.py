@@ -39,6 +39,15 @@ def release(bump, explicit, dry_run):
     current = ET.fromstring(text).find('{http://maven.apache.org/POM/4.0.0}version').text
     if not re.fullmatch(VERSION_PATTERN, current):
         raise RuntimeError('pom.xml must have a stable MAJOR.MINOR.PATCH version.')
+    current_tag = f'refs/tags/v{current}'
+    published = git('ls-remote', 'origin', current_tag, current_tag + '^{}').stdout.splitlines()
+    published_commits = {line.split()[0] for line in published}
+    if starting_head in published_commits:
+        print(f'Nothing to release: HEAD is already published as v{current}. Checks skipped.', flush=True)
+        return
+    local_tag = git('rev-parse', '--verify', current_tag + '^{commit}', check=False)
+    if local_tag.returncode == 0 and local_tag.stdout.strip() == starting_head:
+        raise RuntimeError(f'HEAD is already tagged v{current} locally. Push the existing release instead of bumping again; checks skipped.')
     numbers = [int(n) for n in current.split('.')]
     if explicit:
         if not re.fullmatch(VERSION_PATTERN, explicit):

@@ -49,7 +49,9 @@ class GitPushTest(unittest.TestCase):
         self.assertIn('FIXTURE_CHECKS_RAN', result.stdout)
         self.assertIn('refs/heads/main', self._git('ls-remote', 'origin'))
         self.assertNotIn('refs/tags', self._git('ls-remote', 'origin'))
-        self.assertIn('FIXTURE_CHECKS_RAN', self._push('--master').stdout)
+        repeated = self._push('--master')
+        self.assertIn('Nothing to push', repeated.stdout)
+        self.assertNotIn('FIXTURE_CHECKS_RAN', repeated.stdout)
 
     def test_tag_push_runs_checks_and_leaves_branch_unpublished(self):
         """Publish only the requested tag after validating its checked-out commit.
@@ -61,6 +63,9 @@ class GitPushTest(unittest.TestCase):
         self.assertIn('FIXTURE_CHECKS_RAN', result.stdout)
         self.assertIn('refs/tags/v1.0.0', self._git('ls-remote', 'origin'))
         self.assertNotIn('refs/heads', self._git('ls-remote', 'origin'))
+        repeated = self._push('--tag', 'v1.0.0')
+        self.assertIn('Nothing to push', repeated.stdout)
+        self.assertNotIn('FIXTURE_CHECKS_RAN', repeated.stdout)
 
     def test_failure_and_dirty_tree_block_upload(self):
         """Reject failed validation and uncommitted files without remote changes.

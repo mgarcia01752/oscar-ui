@@ -59,3 +59,9 @@ hook and runs checks during the push; those modes never bypass validation,
 follow other tags, or create a new release version. For a new release, use
 `--tag-major`, `--tag-minor`, or `--tag-patch` to delegate to `push-release.sh`;
 these modes commit the version bump and push the branch and new tag together. Test it with disposable remotes.
+
+Before expensive validation, detect no-op pushes against live origin refs.
+Skip identical branch/tag uploads; reject conflicting tags and behind/diverged
+branches. For release bumps, compare HEAD with the current version tag rather
+than origin/main: already-pushed feature commits can still need a release.
+Test that no-op paths do not run the checker or change versions/tags.
