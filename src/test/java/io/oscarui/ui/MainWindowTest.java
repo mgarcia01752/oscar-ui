@@ -23,6 +23,42 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void selectedTlvHexShowsOnlyTheChosenSubtree() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            assertFalse(action(window, "viewTlvHex").isEnabled());
+            window.openFile(Files.writeString(temporary.resolve("hex.txt"),
+                    "Docsis { DownstreamServiceFlow { ServiceFlowReference 1; } "
+                    + "DownstreamServiceFlow { ServiceFlowReference 2; } }"));
+            await(window::completed);
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.setCurrentItem(tree.topLevelItem(0).child(1));
+            assertTrue(action(window, "viewTlvHex").isEnabled());
+            var closed = new java.util.concurrent.atomic.AtomicBoolean();
+            respond(window, dialog -> {
+                var hexTree = dialog.findChild(QTreeWidget.class, "tlvHexTree");
+                assertEquals("Name", hexTree.headerItem().text(0));
+                assertEquals("Hex", hexTree.headerItem().text(1));
+                assertEquals(1, hexTree.topLevelItemCount());
+                var parent = hexTree.topLevelItem(0);
+                assertEquals("19:04:01:02:00:02", parent.text(1));
+                assertEquals("01:02:00:02", parent.child(0).text(1));
+                assertTrue(parent.isExpanded());
+                dialog.grab().save("target/selected-tlv-hex.png");
+                dialog.reject();
+                closed.set(true);
+            });
+            action(window, "viewTlvHex").trigger();
+            assertFalse(action(window, "viewTlvHex").isEnabled());
+            await(closed::get);
+            assertCallback();
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void oscarCommentsDefaultOnAndGlobalTogglePreservesSource() throws Exception {
         var window = new MainWindow(false);
         window.show();

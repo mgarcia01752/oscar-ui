@@ -63,6 +63,8 @@ public final class MainWindow extends QMainWindow {
 
     private final QAction inspectTlvBreakdown = action("&TLV breakdown", "inspectTlvBreakdown", null);
 
+    private final QAction viewTlvHex = action("View TLV &Hex...", "viewTlvHex", null);
+
     private final QAction configChecks = action("Check Config...", "configChecks", null);
 
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
@@ -144,6 +146,7 @@ public final class MainWindow extends QMainWindow {
         layout.addWidget(status);
         setCentralWidget(central);
         buildMenus();
+        viewTlvHex.triggered.connect(this::showSelectedTlvHex);
         configurationTreePane.currentItemChanged.connect((current, previous) -> {
             configurationTextPane.highlight(configurationTreePane.selectedTlv());
             updateActions();
@@ -158,7 +161,7 @@ public final class MainWindow extends QMainWindow {
                 editSelectedTlv();
             }
         });
-        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv));
+        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv, viewTlvHex));
         poller.timeout.connect(this::receiveResult);
         poller.start(40);
         updateActions();
@@ -431,6 +434,22 @@ public final class MainWindow extends QMainWindow {
             dialog.stopChecking();
             dialog.dispose();
         }
+    }
+
+    private void showSelectedTlvHex() {
+        Node selected = configurationTreePane.selectedTlv();
+        if (pending != null || document == null || selected == null || selected.tlvPath().isEmpty()) {
+            return;
+        }
+        Document snapshot = document;
+        submit(() -> new SelectedTlvHexService().inspect(snapshot, selected), result -> {
+            var dialog = new TlvHexDialog(this, result);
+            try {
+                dialog.exec();
+            } finally {
+                dialog.dispose();
+            }
+        });
     }
 
     private void showBinaryInspection(BinaryInspectionDialog.View view) {
@@ -823,6 +842,8 @@ public final class MainWindow extends QMainWindow {
         inspectTlvBreakdown.setEnabled(binaryActive);
         configChecks.setEnabled(idle && document != null);
         Node selected = configurationTreePane.selectedTlv();
+        viewTlvHex.setEnabled(idle && document != null && selected != null && !selected.tlvPath().isEmpty()
+                && !selected.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE));
         duplicateTlv.setEnabled(idle && documentService.canDuplicate(document, selected));
         deleteTlv.setEnabled(idle && document != null && documentService.canDelete(document, selected));
         editTlv.setEnabled(idle && canOpenEditor(selected));

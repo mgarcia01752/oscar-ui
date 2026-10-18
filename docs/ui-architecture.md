@@ -199,3 +199,29 @@ copies the visible preview. The preference is session-only, like MIC visibility.
 - [x] Request OSCAR comments for binary imports by default.
 - [x] Apply visibility on OK; Cancel preserves the previous choice.
 - [x] Preserve source text and selection offsets when hiding comments.
+
+## Selected TLV hex
+
+The configuration tree's right-click menu offers **View TLV Hex…** for a mapped
+TLV when idle. It is disabled for the document root, no selection, and unmapped
+entries. It works for text and binary documents, independently of the binary-only
+Inspect menu. Double-click continues to edit.
+
+`SelectedTlvHexService` encodes the current selected instance through OSCAR's
+`ConfigurationFileImport`, wrapping nested selections in their ancestor names.
+It uses registry `lengthBytes`, `TlvBuilder.nextTLVIndex/getTlvValue`, and
+`HexString` to build the rows. No file compiler, MIC regeneration, shared secret,
+or disk writes are involved. Current unsaved edits are included. Repeated TLVs
+are selected by node identity, not by their shared numeric path. Unexpected
+encoding boundaries produce an error rather than a misleading breakdown.
+
+`TlvHexDialog` displays a read-only **Name | Hex** tree, expanded initially.
+The selected TLV is the first row; child and nested parent rows appear below it
+with hierarchical indentation. Every row includes its complete type, length,
+and value bytes; a parent's hex therefore includes its children. A scalar has
+one row. Encoding runs on the existing worker, keeping the UI responsive.
+
+- [x] Show parent and nested child bytes with indentation.
+- [x] Preserve repeated-instance selection and current edits.
+- [x] Support scalar selection and OSCAR's DOCSIS 4.0 length widths.
+- [x] Disable the action while busy and for non-TLV selections.
