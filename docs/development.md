@@ -161,8 +161,8 @@ Service tests cover all discovered template types, nested insertion, text fideli
 safe-save failures, and external-change detection. Windows desktop behavior has
 not yet been verified.
 
-The window title identifies the file; **Text** or **Binary** appears at the
-bottom right. Binary imports use their original filename until saved as text.
+The window title stays **OSCAR-UI**; **Text** or **Binary** appears at the
+bottom right. Filenames and paths are not shown in the window title.
 Operation feedback appears only when needed.
 
 ## Current workspace
@@ -245,9 +245,16 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	The **Hash community strings** checkbox keeps a session-only preference;
 	it does not hash or transform values yet. Its algorithm and export behavior
 	remain requirements to define.
-- **Settings > Global** opens a dialog with **Appearance: Light / Dark**.
+- **Settings > Global** opens a dialog with **Appearance: System / Light / Dark**.
+  System is the default and follows the desktop theme reported by Qt.
   Select **OK** to apply the theme and MIC visibility; **Cancel** keeps the
-  previous settings. These preferences apply for this session only.
+  previous settings. Appearance is saved in a per-user `settings.json` on OK
+  and restored at startup. MIC visibility remains session-only.
+  Settings live under Qt's application configuration directory, normally
+  `~/.config/OSCAR-UI/settings.json` on Ubuntu (respecting `XDG_CONFIG_HOME`)
+  and `%LOCALAPPDATA%/OSCAR-UI/settings.json` on Windows. Secrets are not stored.
+  Missing settings use System; unreadable/invalid settings show a status message
+  and use System without overwriting the file. Failed saves keep prior settings.
 
 The binary adapter has lab tests with public test keys and independently
 calculated legacy CM/CMTS MICs: CM-SP-MULPIv3.1-I21-201020, D.1.3.1 / D.2.1,

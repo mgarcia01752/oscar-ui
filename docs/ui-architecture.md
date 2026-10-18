@@ -10,7 +10,7 @@ thread. Oscar parsing, validation, and serialization remain in the service layer
 | `ConfigurationTextPane` | Read-only source preview and selection highlighting, including CRLF position conversion |
 | `TlvEditorDialog` | Shared Add/Edit controls, value help, validation, and delete confirmation |
 | `NewDocumentDialog` | New configuration and reference-template choices |
-| `GlobalSettingsDialog` | Session appearance and MIC visibility preferences |
+| `GlobalSettingsDialog` | Persisted appearance choice and session MIC visibility |
 | `SecretsDialog` | Masked session secret and hashing preference |
 | `SaveFormatDialog` | Text/Binary choice; the main window performs the save |
 | `BinaryInspectionDialog` | Read-only, monospace HexDump and top-level TLV listings |
@@ -62,3 +62,73 @@ Inspection checklist:
 - [x] Original snapshot retained after edits or external file deletion.
 - [x] Repeated TLV order, padding/end-marker handling, and text-save gating.
 - [ ] Verify native dialogs on Windows.
+
+## Keyboard shortcuts
+
+Use Qt standard key bindings, with one action owning each shortcut. File → Save
+owns Ctrl+S directly and displays it in the menu. It saves the active format:
+text to its text path, binary to its binary path, and a new text document through
+the destination chooser. Saving is disabled while busy or without changes.
+
+| Action | Windows / Linux shortcut | Behavior |
+| --- | --- | --- |
+| New | Ctrl+N | Create a document, with an unsaved-change prompt if needed |
+| Open | Ctrl+O | Open a text or binary configuration |
+| Save | Ctrl+S | Save in the current format |
+| Save As | Ctrl+Shift+S | Choose Text or Binary, then a destination |
+| Copy | Ctrl+C | Copy selected configuration text |
+| Select All | Ctrl+A | Select all configuration text |
+| Quit | Qt platform default | Close with an unsaved-change prompt; window close shortcuts also apply |
+
+Qt resolves platform-specific standard bindings; macOS generally uses Command
+instead of Control, but native macOS UI support is not verified. Copy and Select
+All also follow the focused text widget's behavior in dialogs.
+
+Hotkey checklist:
+
+- [x] One Save action for menu clicks and Ctrl+S; no duplicate shortcut binding.
+- [x] Ctrl+S keyboard event saves a new text document through its chooser.
+- [x] Save uses the active binary format without a format-selection prompt.
+- [x] Save enablement follows pending operations and modified state.
+- [ ] Verify physical keyboard shortcuts on Windows.
+
+## System appearance and JSON preferences
+
+`Appearance` has SYSTEM (default), LIGHT, and DARK choices. `DesktopTheme`
+resolves SYSTEM using Qt 6.8
+[`QStyleHints.colorScheme`](https://doc.qt.io/qt-6.8/qstylehints.html#colorScheme-prop); an unknown system scheme
+falls back to Light. A queued `colorSchemeChanged` connection reapplies the chosen
+palette after Qt processes the system change. Explicit Light/Dark choices remain
+fixed. The connection is disconnected when the window closes. Icons follow the
+resolved palette. OS notification delivery depends on the desktop/Qt platform.
+
+`AppearanceSettingsStore` owns only the per-user JSON schema and file I/O.
+`MainWindow` locates `settings.json` through `QStandardPaths.AppConfigLocation`,
+loads it before displaying the window, and saves on Settings → Global → OK.
+Cancel never writes. Successful persistence precedes applying the choice; write
+failure reports an error and keeps the previous settings. Missing files default
+to System; malformed/unreadable files produce a visible status message and are
+not overwritten at startup. Saves use a sibling temporary file and atomic rename
+where available, with replacement fallback on filesystems without atomic moves.
+
+```json
+{
+  "version": 1,
+  "appearance": "system"
+}
+```
+
+Only appearance is persisted: no shared secret, community values, configuration
+contents, or MIC visibility. Settings are outside the installation directory and
+survive uninstall. Noninteractive smoke/tests skip user settings unless a test
+injects a temporary settings store.
+
+Appearance checklist:
+
+- [x] Default to System; retain explicit Light and Dark choices.
+- [x] Follow system color-scheme notifications without overriding explicit choices.
+- [x] Persist the selection in per-user JSON and restore it on restart.
+- [x] Cancel leaves preferences unchanged; failed writes preserve prior state.
+- [x] Reject malformed/unsupported JSON without changing its contents.
+- [x] Keep all secrets and document contents out of the settings file.
+- [ ] Verify real desktop theme notifications on Ubuntu and Windows.

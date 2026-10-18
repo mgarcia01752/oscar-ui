@@ -3,6 +3,10 @@ package io.oscarui.ui;
 import io.oscarui.service.*;
 import io.oscarui.service.OscarDocumentService.*;
 import io.qt.core.QTimer;
+import io.qt.core.QStandardPaths;
+import io.qt.core.QMetaObject;
+import io.qt.core.QObject;
+import java.io.IOException;
 import io.qt.core.Qt;
 import io.qt.gui.QAction;
 import io.qt.gui.QCloseEvent;
@@ -36,7 +40,7 @@ public final class MainWindow extends QMainWindow {
 
     private final QAction open = action("&Open...", "fileOpen", QKeySequence.StandardKey.Open);
 
-    private final QAction save = action("&Save", "fileSave", null);
+    private final QAction save = action("&Save", "fileSave", QKeySequence.StandardKey.Save);
 
     private final QAction saveAs = action("&Text...", "fileSaveAs", null);
 
@@ -49,8 +53,6 @@ public final class MainWindow extends QMainWindow {
     private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
 
     private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
-
-    private final QAction saveShortcut = action("Save", "saveShortcut", QKeySequence.StandardKey.Save);
 
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
 
@@ -71,6 +73,12 @@ public final class MainWindow extends QMainWindow {
     private final QTimer poller = new QTimer(this);
 
     private final boolean interactive;
+
+    private final AppearanceSettingsStore appearanceSettings;
+
+    private Appearance appearance = Appearance.SYSTEM;
+
+    private final QMetaObject.Connection systemAppearanceConnection;
 
     private Document document;
 
@@ -95,15 +103,22 @@ public final class MainWindow extends QMainWindow {
      * Creates the application window with optional interactive prompts.
      *
      * <p>Must be called on the Qt UI thread. Closing the window stops its
-     * worker and clears session secrets.
+     * worker and clears session secrets. Interactive windows load per-user
+     * appearance settings; noninteractive smoke/tests do not access user settings.
      *
      * @param interactive true to show prompts and open the editor after loading;
      *                    false for automated smoke and dialog tests
      */
     public MainWindow(boolean interactive) {
+        this(interactive, interactive ? new AppearanceSettingsStore(Path.of(
+                QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppConfigLocation), "settings.json")) : null);
+    }
+
+    MainWindow(boolean interactive, AppearanceSettingsStore appearanceSettings) {
+        this.appearanceSettings = appearanceSettings;
         this.interactive = interactive;
         setWindowTitle("OSCAR-UI");
-        DesktopTheme.updateIcon();
+
         resize(1200, 780);
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
@@ -140,6 +155,16 @@ public final class MainWindow extends QMainWindow {
         poller.timeout.connect(this::receiveResult);
         poller.start(40);
         updateActions();
+        if (appearanceSettings != null) {
+            try {
+                appearance = appearanceSettings.load();
+            } catch (IOException exception) {
+                showStatus("Could not read appearance settings; using System. Save a preference in Settings > Global to replace them.");
+            }
+        }
+        DesktopTheme.apply(appearance);
+        systemAppearanceConnection = QApplication.styleHints().colorSchemeChanged.connect(
+                scheme -> DesktopTheme.apply(appearance, scheme), Qt.ConnectionType.QueuedConnection);
     }
 
     /**
@@ -245,6 +270,7 @@ public final class MainWindow extends QMainWindow {
             withDiscardPermission(() -> { modified = false; QTimer.singleShot(0, () -> close()); });
             return;
         }
+        QObject.disconnect(systemAppearanceConnection);
         poller.stop();
         if (pending != null) {
             pending.cancel(true);
@@ -271,9 +297,7 @@ public final class MainWindow extends QMainWindow {
         saveAsMenu = file.addMenu("Save &As");
         saveAsMenu.addAction(binarySaveAs);
         saveAsMenu.addAction(saveAs);
-        addAction(saveShortcut);
         addAction(saveAsShortcut);
-        saveShortcut.triggered.connect(() -> saveCurrent(() -> {}));
         saveAsShortcut.triggered.connect(this::chooseSaveFormat);
         binarySaveAs.triggered.connect(() -> saveBinary(true, () -> {}));
         file.addAction(configChecks);
@@ -313,11 +337,22 @@ public final class MainWindow extends QMainWindow {
         showMicTlvs.setCheckable(true);
         showMicTlvs.toggled.connect(checked -> updateMicVisibility());
         global.triggered.connect(() -> {
-            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked());
+            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), appearance);
             try {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
-                    showMicTlvs.setChecked(dialog.showMicTlvs());
-                    DesktopTheme.apply(dialog.darkMode());
+                    try {
+                        if (appearanceSettings != null) {
+                            appearanceSettings.save(dialog.appearance());
+                        }
+                        appearance = dialog.appearance();
+                        showMicTlvs.setChecked(dialog.showMicTlvs());
+                        DesktopTheme.apply(appearance);
+                    } catch (IOException exception) {
+                        showStatus("Could not save appearance settings. Previous settings were kept.");
+                        if (interactive) {
+                            QMessageBox.warning(this, "Settings not saved", "Could not write appearance settings. Check configuration-directory permissions.");
+                        }
+                    }
                 }
             } finally { dialog.dispose(); }
         });
@@ -399,11 +434,7 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void updateDocumentLabels() {
-        var file = document.path() != null ? document.path()
-                : document.origin() == null ? null : document.origin().path();
-        String name = file == null ? "Untitled" : file.getFileName().toString();
         typeLabel.setText(document.path() == null && document.origin() != null ? "Binary" : "Text");
-        setWindowTitle(name + (modified ? " *" : "") + " - OSCAR-UI");
         showStatus("");
     }
 
@@ -720,7 +751,6 @@ public final class MainWindow extends QMainWindow {
         saveAs.setEnabled(idle && document != null);
         saveAsMenu.setEnabled(idle && document != null);
         binarySaveAs.setEnabled(idle && document != null);
-        saveShortcut.setEnabled(idle && document != null && modified);
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
         boolean binaryActive = idle && document != null && document.path() == null && document.origin() != null;

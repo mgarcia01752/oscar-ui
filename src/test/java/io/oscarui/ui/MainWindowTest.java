@@ -23,6 +23,60 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void appearancePersistsAndSystemChangesRespectOverrides() throws Exception {
+        var store = new io.oscarui.service.AppearanceSettingsStore(temporary.resolve("settings.json"));
+        var window = new MainWindow(false, store);
+        window.show();
+        try {
+            respond(window, dialog -> {
+                var choices = dialog.findChild(QComboBox.class, "appearanceMode");
+                assertEquals("System", choices.currentText());
+                assertEquals(3, choices.count());
+                choices.setCurrentIndex(2);
+                dialog.reject();
+            });
+            action(window, "globalSettings").trigger();
+            assertCallback();
+            assertFalse(Files.exists(temporary.resolve("settings.json")));
+            respond(window, dialog -> {
+                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(2);
+                dialog.accept();
+            });
+            action(window, "globalSettings").trigger();
+            assertCallback();
+            assertEquals(io.oscarui.service.Appearance.DARK, store.load());
+            QApplication.styleHints().colorSchemeChanged.emit(Qt.ColorScheme.Light);
+            QApplication.processEvents();
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+        } finally {
+            window.close();
+            window.dispose();
+        }
+        var reopened = new MainWindow(false, store);
+        reopened.show();
+        try {
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+            respond(reopened, dialog -> {
+                var choices = dialog.findChild(QComboBox.class, "appearanceMode");
+                assertEquals("Dark", choices.currentText());
+                choices.setCurrentIndex(0);
+                dialog.accept();
+            });
+            action(reopened, "globalSettings").trigger();
+            assertCallback();
+            assertEquals(io.oscarui.service.Appearance.SYSTEM, store.load());
+            QApplication.styleHints().colorSchemeChanged.emit(Qt.ColorScheme.Dark);
+            QApplication.processEvents();
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+            QApplication.styleHints().colorSchemeChanged.emit(Qt.ColorScheme.Light);
+            QApplication.processEvents();
+            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() > 128);
+        } finally {
+            reopened.close();
+            reopened.dispose();
+        }
+    }
+
     @Test void inspectMenuFollowsActiveFileAndDisplaysOscarListings() throws Exception {
         var window = new MainWindow(false);
         window.show();
@@ -316,7 +370,7 @@ class MainWindowTest {
             var imported = window.currentDocument();
             assertNull(imported.path());
             assertEquals(input, imported.origin().path());
-            assertTrue(window.windowTitle().startsWith("input.cfg"));
+            assertEquals("OSCAR-UI", window.windowTitle());
             assertNull(window.findChild(QLabel.class, "documentName"));
             assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
             assertFalse(window.windowTitle().contains("Untitled"));
@@ -339,7 +393,7 @@ class MainWindowTest {
             await(() -> window.completed() && text.equals(window.currentDocument().path()));
             assertCallback();
             assertEquals(imported.text(), Files.readString(text));
-            assertTrue(window.windowTitle().startsWith("decoded.txt"));
+            assertEquals("OSCAR-UI", window.windowTitle());
             assertNull(window.findChild(QLabel.class, "documentName"));
             assertEquals("Text", window.findChild(QLabel.class, "documentType").text());
             assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
@@ -652,6 +706,9 @@ class MainWindowTest {
 
     @Test void saveShortcutUsesTextWithoutFormatPrompt() throws Exception {
         var window = new MainWindow(false);
+        window.show();
+        window.activateWindow();
+        QApplication.processEvents();
         try {
             var configurationType = new OscarDocumentService().types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
             window.createDocument(configurationType, false);
@@ -662,7 +719,14 @@ class MainWindowTest {
                 chooser.findChild(QLineEdit.class, "fileNameEdit").setText(destination.toString());
                 chooser.accept();
             });
-            action(window, "saveShortcut").trigger();
+            assertEquals(new io.qt.gui.QKeySequence(io.qt.gui.QKeySequence.StandardKey.Save),
+                    action(window, "fileSave").shortcut());
+            var editor = window.findChild(QPlainTextEdit.class, "configurationText");
+            editor.setFocus();
+            var keyPress = new io.qt.gui.QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_S.value(),
+                    new Qt.KeyboardModifiers(Qt.KeyboardModifier.ControlModifier));
+            QApplication.sendEvent(editor, keyPress);
+            keyPress.dispose();
             await(() -> window.completed() && destination.equals(window.currentDocument().path()));
             assertEquals(window.currentDocument().text(), Files.readString(destination));
         } finally { window.close(); window.dispose(); }
@@ -701,7 +765,7 @@ class MainWindowTest {
             });
             action(window, "editTlv").trigger();
             await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
-            action(window, "saveShortcut").trigger();
+            action(window, "fileSave").trigger();
             await(() -> window.completed() && !action(window, "fileSave").isEnabled());
             assertArrayEquals(new byte[]{3, 1, 0}, java.util.Arrays.copyOf(Files.readAllBytes(output), 3));
             assertEquals("Docsis { NetworkAccess 1; }", Files.readString(source));
@@ -760,11 +824,11 @@ class MainWindowTest {
         var originalPalette = QApplication.palette();
         var window = new MainWindow(false);
         try {
-            DesktopTheme.apply(false);
+            DesktopTheme.apply(io.oscarui.service.Appearance.LIGHT);
             assertFalse(window.windowIcon().isNull());
             long lightIconCacheKey = window.windowIcon().cacheKey();
             var lightImage = window.windowIcon().pixmap(32, 32).toImage();
-            DesktopTheme.apply(true);
+            DesktopTheme.apply(io.oscarui.service.Appearance.DARK);
             assertFalse(window.windowIcon().isNull());
             var darkImage = window.windowIcon().pixmap(32, 32).toImage();
             assertFalse(darkImage.isNull());
@@ -775,7 +839,7 @@ class MainWindowTest {
             } finally {
                 dialog.dispose();
             }
-            DesktopTheme.apply(false);
+            DesktopTheme.apply(io.oscarui.service.Appearance.LIGHT);
             assertEquals(lightImage, window.windowIcon().pixmap(32, 32).toImage());
             lightImage.dispose();
             darkImage.dispose();
@@ -797,7 +861,7 @@ class MainWindowTest {
             assertNotNull(global);
             assertTrue(global.actions().contains(action(window, "settingsSecrets")));
             respond(window, dialog -> {
-                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(1);
+                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(2);
                 dialog.accept();
             });
             action(window, "globalSettings").trigger();
@@ -815,7 +879,7 @@ class MainWindowTest {
             action(window, "settingsSecrets").trigger();
             assertCallback();
             respond(window, dialog -> {
-                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(0);
+                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(1);
                 dialog.accept();
             });
             action(window, "globalSettings").trigger();

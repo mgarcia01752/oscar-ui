@@ -1,0 +1,46 @@
+package io.oscarui.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.IOException;
+import java.nio.file.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+class AppearanceSettingsStoreTest {
+    @TempDir Path temporary;
+
+    @Test void missingSettingsDefaultToSystemAndChoicesSurviveReload() throws Exception {
+        Path settingsPath = temporary.resolve("preferences/settings.json");
+        var store = new AppearanceSettingsStore(settingsPath);
+        assertEquals(Appearance.SYSTEM, store.load());
+        assertFalse(Files.exists(settingsPath));
+        for (Appearance appearance : Appearance.values()) {
+            store.save(appearance);
+            assertEquals(appearance, new AppearanceSettingsStore(settingsPath).load());
+            var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(settingsPath.toFile());
+            assertEquals(2, json.size());
+            assertEquals(1, json.get("version").intValue());
+        }
+        try (var files = Files.list(settingsPath.getParent())) {
+            assertEquals(1, files.count());
+        }
+    }
+
+    @Test void invalidSettingsAreReportedWithoutRewritingThem() throws Exception {
+        Path settingsPath = temporary.resolve("settings.json");
+        for (String invalid : new String[]{"broken", "{}", "null",
+                "{\"version\":2,\"appearance\":\"dark\"}",
+                "{\"version\":1,\"appearance\":\"invalid\"}"}) {
+            Files.writeString(settingsPath, invalid);
+            assertThrows(IOException.class, () -> new AppearanceSettingsStore(settingsPath).load());
+            assertEquals(invalid, Files.readString(settingsPath));
+        }
+    }
+
+    @Test void writeFailureDoesNotReplaceExistingContent() throws Exception {
+        Path blockedParent = Files.writeString(temporary.resolve("blocked"), "keep");
+        var store = new AppearanceSettingsStore(blockedParent.resolve("settings.json"));
+        assertThrows(IOException.class, () -> store.save(Appearance.DARK));
+        assertEquals("keep", Files.readString(blockedParent));
+    }
+}

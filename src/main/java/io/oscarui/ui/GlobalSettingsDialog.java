@@ -1,13 +1,13 @@
 package io.oscarui.ui;
 
-import io.qt.gui.QPalette;
+import io.oscarui.service.Appearance;
 import io.qt.widgets.*;
 
 final class GlobalSettingsDialog extends QDialog {
     private final QCheckBox showMicTlvsCheckbox = new QCheckBox("Show CM/CMTS MIC TLVs");
     private final QComboBox appearanceSelector = new QComboBox();
 
-    GlobalSettingsDialog(QWidget parent, boolean showMic) {
+    GlobalSettingsDialog(QWidget parent, boolean showMic, Appearance appearance) {
         super(parent);
         setObjectName("globalSettingsDialog");
         setWindowTitle("Settings - Global");
@@ -17,9 +17,10 @@ final class GlobalSettingsDialog extends QDialog {
         showMicTlvsCheckbox.setChecked(showMic);
         layout.addWidget(showMicTlvsCheckbox);
         appearanceSelector.setObjectName("appearanceMode");
+        appearanceSelector.addItem("System");
         appearanceSelector.addItem("Light");
         appearanceSelector.addItem("Dark");
-        appearanceSelector.setCurrentIndex(QApplication.palette().color(QPalette.ColorRole.Window).lightness() < 128 ? 1 : 0);
+        appearanceSelector.setCurrentIndex(appearance.ordinal());
         var form = new QFormLayout();
         form.addRow("Appearance", appearanceSelector);
         layout.addLayout(form);
@@ -32,5 +33,5 @@ final class GlobalSettingsDialog extends QDialog {
     }
 
     boolean showMicTlvs() { return showMicTlvsCheckbox.isChecked(); }
-    boolean darkMode() { return appearanceSelector.currentIndex() == 1; }
+    Appearance appearance() { return Appearance.values()[appearanceSelector.currentIndex()]; }
 }

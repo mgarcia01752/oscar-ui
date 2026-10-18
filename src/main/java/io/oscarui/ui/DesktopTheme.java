@@ -1,17 +1,25 @@
 package io.oscarui.ui;
 
 import io.qt.gui.QPalette;
+import io.qt.core.Qt;
+import io.oscarui.service.Appearance;
 import io.qt.gui.QIcon;
 import io.qt.gui.QPixmap;
 import java.io.IOException;
 import io.qt.widgets.QApplication;
 import static io.qt.gui.QPalette.ColorRole.*;
 
-/** Application-wide, session-only palette shared by existing and new dialogs. */
+/** Application-wide palette resolved from a preference and the desktop color scheme. */
 final class DesktopTheme {
     private DesktopTheme() {}
 
-    static void apply(boolean dark) {
+    static void apply(Appearance appearance) {
+        apply(appearance, QApplication.styleHints().colorScheme());
+    }
+
+    static void apply(Appearance appearance, Qt.ColorScheme systemScheme) {
+        boolean dark = appearance == Appearance.DARK
+                || (appearance == Appearance.SYSTEM && systemScheme == Qt.ColorScheme.Dark);
         // Fusion honors explicit palettes consistently on Linux and Windows.
         QApplication.setStyle("Fusion");
         var palette = new QPalette(QApplication.style().standardPalette());
