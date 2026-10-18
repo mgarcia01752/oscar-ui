@@ -193,3 +193,5 @@ conflicting or incomplete notices are reported for manual review. The checker
 covers Java source, development/build scripts, and owned installer/Git hooks,
 and excludes Maven Wrapper, generated files, and dependencies. Local pre-push
 validation and Java CI run the read-only check automatically.
+
+For native DEB/MSI builds, see [Build local installers](build-images.md).

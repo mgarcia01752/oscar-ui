@@ -76,7 +76,7 @@ their contents. Validate the canonical path and both discovery paths after edits
 - Do not add loose wrappers at the root of `tools/` or duplicate implementations.
   Keep application build, bootstrap, and packaging scripts under `scripts/`:
   shell entry points in `unix/`, PowerShell in `windows/`, shared Python in
-  `shared/`, and portable test harnesses in `tests/`. Keep `scripts/README.md`
+  `build/`, and portable test harnesses in `tests/`. Keep `scripts/README.md`
   current when adding or moving a script. Unix does not imply macOS desktop
   support; only the OSCAR bootstrap is used by macOS CI.
 - When moving a helper, update its project-root resolution, all script callers,
@@ -95,6 +95,10 @@ Keep new check suites integrated with this gate and CI. Local success does not
 replace Windows/Ubuntu installer jobs or prove untested platform behavior.
 
 ## Releases
+
+Use [build-images](skills/build-images/SKILL.md) for local installer builds.
+The shared `scripts/build/build-image.py` wraps native packaging; `--all`
+means current-host targets only. Keep local builds separate from release pushes.
 
 - Preserve the two uploaded application assets: Windows MSI and Ubuntu DEB.
   Keep corresponding dependency sources and checksums inside packages.

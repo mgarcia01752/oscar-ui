@@ -122,7 +122,7 @@ def _references(root, version, commit, digest):
             (rf"^\$Version = '{escaped}'$", f"$Version = '{version}'"),
             (r"^\$Commit = '[0-9a-f]{40}'$", f"$Commit = '{commit}'"),
             (r"^\$Sha256 = '[0-9a-f]{64}'$", f"$Sha256 = '{digest}'")],
-        'scripts/shared/desktop.py': [(rf"\.tools/oscar-{escaped}'", f".tools/oscar-{version}'")],
+        'scripts/build/desktop.py': [(rf"\.tools/oscar-{escaped}'", f".tools/oscar-{version}'")],
         'THIRD-PARTY-NOTICES.md': [
             (rf'^\| Comcast/Oscar {escaped}, commit [0-9a-f]{{40}} \|.*$',
              f'| Comcast/Oscar {version}, commit {commit} | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v{version} |')],

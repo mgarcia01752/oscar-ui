@@ -8,8 +8,15 @@ Run these commands from the repository root. See the
 | --- | --- |
 | `unix/` | Bash entry points; OSCAR bootstrap supports Linux/macOS, while Qt setup, desktop execution, and DEB packaging target Linux x64 |
 | `windows/` | Windows x64 PowerShell setup, desktop, MSI packaging, and installer verification |
-| `shared/` | Python implementation shared by the platform entry points |
+| `build/` | Python implementation shared by the platform entry points |
 | `tests/` | Python packaging tests and the mocked Ubuntu development-installer test |
+
+## Local installer wrapper
+
+Use `python3 scripts/build/build-image.py --linux`, `--windows`, or `--all`
+(`python` on Windows). `--all` selects the current host only. Add `--dry-run`
+to preview. See [Build local installers](../docs/development/build-images.md)
+for prerequisites, output paths, and rebuilding without overwriting output.
 
 ## Linux
 
@@ -39,10 +46,10 @@ for disposable Windows CI runners, not routine checks on a developer machine.
 
 ## Shared implementation and tests
 
-`shared/desktop.py` implements build, run, smoke, and packaging commands.
-`shared/collect-release-sources.py` bundles dependency source archives and
+`build/desktop.py` implements build, run, smoke, and packaging commands.
+`build/collect-release-sources.py` bundles dependency source archives and
 checksums; release entry points invoke it after building the application.
-`shared/verify-java-distribution.py` checks Java licenses, module notices,
+`build/verify-java-distribution.py` checks Java licenses, module notices,
 matching source archives, and build files in extracted/installed packages.
 The Ubuntu release and Windows image/install checks invoke it automatically.
 

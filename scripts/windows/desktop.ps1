@@ -6,5 +6,5 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-& python "$Root/scripts/shared/desktop.py" $Command --type $Type
+& python "$Root/scripts/build/desktop.py" $Command --type $Type
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

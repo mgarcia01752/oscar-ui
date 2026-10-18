@@ -11,7 +11,7 @@ if [[ "${GITHUB_REF_TYPE:-}" == tag && "${GITHUB_REF_NAME:-}" != "v$VERSION" ]];
 fi
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 ./scripts/unix/desktop.sh build
-python3 ./scripts/shared/collect-release-sources.py
+python3 ./scripts/build/collect-release-sources.py
 ./scripts/unix/desktop.sh package --type deb
 shopt -s nullglob
 PACKAGES=("$ROOT"/dist/linux/deb/*.deb)
@@ -30,7 +30,7 @@ for maintainer in postinst prerm; do
 done
 dpkg-deb -x "$PACKAGE" "$PROBE"
 BUILD_JDK="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
-python3 "$ROOT/scripts/shared/verify-java-distribution.py" \
+python3 "$ROOT/scripts/build/verify-java-distribution.py" \
   --runtime "$PROBE/opt/oscar-ui/lib/runtime" \
   --sources "$PROBE/opt/oscar-ui/lib/app/sources" --jdk-home "$BUILD_JDK"
 env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen \

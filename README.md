@@ -51,6 +51,7 @@ for the limits of masking and your responsibility for sensitive files.
 See the [development guide](docs/development/README.md) for setup, build and test
 commands, current functionality, and limitations. Maintainers can find release
 instructions in [Release packaging](docs/development/packaging.md).
+To create a local DEB or MSI, see [Build local installers](docs/development/build-images.md).
 
 Licensed under [Apache License 2.0](LICENSE). See
 [Third-party notices](THIRD-PARTY-NOTICES.md) for bundled dependencies.

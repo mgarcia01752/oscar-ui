@@ -44,7 +44,7 @@ It updates these active references together:
 - `pom.xml`: OSCAR dependency version.
 - `scripts/unix/bootstrap-oscar.sh` and
   `scripts/windows/bootstrap-oscar.ps1`: version, commit, and checksum.
-- `scripts/shared/desktop.py`: attribution cache directory.
+- `scripts/build/desktop.py`: attribution cache directory.
 - `THIRD-PARTY-NOTICES.md`: selected release and commit.
 - Development README and UI architecture: current dependency references.
 

@@ -12,12 +12,12 @@ if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$Version") {
 }
 & "$Root/scripts/windows/desktop.ps1" build
 if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
-& python "$Root/scripts/shared/collect-release-sources.py"
+& python "$Root/scripts/build/collect-release-sources.py"
 if ($LASTEXITCODE -ne 0) { throw 'Source collection failed' }
 & "$Root/scripts/windows/desktop.ps1" package -Type app-image
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
 $Image = "$Root/dist/windows/app-image/OSCAR-UI"
-& python "$Root/scripts/shared/verify-java-distribution.py" `
+& python "$Root/scripts/build/verify-java-distribution.py" `
     --runtime "$Image/runtime" --sources "$Image/app/sources" --jdk-home $env:JAVA_HOME
 if ($LASTEXITCODE -ne 0) { throw 'Java distribution verification failed' }
 # Put transitive native dependencies beside the launcher for Windows DLL lookup.

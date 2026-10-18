@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 SPEC = importlib.util.spec_from_file_location(
-    'java_distribution', Path(__file__).resolve().parents[1] / 'shared/verify-java-distribution.py')
+    'java_distribution', Path(__file__).resolve().parents[1] / 'build/verify-java-distribution.py')
 CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
 

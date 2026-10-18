@@ -17,7 +17,7 @@ SPEC = importlib.util.spec_from_file_location('update_oscar', REPO / 'tools/deve
 UPDATER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(UPDATER)
 FILES = ('pom.xml', 'scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstrap-oscar.ps1',
-         'scripts/shared/desktop.py', 'THIRD-PARTY-NOTICES.md', 'docs/development/README.md',
+         'scripts/build/desktop.py', 'THIRD-PARTY-NOTICES.md', 'docs/development/README.md',
          'docs/development/ui-architecture.md')
 
 
@@ -151,7 +151,7 @@ class UpdateOscarTest(unittest.TestCase):
 
     def test_unknown_reference_layout_fails_before_writing(self):
         """Unexpected source layout requires review rather than a partial replacement."""
-        (self.root / 'scripts/shared/desktop.py').write_text('changed layout', encoding='utf-8')
+        (self.root / 'scripts/build/desktop.py').write_text('changed layout', encoding='utf-8')
         with self.assertRaisesRegex(RuntimeError, 'Expected one reference'):
             UPDATER._references(self.root, self.version, self.commit, self.digest)
         self.assertEqual((self.root / 'pom.xml').read_bytes(), self.originals['pom.xml'])

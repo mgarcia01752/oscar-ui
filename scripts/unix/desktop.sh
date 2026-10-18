@@ -3,4 +3,4 @@
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-exec python3 "${ROOT}/scripts/shared/desktop.py" "$@"
+exec python3 "${ROOT}/scripts/build/desktop.py" "$@"

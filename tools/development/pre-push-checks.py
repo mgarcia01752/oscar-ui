@@ -133,7 +133,7 @@ def _checks():
     _run('GitHub workflow lint', [actionlint, '-shellcheck=', '-pyflakes='])
     bootstrap = [powershell, '-NoProfile', '-File', ROOT / 'scripts/windows/bootstrap-oscar.ps1'] if windows else [bash, ROOT / 'scripts/unix/bootstrap-oscar.sh']
     _run('Verify and install pinned OSCAR dependency', bootstrap)
-    desktop = [sys.executable, ROOT / 'scripts/shared/desktop.py']
+    desktop = [sys.executable, ROOT / 'scripts/build/desktop.py']
     wrapper = ROOT / ('mvnw.cmd' if windows else 'mvnw')
     maven = [wrapper, '-B', f'-Dmaven.repo.local={ROOT / ".m2"}']
     if sys.platform in ('linux', 'win32'):

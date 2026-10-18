@@ -48,7 +48,7 @@ $OriginalQt = $env:QT_PLUGIN_PATH
 $OriginalPlatform = $env:QT_QPA_PLATFORM
 try {
     Invoke-MsiOperation '/i' 'install'
-    & python "$Root/scripts/shared/verify-java-distribution.py" `
+    & python "$Root/scripts/build/verify-java-distribution.py" `
         --runtime "$InstallDirectory/runtime" --sources "$InstallDirectory/app/sources" --jdk-home $env:JAVA_HOME
     if ($LASTEXITCODE -ne 0) { throw 'Installed Java distribution verification failed' }
     foreach ($Required in @("$InstallDirectory/OSCAR-UI.exe", "$InstallDirectory/runtime/release",
