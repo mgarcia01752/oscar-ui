@@ -25,46 +25,20 @@ Open [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases) and
 choose the package for your system under **Assets**. Java and Qt are included;
 you do not need to download the repository.
 
-## Ubuntu 22.04 / 24.04 (x64)
+## Installation
 
-1. Download `oscar-ui_<version>_amd64.deb`.
-2. Open a terminal in the download folder and install the package:
+| System | Package | Instructions |
+| --- | --- | --- |
+| Ubuntu 22.04 / 24.04 (x64) | `.deb` | [Ubuntu installation](docs/install/ubuntu.md) |
+| Windows (x64) | `.msi` | [Windows installation](docs/install/windows.md) |
 
-   ```bash
-   sudo apt install ./oscar-ui_*.deb
-   ```
+Each guide covers installation, launch, troubleshooting, and uninstall.
+GitHub's **Source code** archives are for developers, not runnable applications.
 
-   Keep only the version you want to install in that folder.
-3. Launch **OSCAR-UI** from the application menu.
+## User guide
 
-## Windows (x64)
-
-1. Download `OSCAR-UI-<version>-windows-x64.msi`.
-2. Run the installer and follow the prompts (administrator permission required).
-3. Launch **OSCAR-UI** from the Start menu.
-
-The installer is currently unsigned, so Windows may display a SmartScreen warning.
-
-## Uninstall
-
-- **Windows:** Settings → Apps → Installed apps → OSCAR-UI → Uninstall.
-- **Ubuntu:** run `sudo apt remove oscar-ui`.
-
-Keep your configuration files in your own folders, outside the application
-installation directory. Uninstall removes the application and bundled runtime;
-your configuration files remain.
-
-GitHub's **Source code** ZIP/TAR downloads are for developers, not runnable
-application packages.
-
-## Check a shared secret
-
-Choose **Tools → Check Shared Secret**, enter the masked secret, select a
-DOCSIS binary, and click **Check**. The result is **Correct Shared Secret** or
-**Incorrect Shared Secret**. Text, damaged files, and unsupported MICs show
-**Unable to Check**. The file is unchanged and the secret is not saved.
-In both this dialog and Settings → Secrets, hold the eye button to reveal the
-shared secret; release it to mask the value again.
+See the [OSCAR-UI user guide](docs/ui/README.md) for file operations, TLV editing,
+inspection, settings, Tools → Check Shared Secret, and update checks.
 
 ## Configuration file security concerns
 

@@ -342,3 +342,5 @@ Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.0.
 The dialog masks the supplied key and does not change the editor or selected
 file. See the [architecture and checklist](ui-architecture.md#check-shared-secret)
 for profile detection, result semantics and validation coverage.
+
+For task-based instructions aimed at application users, see the [UI user guide](../ui/README.md).
