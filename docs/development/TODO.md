@@ -117,3 +117,18 @@ it; OSCAR-UI does not remove it from the upstream list or bypass compilation.
   types, grammar, and unsigned 64-bit encoding limits.
 - [ ] Update the pinned release and test Counter64 boundaries before enabling
   acceptance; update the UI regression currently checking rejection.
+
+## PacketCable Snmp64 value export
+
+Confirmed with OSCAR 3.2.0: `ConfigurationFileExport.topLevelTLVCodeBlock`
+passes all two-byte-length varbind values through `HexString.asciiToHex`, but
+keeps their BER type. A Snmp64 `IpAddress "192.0.2.1"` therefore becomes
+`IpAddress "31:39:32:2E:30:2E:32:2E:31"` after binary tree projection.
+The structured editor correctly rejects that malformed IPv4 value.
+
+- [ ] Agree an upstream fix with the author; preserve each BER type's value
+  semantics independently of the outer TLV length field.
+- [ ] Update the pinned JAR and verify Snmp64 types through encode/decode/edit
+  with byte-preserving round trips for each PacketCable version.
+- [ ] Replace the UI regression's known-malformed-value assertion after the
+  upstream fix. Do not silently reinterpret the hex as a UI workaround.

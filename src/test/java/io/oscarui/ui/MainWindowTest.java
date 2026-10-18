@@ -91,6 +91,66 @@ class MainWindowTest {
         }
     }
 
+    @Test void packetCableSnmp64UsesStructuredAddAndEdit() throws Exception {
+        var service = new OscarDocumentService();
+        var packetCableTypes = service.types().stream()
+                .filter(configurationType -> configurationType.family().equals("packetcable")).toList();
+        assertFalse(packetCableTypes.isEmpty());
+        for (var configurationType : packetCableTypes) {
+            var document = service.create(configurationType, false);
+            var definition = service.choices(document, document.root()).stream()
+                    .filter(candidate -> candidate.name().equals("Snmp64")).findFirst().orElseThrow();
+            var addDialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
+            try {
+                addDialog.show();
+                var oidInput = addDialog.findChild(QLineEdit.class, "snmpOid");
+                var typeSelector = addDialog.findChild(QComboBox.class, "snmpType");
+                var valueInput = addDialog.findChild(QLineEdit.class, "snmpValue");
+                var apply = addDialog.findChild(QPushButton.class, "confirmAddTlv");
+                assertTrue(oidInput.isVisible());
+                assertTrue(typeSelector.isVisible());
+                assertTrue(valueInput.isVisible());
+                assertFalse(addDialog.findChild(QLineEdit.class, "tlvValue").isVisible());
+                assertEquals(com.comcast.oscar.ber.BERService.getDataTypeStringList(),
+                        java.util.stream.IntStream.range(0, typeSelector.count()).mapToObj(typeSelector::itemText).toList());
+                assertFalse(apply.isEnabled());
+                oidInput.setText("1.3.6.1.2.1.1.5.0");
+                typeSelector.setCurrentText("IpAddress");
+                valueInput.setText("192.0.2.999");
+                assertFalse(apply.isEnabled());
+                valueInput.setText("192.0.2.1");
+                assertTrue(apply.isEnabled());
+                assertTrue(addDialog.findChild(QLabel.class, "snmpValueHint").text().contains("IPv4"));
+                document = service.insert(document, document.root(), definition, addDialog.selection().value());
+            } finally {
+                addDialog.close();
+                addDialog.dispose();
+            }
+            var snmpNode = document.root().childTlvs().stream()
+                    .filter(node -> node.tlvName().equals("Snmp64")).findFirst().orElseThrow();
+            var editDialog = new TlvEditorDialog(null, service, document, document.root(),
+                    java.util.List.of(definition), snmpNode);
+            try {
+                editDialog.show();
+                assertEquals(snmpNode.encodedValueText().split(" ", 2)[0],
+                        editDialog.findChild(QLineEdit.class, "snmpOid").text());
+                assertEquals("IpAddress", editDialog.findChild(QComboBox.class, "snmpType").currentText());
+                var valueInput = editDialog.findChild(QLineEdit.class, "snmpValue");
+                // OSCAR 3.2.0 exports Snmp64 IpAddress values as ASCII hex.
+                // Keep the defect visible: the editor must reject that malformed value.
+                assertEquals("31:39:32:2E:30:2E:32:2E:31", valueInput.text());
+                assertFalse(editDialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                valueInput.setText("192.0.2.2");
+                assertTrue(editDialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                var edited = service.replaceValue(document, snmpNode, editDialog.selection().value());
+                assertTrue(edited.text().contains("Snmp64 " + editDialog.selection().value() + ";"));
+            } finally {
+                editDialog.close();
+                editDialog.dispose();
+            }
+        }
+    }
+
     @Test void structuredSnmpAddValidatesFieldsThroughOscar() throws Exception {
         var service = new OscarDocumentService();
         var configurationType = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();

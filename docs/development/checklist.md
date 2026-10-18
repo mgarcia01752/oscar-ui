@@ -100,3 +100,8 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Open an unknown numeric OID: preserve its unresolved suffix and encoded bytes.
 - [ ] Open numeric source text: preserve the source while showing known names
   in the binary-derived tree.
+
+- [ ] For each PacketCable version, select Snmp64 in Add and Edit: show OID,
+  OSCAR Type dropdown, and Value; check hints, invalid input, prefilled values,
+  and application of the edited statement. Covered by
+  `MainWindowTest.packetCableSnmp64UsesStructuredAddAndEdit`.

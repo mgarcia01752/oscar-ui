@@ -44,7 +44,8 @@ Use [View TLV Hex](inspection.md#selected-tlv-hex) to inspect a selected entry.
 
 ## SNMP fields
 
-For **Snmp11** (and Snmp64), Add and Edit show three fields:
+For **Snmp11** and PacketCable **Snmp64**, Add and Edit show the same three
+fields:
 
 | Field | Input |
 | --- | --- |
@@ -65,3 +66,8 @@ Binary files display OSCAR-resolved SNMP names with their instance indexes in
 both the tree and decoded text. Unresolved portions remain numeric; OSCAR may
 return a partial name such as `iso.3.6...`. For text files, the source is
 preserved and the tree shows OSCAR-resolved names.
+
+PacketCable Snmp64 uses these same controls and validation. OSCAR 3.2.0 has
+an export limitation: projected Snmp64 values can appear as ASCII hex with
+an incompatible type. Such values fail validation. PacketCable SNMP binary
+import is still unsupported; full Snmp64 round-trip editing awaits an OSCAR fix.

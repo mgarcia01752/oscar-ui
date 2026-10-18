@@ -436,7 +436,8 @@ names. Binary import still checks byte-preserving recompilation.
 ## SNMP statement editing
 
 `SnmpValuePane` provides separate OID, Type, and Value controls in both Add
-and Edit for Snmp11/Snmp64 (`oid` codec). The Type dropdown comes directly from
+and Edit for Snmp11/Snmp64 (`oid` codec), including PacketCable Snmp64.
+The Type dropdown comes directly from
 OSCAR's `BERService.getDataTypeStringList()`. Type-specific hints explain decimal
 ranges, IPv4 addresses, colon-separated hex bytes, and unquoted text. The pane
 adds the required quotes and rejects malformed fields before OSCAR parses and
@@ -451,6 +452,12 @@ replacement. Validation messages do not echo credentials.
 OSCAR 3.2.0 advertises Counter64 in its BER type list but does not accept it in
 its text grammar. It remains listed; compile validation prevents acceptance.
 The upstream discrepancy is tracked in [TODO](TODO.md).
+
+Snmp64 Add/Edit controls are covered for every supported PacketCable header.
+OSCAR 3.2.0's two-byte varbind export converts even IpAddress values to ASCII
+hex; the editor displays that upstream value and rejects its invalid format.
+See [the upstream blocker](TODO.md#packetcable-snmp64-value-export); this UI
+coverage does not establish lossless PacketCable SNMP binary import/editing.
 
 ## Check Shared Secret
 
