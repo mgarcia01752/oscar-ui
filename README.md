@@ -9,6 +9,7 @@
 </p>
 
 [![CI status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/java-ci.yml?branch=main&label=CI)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
+[![Windows MSI and Ubuntu DEB release status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/release.yml?label=Windows%20MSI%20%2B%20Ubuntu%20DEB)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)
 [![Java CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
 [![Ubuntu 22.04 CI target](https://img.shields.io/badge/Ubuntu-22.04-E95420?logo=ubuntu&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
 [![Ubuntu 24.04 CI target](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
@@ -31,6 +32,11 @@ you do not need to download the repository.
 | --- | --- | --- |
 | Ubuntu 22.04 / 24.04 (x64) | `.deb` | [Ubuntu installation](docs/install/ubuntu.md) |
 | Windows (x64) | `.msi` | [Windows installation](docs/install/windows.md) |
+
+The **Windows MSI + Ubuntu DEB** badge shows the combined release workflow status;
+both platform builds and installer checks must pass. See the
+[release runs](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)
+for each platform's results.
 
 Each guide covers installation, launch, troubleshooting, and uninstall.
 GitHub's **Source code** archives are for developers, not runnable applications.
