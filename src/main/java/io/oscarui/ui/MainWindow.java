@@ -386,7 +386,7 @@ public final class MainWindow extends QMainWindow {
                         DesktopTheme.apply(appearance);
                         showTextTlvNumbers = dialog.showTextTlvNumbers();
                         if (document != null) {
-                            configurationTextPane.displaySource(document.text(), document.root(), showTextTlvNumbers);
+                            configurationTextPane.displaySource(document.text(), showTextTlvNumbers);
                             configurationTextPane.highlight(configurationTreePane.selectedTlv());
                         }
                     } catch (IOException exception) {
@@ -478,7 +478,7 @@ public final class MainWindow extends QMainWindow {
     private void display(Document current, boolean changed) {
         document = current;
         modified = changed;
-        configurationTextPane.displaySource(current.text(), current.root(), showTextTlvNumbers);
+        configurationTextPane.displaySource(current.text(), showTextTlvNumbers);
         configurationTreePane.displayRoot(current.root());
         updateMicVisibility();
         updateDocumentLabels();

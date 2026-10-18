@@ -278,7 +278,7 @@ public final class OscarBinaryService {
             snapshot.add(new TlvVariableBinding(bytes, lengthFieldBytesByTlvType));
             var exporter = new ConfigurationFileExport(snapshot, configurationType.id());
             exporter.setDotTextOIDOutputFormat(false);
-            String text = exporter.toPrettyPrint(false, true);
+            String text = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_FOUND_TLV, false);
             if (text.length() > OscarInspectionService.MAX_BYTES) {
                 throw new InspectionException("The decoded configuration exceeds the text size limit.");
             }

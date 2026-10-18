@@ -23,16 +23,16 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
-    @Test void textTlvNumbersDefaultOnAndGlobalTogglePreservesSource() throws Exception {
+    @Test void oscarCommentsDefaultOnAndGlobalTogglePreservesSource() throws Exception {
         var window = new MainWindow(false);
         window.show();
-        String source = "Docsis {\r\n    NetworkAccess 1;\r\n    NetworkAccess 0;\r\n}\r\n";
+
         try {
-            window.openFile(Files.writeString(temporary.resolve("numbers.txt"), source));
+            window.openFile(Files.write(temporary.resolve("comments.bin"), java.util.HexFormat.of().parseHex("030101ff00")));
             await(window::completed);
             var text = window.findChild(QPlainTextEdit.class, "configurationText");
-            var gutter = text.findChild(QWidget.class, "textTlvNumbers");
-            assertTrue(gutter.isVisible());
+            String source = window.currentDocument().text();
+            assertTrue(text.toPlainText().contains("/* TLV: [3]"));
             assertEquals(source.replace("\r\n", "\n"), text.toPlainText());
             window.grab().save("target/text-tlv-numbers.png");
             respond(window, dialog -> {
@@ -43,23 +43,23 @@ class MainWindowTest {
             });
             action(window, "globalSettings").trigger();
             assertCallback();
-            assertTrue(gutter.isVisible());
+            assertTrue(text.toPlainText().contains("/* TLV: [3]"));
             respond(window, dialog -> {
                 dialog.findChild(QCheckBox.class, "showTextTlvNumbersCheckbox").setChecked(false);
                 dialog.accept();
             });
             action(window, "globalSettings").trigger();
             assertCallback();
-            assertFalse(gutter.isVisible());
+            assertFalse(text.toPlainText().contains("/* TLV: [3]"));
             assertEquals(source, window.currentDocument().text());
-            assertEquals(source.replace("\r\n", "\n"), text.toPlainText());
+            assertTrue(text.toPlainText().contains("NetworkAccess 1;"));
             respond(window, dialog -> {
                 dialog.findChild(QCheckBox.class, "showTextTlvNumbersCheckbox").setChecked(true);
                 dialog.accept();
             });
             action(window, "globalSettings").trigger();
             assertCallback();
-            assertTrue(gutter.isVisible());
+            assertTrue(text.toPlainText().contains("/* TLV: [3]"));
         } finally {
             window.close();
             window.dispose();

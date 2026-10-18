@@ -21,6 +21,15 @@ class OscarBinaryServiceTest {
         return documents.open(Files.writeString(temporary.resolve("source.txt"), text));
     }
 
+    @Test void binaryImportIncludesOscarsTopLevelAndNestedComments() throws Exception {
+        byte[] bytes = HexFormat.of().parseHex("030101190401020001ff00");
+        var document = binary.openAuto(Files.write(temporary.resolve("comments.bin"), bytes));
+        assertTrue(document.text().contains("/* TLV: [3]"));
+        assertTrue(document.text().contains("/* TLV: [25.1]"));
+        assertArrayEquals(bytes, document.origin().bytes());
+        assertEquals(java.util.List.of(25, 1), document.root().childTlvs().get(1).childTlvs().getFirst().tlvPath());
+    }
+
     @Test void decodesInMemoryWithAnExplicitTypeWithoutCredentials() throws Exception {
         var snapshot = new com.comcast.oscar.tlv.TlvBuilder();
         snapshot.add(new com.comcast.oscar.utilities.HexString(HexFormat.of().parseHex("030101ff00")));

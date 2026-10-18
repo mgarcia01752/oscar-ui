@@ -5,7 +5,7 @@ import io.qt.widgets.*;
 
 final class GlobalSettingsDialog extends QDialog {
     private final QCheckBox showMicTlvsCheckbox = new QCheckBox("Show CM/CMTS MIC TLVs");
-    private final QCheckBox showTextTlvNumbersCheckbox = new QCheckBox("Show TLV numbers beside configuration text");
+    private final QCheckBox showTextTlvNumbersCheckbox = new QCheckBox("Show TLV comments in configuration text");
     private final QComboBox appearanceSelector = new QComboBox();
 
     GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance) {
