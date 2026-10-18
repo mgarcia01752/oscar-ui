@@ -422,6 +422,17 @@ public final class MainWindow extends QMainWindow {
         inspectMenu.addAction(inspectTlvBreakdown);
         inspectHexDump.triggered.connect(() -> showBinaryInspection(BinaryInspectionDialog.View.HEX_DUMP));
         inspectTlvBreakdown.triggered.connect(() -> showBinaryInspection(BinaryInspectionDialog.View.TLV_BREAKDOWN));
+        var tools = menuBar().addMenu("&Tools");
+        var checkSecret = action("Check Shared Secret...", "checkSharedSecret", null);
+        tools.addAction(checkSecret);
+        checkSecret.triggered.connect(() -> {
+            var dialog = new SharedSecretCheckDialog(this);
+            try {
+                dialog.exec();
+            } finally {
+                dialog.dispose();
+            }
+        });
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &OSCAR-UI", "aboutOscar", null);
         about.triggered.connect(() -> showAbout(false));

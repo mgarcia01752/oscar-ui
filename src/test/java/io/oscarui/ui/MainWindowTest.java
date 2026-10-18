@@ -23,6 +23,39 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void checksSharedSecretInMaskedIndependentDialog() throws Exception {
+        var documents = new OscarDocumentService();
+        var binary = new io.oscarui.service.OscarBinaryService(documents);
+        Path source = Files.writeString(temporary.resolve("source.txt"), "Docsis { NetworkAccess 1; }");
+        Path binaryPath = temporary.resolve("check.bin");
+        binary.saveDocument(binary.openAuto(source), binaryPath, null, "public-test-key");
+        var dialog = new SharedSecretCheckDialog(null);
+        dialog.show();
+        try {
+            var secret = dialog.findChild(QLineEdit.class, "checkSharedSecret");
+            var file = dialog.findChild(QLineEdit.class, "checkBinaryPath");
+            var check = dialog.findChild(QPushButton.class, "runSharedSecretCheck");
+            var result = dialog.findChild(QLabel.class, "sharedSecretCheckResult");
+            assertEquals(QLineEdit.EchoMode.Password, secret.echoMode());
+            assertFalse(check.isEnabled());
+            file.setText(binaryPath.toString());
+            secret.setText("public-test-key");
+            check.click();
+            await(() -> result.text().equals("Correct Shared Secret"));
+            assertTrue(secret.text().isEmpty());
+            secret.setText("wrong-key");
+            check.click();
+            await(() -> result.text().equals("Incorrect Shared Secret"));
+            file.setText(source.toString());
+            secret.setText("public-test-key");
+            check.click();
+            await(() -> result.text().startsWith("Unable to Check:"));
+        } finally {
+            dialog.close();
+            dialog.dispose();
+        }
+    }
+
     @Test void editsSnmp11AfterTextIsSavedAsBinaryWithMasking() throws Exception {
         var documents = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(documents);
@@ -485,7 +518,7 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&About"),
+            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&Tools", "&About"),
                     window.menuBar().actions().stream().map(QAction::text).toList());
             var inspectMenu = window.findChild(QMenu.class, "inspectMenu");
             assertFalse(inspectMenu.isEnabled());

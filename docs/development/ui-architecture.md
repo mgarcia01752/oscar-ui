@@ -388,3 +388,26 @@ value to replace it. Validation messages do not echo supplied credentials.
 - [x] Edit Snmp11 after text-to-binary saving and save/reopen the changed binary.
 - [x] Keep the editor and preview masked while retaining real output values.
 - [x] Reject additional statements in a proposed SNMP value.
+
+## Check Shared Secret
+
+Tools → Check Shared Secret opens an independent dialog with a masked secret
+field and binary-file picker. It works without an open editor document. Check
+reads the original file without compiling text, changing the file, or replacing
+the editor contents. The secret is not persisted and is cleared after checking
+or closing the dialog; worker-owned key bytes are cleared after verification.
+
+OSCAR 3.2.0 verifies the original bytes using compatible D3.1/D4.0 framing.
+Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
+is checked against all present supported keyed MICs, including extended MICs.
+The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
+Different legacy/extended keys can yield a mismatch with a single supplied key.
+Invalid CM integrity, text input, missing MICs and unsupported algorithms show
+**Unable to Check**, rather than a misleading key verdict. Work runs off the
+GUI thread; neither secret values nor binary content appear in diagnostics.
+
+- [x] Mask the key and require a key and selected file before checking.
+- [x] Use OSCAR MIC verification with automatic compatible profile selection.
+- [x] Check standard, implicit and explicit MICs with HMAC-MD5/MMH.
+- [x] Preserve input bytes and keep checker state outside editor/settings.
+- [x] Test correct/wrong keys, rejected input, and native dialog behavior.

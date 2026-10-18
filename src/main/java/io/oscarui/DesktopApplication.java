@@ -68,15 +68,16 @@ public final class DesktopApplication {
             return false;
         }
         var menus = window.menuBar().actions();
-        if (menus.size() != 5
+        if (menus.size() != 6
             || !menus.get(0).text().equals("&File")
             || !menus.get(1).text().equals("&Edit")
             || !menus.get(2).text().equals("&Settings")
             || !menus.get(3).text().equals("&Inspect")
-            || !menus.get(4).text().equals("&About")) {
+            || !menus.get(4).text().equals("&Tools")
+            || !menus.get(5).text().equals("&About")) {
             return false;
         }
-        for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt"}) {
+        for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt", "checkSharedSecret"}) {
             var action = window.findChild(QAction.class, name);
             if (action == null || !action.isEnabled()) {
                 return false;

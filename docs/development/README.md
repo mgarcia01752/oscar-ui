@@ -77,8 +77,8 @@ Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded
 Maven POM into this project's `.m2` cache. Dependencies still come from Maven
 Central; no Oscar source checkout or source build is required.
 Oscar 3.2.0 adds a shared-secret MIC verification API and D3.1 extended MIC
-generation, shared with D4.0. The verification API is available to the UI
-dependency; no shared-secret verification dialog is included in this update.
+generation, shared with D4.0. Tools → Check Shared Secret uses the verification API for a selected binary
+without altering the open document.
 It retains the 123 SNMP security/community OID mappings for USM, VACM,
 DH key-change, and community objects. Indexed names still need Net-SNMP
 unless cached; this update does not change the numeric-OID display policy.
@@ -335,3 +335,10 @@ new installer. Draft releases are not offered.
 DOCSIS binary saving includes SNMP values from the original configuration, even
 when display masking is enabled. Repeated entries are retained and validated
 before the destination is replaced; masks are never exported as values.
+
+## Check Shared Secret
+
+Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.0.
+The dialog masks the supplied key and does not change the editor or selected
+file. See the [architecture and checklist](ui-architecture.md#check-shared-secret)
+for profile detection, result semantics and validation coverage.

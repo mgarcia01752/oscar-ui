@@ -57,6 +57,13 @@ your configuration files remain.
 GitHub's **Source code** ZIP/TAR downloads are for developers, not runnable
 application packages.
 
+## Check a shared secret
+
+Choose **Tools → Check Shared Secret**, enter the masked secret, select a
+DOCSIS binary, and click **Check**. The result is **Correct Shared Secret** or
+**Incorrect Shared Secret**. Text, damaged files, and unsupported MICs show
+**Unable to Check**. The file is unchanged and the secret is not saved.
+
 ## Configuration file security concerns
 
 OSCAR-UI masks recognized secrets on screen; it does not encrypt or protect
