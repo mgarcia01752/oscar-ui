@@ -48,10 +48,23 @@ final class AboutDialog extends QDialog {
         var description = new QLabel("View, edit, and inspect cable modem configurations with OSCAR.");
         description.setWordWrap(true);
         layout.addWidget(description);
-        layout.addWidget(link("OSCAR-UI on GitHub", ReleaseUpdateService.UI_PROJECT));
-        layout.addWidget(link("OSCAR on GitHub", ReleaseUpdateService.OSCAR_PROJECT));
-        layout.addWidget(new QLabel("OSCAR " + build.getProperty("oscar.version", "unknown")
-                + "   •   Qt Jambi " + build.getProperty("qt.version", "unknown") + "\nApache License 2.0"));
+        var programs = new QGroupBox("Programs");
+        var programGrid = new QGridLayout(programs);
+        programGrid.setHorizontalSpacing(24);
+        programGrid.setVerticalSpacing(12);
+        programGrid.setColumnStretch(0, 1);
+        programGrid.addWidget(new QLabel("<b>Program</b>"), 0, 0);
+        programGrid.addWidget(new QLabel("<b>Version</b>"), 0, 1);
+        programGrid.addWidget(new QLabel("<b>Link</b>"), 0, 2);
+        addProgramRow(programGrid, 1, "OSCAR-UI", installedVersion, ReleaseUpdateService.UI_PROJECT);
+        addProgramRow(programGrid, 2, "OSCAR", build.getProperty("oscar.version", "unknown"),
+                ReleaseUpdateService.OSCAR_PROJECT);
+        addProgramRow(programGrid, 3, "Qt Jambi", build.getProperty("qt.version", "unknown"),
+                "https://github.com/OmixVisualization/qtjambi");
+        layout.addWidget(programs);
+        var license = link("OSCAR-UI license: Apache License 2.0", "https://www.apache.org/licenses/LICENSE-2.0");
+        license.setObjectName("applicationLicenseLink");
+        layout.addWidget(license);
         var updates = new QGroupBox("Release updates");
         var updateLayout = new QVBoxLayout(updates);
         updateStatus.setObjectName("updateStatus");
@@ -106,6 +119,16 @@ final class AboutDialog extends QDialog {
         }
         pendingCheck = null;
         checkButton.setEnabled(true);
+    }
+
+    private static void addProgramRow(QGridLayout grid, int row, String programName,
+                                      String programVersion, String projectUrl) {
+        grid.addWidget(new QLabel(programName), row, 0);
+        grid.addWidget(new QLabel(programVersion), row, 1);
+        var projectLink = link("GitHub", projectUrl);
+        projectLink.setAccessibleName(programName + " on GitHub");
+        projectLink.setToolTip(projectUrl);
+        grid.addWidget(projectLink, row, 2);
     }
 
     private static QLabel link(String caption, String address) {
