@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Regression checks for the packaged Java redistribution materials."""
 import hashlib
 import importlib.util

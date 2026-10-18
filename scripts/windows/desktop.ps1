@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 param(
     [ValidateSet('build','run','smoke','package')][string]$Command = 'build',
     [ValidateSet('app-image','msi','exe')][string]$Type = 'app-image'

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Verify the pushed commit matches the clean checkout before running checks."""
 import os
 from pathlib import Path

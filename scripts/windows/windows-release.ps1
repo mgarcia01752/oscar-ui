@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 # Build an MSI from the runtime-complete, smoke-tested application image.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest

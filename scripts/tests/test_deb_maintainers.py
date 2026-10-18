@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Exercise DEB launcher scripts in an isolated filesystem, without root."""
 from pathlib import Path
 import subprocess

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Check Java redistribution materials in an extracted or installed package."""
 import argparse
 import hashlib

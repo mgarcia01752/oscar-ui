@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 # Verify the release MSI lifecycle on a disposable Windows CI runner.
 # Installs machine-wide and removes the product in a finally block.
 $ErrorActionPreference = 'Stop'

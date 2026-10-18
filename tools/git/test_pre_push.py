@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Verify pre-push enforcement using disposable repositories and a fixture checker."""
 import os
 from pathlib import Path

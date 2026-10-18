@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Exercise dependency updates without network access or a Maven installation."""
 import contextlib
 import hashlib

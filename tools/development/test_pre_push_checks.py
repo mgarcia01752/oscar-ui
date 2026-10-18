@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Regression checks for the host validation runner without invoking builds."""
 import importlib.util
 import os

@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 # Remove only our launcher; absent desktop-menu directories are valid on servers.
 set -eu
 case "$1" in

@@ -95,3 +95,8 @@ python3 -X warn_default_encoding -W error::EncodingWarning -m unittest discover 
 Hook tests use temporary repositories and a fixture checker. They do not push to
 GitHub or recursively invoke the full build. The runner removes inherited
 repository-local Git environment variables before starting fixture tests.
+
+Source headers are checked with `tools/development/check-license-headers.py`.
+To add absent project-owned copyright/SPDX headers, run it with `--fix`, review
+the changes, and commit them before pushing. Conflicting notices need manual
+review; validation never rewrites source files.

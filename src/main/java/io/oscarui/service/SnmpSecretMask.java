@@ -1,3 +1,7 @@
+/*
+ * Copyright 2026 OSCAR-UI contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package io.oscarui.service;
 
 import com.comcast.oscar.dictionary.TlvDefinition;

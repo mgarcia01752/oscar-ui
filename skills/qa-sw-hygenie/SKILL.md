@@ -18,6 +18,23 @@ constants. Search Oscar for existing definitions before accepting duplicated
 codec lists or mappings; distinguish UI editing restrictions from registry
 support.
 
+## Source license headers
+
+Run `python3 tools/development/check-license-headers.py` for project-owned source.
+Use `--fix` to add missing copyright/SPDX headers, then review the diff and rerun
+without `--fix`. The script also runs in the local push gate and Java CI.
+Use the copyright holder recorded in root `NOTICE` (OSCAR-UI contributors) and
+`SPDX-License-Identifier: Apache-2.0`; retain existing years rather than updating
+them on every run. The full license remains in root `LICENSE`.
+
+Scope includes Java under `src/`, Python/shell/PowerShell under `scripts/` and
+`tools/`, the installer, Git pre-push hook, and DEB maintainer scripts. Preserve
+shebangs, encoding declarations, existing copyright notices, and third-party
+licenses. Exclude Maven Wrapper, generated files, downloaded dependencies, and
+vendor code. Different or incomplete existing notices require manual review;
+do not relabel them automatically. Extend the explicit checker scope when new
+project-owned source locations or languages are introduced.
+
 ## TLV and UI checks
 
 - Machine TLV identifiers must not contain whitespace. Human-facing labels

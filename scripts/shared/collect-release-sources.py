@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Bundle corresponding sources inside a release application, not as extra assets."""
 import hashlib
 import os

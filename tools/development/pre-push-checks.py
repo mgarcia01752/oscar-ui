@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Run local validation before a push; never commit, tag, or push."""
 import argparse
 import importlib.util
@@ -109,6 +111,7 @@ def _checks():
     actionlint = _tool('actionlint', '.tools/release-validation/actionlint/actionlint.exe' if windows else
                        '.tools/release-validation/actionlint/actionlint')
     files = _files()
+    _run('Source license headers', [sys.executable, ROOT / 'tools/development/check-license-headers.py'])
     _run('Whitespace checks', ['git', 'diff', '--check', 'HEAD'])
     print('[pre-push] UTF-8, Python syntax, documentation links, examples, and OSCAR pins', flush=True)
     _documentation(files)

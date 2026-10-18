@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 # Validate every branch/tag push through the repository's shared local gate.
 set -eu
 root=$(git rev-parse --show-toplevel)

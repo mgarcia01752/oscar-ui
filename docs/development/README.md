@@ -178,3 +178,18 @@ particular platform or release passed; record actual commands and results.
 Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.0.
 See the [architecture](ui-architecture.md#check-shared-secret) for compatible
 profile selection, result semantics, and secret lifetime.
+
+## Source license headers
+
+Project-owned source uses short copyright and Apache-2.0 SPDX headers, with the
+full terms in root `LICENSE`. Check headers before committing:
+
+```bash
+python3 tools/development/check-license-headers.py
+```
+
+Add missing headers with `--fix`. Existing years and notices are preserved;
+conflicting or incomplete notices are reported for manual review. The checker
+covers Java source, development/build scripts, and owned installer/Git hooks,
+and excludes Maven Wrapper, generated files, and dependencies. Local pre-push
+validation and Java CI run the read-only check automatically.

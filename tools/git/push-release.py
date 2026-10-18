@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Bump the UI version, commit, tag, and atomically push a release to origin."""
 import argparse
 from pathlib import Path

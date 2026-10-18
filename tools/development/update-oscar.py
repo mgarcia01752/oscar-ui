@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 """Download a published OSCAR thin JAR, update pins, and verify the local build."""
 import argparse
 import hashlib

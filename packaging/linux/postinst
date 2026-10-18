@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 # OSCAR-UI registers its launcher without requiring a running desktop menu service.
 set -eu
 case "$1" in

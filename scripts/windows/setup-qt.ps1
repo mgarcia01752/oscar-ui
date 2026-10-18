@@ -1,3 +1,5 @@
+# Copyright 2026 OSCAR-UI contributors
+# SPDX-License-Identifier: Apache-2.0
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { throw 'Windows x86_64 required' }
