@@ -97,18 +97,18 @@ if [[ "$CHECK_ONLY" == 1 ]]; then
 fi
 
 mkdir -p "$ROOT/development"
-bash "$ROOT/scripts/bootstrap-oscar.sh"
+bash "$ROOT/scripts/unix/bootstrap-oscar.sh"
 QT_DIRECTORY="${QT_HOME:-${ROOT}/.tools/Qt/6.8.3/gcc_64}"
 if [[ ! -x "$QT_DIRECTORY/bin/qmake" ]]; then
   if [[ -n "${QT_HOME:-}" ]]; then
     printf 'QT_HOME does not contain bin/qmake: %s\n' "$QT_HOME" >&2
     exit 1
   fi
-  bash "$ROOT/scripts/setup-qt.sh"
+  bash "$ROOT/scripts/unix/setup-qt.sh"
 fi
 if [[ "$("$QT_DIRECTORY/bin/qmake" -query QT_VERSION)" != 6.8.3 ]]; then
-  printf '%s\n' 'Qt 6.8.3 is required; check QT_HOME or rerun scripts/setup-qt.sh.' >&2
+  printf '%s\n' 'Qt 6.8.3 is required; check QT_HOME or rerun scripts/unix/setup-qt.sh.' >&2
   exit 1
 fi
-bash "$ROOT/scripts/desktop.sh" build
-printf '%s\n' 'Development setup and build passed.' 'Launch the UI with: ./scripts/desktop.sh run'
+bash "$ROOT/scripts/unix/desktop.sh" build
+printf '%s\n' 'Development setup and build passed.' 'Launch the UI with: ./scripts/unix/desktop.sh run'

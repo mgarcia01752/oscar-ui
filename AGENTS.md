@@ -70,7 +70,11 @@ their contents. Validate the canonical path and both discovery paths after edits
 - Keep developer maintenance helpers and their tests under `tools/development/`,
   including `update-oscar.py` for pinned dependency updates.
 - Do not add loose wrappers at the root of `tools/` or duplicate implementations.
-  Keep application build, bootstrap, and packaging scripts under `scripts/`.
+  Keep application build, bootstrap, and packaging scripts under `scripts/`:
+  shell entry points in `unix/`, PowerShell in `windows/`, shared Python in
+  `shared/`, and portable test harnesses in `tests/`. Keep `scripts/README.md`
+  current when adding or moving a script. Unix does not imply macOS desktop
+  support; only the OSCAR bootstrap is used by macOS CI.
 - When moving a helper, update its project-root resolution, all script callers,
   test fixtures, CI commands, documentation, and skill references together.
   Run the relocated helper's tests from outside the checkout where supported;

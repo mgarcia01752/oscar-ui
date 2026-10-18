@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 VERSION="$(python3 -c 'import xml.etree.ElementTree as E; print(E.parse("pom.xml").getroot().find("{http://maven.apache.org/POM/4.0.0}version").text)')"
 if [[ "${GITHUB_REF_TYPE:-}" == tag && "${GITHUB_REF_NAME:-}" != "v$VERSION" ]]; then
@@ -8,9 +8,9 @@ if [[ "${GITHUB_REF_TYPE:-}" == tag && "${GITHUB_REF_NAME:-}" != "v$VERSION" ]];
   exit 1
 fi
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
-./scripts/desktop.sh build
-python3 ./scripts/collect-release-sources.py
-./scripts/desktop.sh package --type deb
+./scripts/unix/desktop.sh build
+python3 ./scripts/shared/collect-release-sources.py
+./scripts/unix/desktop.sh package --type deb
 shopt -s nullglob
 PACKAGES=("$ROOT"/dist/linux/deb/*.deb)
 [[ "${#PACKAGES[@]}" -eq 1 ]] || { echo 'Expected exactly one generated DEB' >&2; exit 1; }

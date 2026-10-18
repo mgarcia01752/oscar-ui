@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 unset JAVA_HOME
 
 uname() {
@@ -24,8 +24,8 @@ jpackage() { printf '%s\n' '21.0.1'; }
 curl() { printf '%s\n' 'Unexpected download' >&2; return 99; }
 bash() {
   if [[ "${TEST_STOP_BOOTSTRAP:-}" == 1 ]]; then
-    [[ "$1" == */scripts/bootstrap-oscar.sh ]] || return 99
-    [[ -d "${1%/scripts/bootstrap-oscar.sh}/development" ]] || return 99
+    [[ "$1" == */scripts/unix/bootstrap-oscar.sh ]] || return 99
+    [[ -d "${1%/scripts/unix/bootstrap-oscar.sh}/development" ]] || return 99
     return 77
   fi
   command bash "$@"

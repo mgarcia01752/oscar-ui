@@ -34,16 +34,16 @@ jobs:
           $WixBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install pinned Oscar
         shell: pwsh
-        run: ./scripts/bootstrap-oscar.ps1
+        run: ./scripts/windows/bootstrap-oscar.ps1
       - name: Install pinned Qt
         shell: pwsh
-        run: ./scripts/setup-qt.ps1
+        run: ./scripts/windows/setup-qt.ps1
       - name: Build MSI and test application image
         shell: pwsh
-        run: ./scripts/windows-release.ps1
+        run: ./scripts/windows/windows-release.ps1
       - name: Verify MSI install, launch, and uninstall
         shell: pwsh
-        run: ./scripts/test-windows-install.ps1
+        run: ./scripts/windows/test-windows-install.ps1
       - name: Upload installer logs
         if: always()
         uses: actions/upload-artifact@v4

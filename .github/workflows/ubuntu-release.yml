@@ -22,10 +22,10 @@ jobs:
           sudo apt-get install -y fakeroot libgl1 libegl1 libdbus-1-3 libfontconfig1 libfreetype6 libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0 libxcb1 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-randr0 libxcb-xfixes0 libxcb-sync1 libxcb-render0
       - name: Bootstrap pinned dependencies
         run: |
-          ./scripts/bootstrap-oscar.sh
-          ./scripts/setup-qt.sh
+          ./scripts/unix/bootstrap-oscar.sh
+          ./scripts/unix/setup-qt.sh
       - name: Build and check Debian package
-        run: ./scripts/linux-release.sh
+        run: ./scripts/unix/linux-release.sh
       - uses: actions/upload-artifact@v4
         with:
           name: linux-release

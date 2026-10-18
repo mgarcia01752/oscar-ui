@@ -13,6 +13,7 @@ Keep personal configuration files in the ignored `test-config/` directory.
 - [Deferred work and follow-up checks](TODO.md)
 - [UI component ownership](ui-architecture.md)
 - [Release packaging and version tags](packaging.md)
+- [Build script layout and commands](../../scripts/README.md)
 - [Agent instructions](../../AGENTS.md)
 - [Coding style](../../skills/coding-style/SKILL.md)
 
@@ -37,7 +38,7 @@ UI using the Maven wrapper. Existing Qt installations can be selected with
 `QT_HOME`. Downloads require internet access. The `--check` option checks only
 system prerequisites, without downloading or building anything.
 
-After a successful setup, launch with `./scripts/desktop.sh run`. A graphical
+After a successful setup, launch with `./scripts/unix/desktop.sh run`. A graphical
 desktop is required for normal use. Prerequisite checks also cover Git, `unzip`,
 Pillow (`python3-pil`) for icon conversion, `dpkg-dev` and `fakeroot` for DEB
 packaging, and `xvfb`/`xauth` for headless X11 verification. Maven is downloaded
@@ -52,7 +53,7 @@ RPM packaging and Windows build tools are outside this Linux setup.
 Validate installer changes without installing packages or downloading tools:
 
 ```sh
-bash scripts/test-install.sh
+bash scripts/tests/test-install.sh
 ```
 
 ### Run the application
@@ -60,8 +61,8 @@ bash scripts/test-install.sh
 Run commands from the repository root in a terminal on your graphical desktop:
 
 ```bash
-./scripts/desktop.sh build
-./scripts/desktop.sh run
+./scripts/unix/desktop.sh build
+./scripts/unix/desktop.sh run
 ```
 
 For a VM, open the terminal inside the VM's graphical desktop so the application
@@ -94,19 +95,19 @@ Use Java 21. On Linux/macOS, bootstrap also requires `curl` and either `sha256su
 or `shasum` (available on macOS):
 
 ```sh
-scripts/bootstrap-oscar.sh
+scripts/unix/bootstrap-oscar.sh
 ./mvnw -B -Dmaven.repo.local="$PWD/.m2" test
 ```
 
 On Windows, run from PowerShell:
 
 ```powershell
-./scripts/bootstrap-oscar.ps1
+./scripts/windows/bootstrap-oscar.ps1
 ./mvnw.cmd -B "-Dmaven.repo.local=$PWD/.m2" test
 ```
 
-The desktop build command (`scripts/desktop.sh build` or
-`scripts/desktop.ps1 build`) uses the same cache. Bootstrap also downloads the
+The desktop build command (`scripts/unix/desktop.sh build` or
+`scripts/windows/desktop.ps1 build`) uses the same cache. Bootstrap also downloads the
 release's original license and notice for inclusion in desktop packages.
 
 ## Saving Repository Changes
@@ -139,8 +140,8 @@ currently means Java compilation and service tests; macOS desktop packaging
 and native GUI support are not implemented.
 
 
-`./scripts/desktop.sh build` builds the desktop bundle and runs the service
-tests. `./scripts/desktop.sh smoke` stages Qt and checks the native workspace,
+`./scripts/unix/desktop.sh build` builds the desktop bundle and runs the service
+tests. `./scripts/unix/desktop.sh smoke` stages Qt and checks the native workspace,
 menus, tree-to-text selection, and clipboard offscreen with a public sample.
 
 After those commands, run the opt-in native dialog tests on Linux:

@@ -14,8 +14,8 @@ REPO = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('update_oscar', REPO / 'tools/development/update-oscar.py')
 UPDATER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(UPDATER)
-FILES = ('pom.xml', 'scripts/bootstrap-oscar.sh', 'scripts/bootstrap-oscar.ps1',
-         'scripts/desktop.py', 'THIRD-PARTY-NOTICES.md', 'docs/development/README.md',
+FILES = ('pom.xml', 'scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstrap-oscar.ps1',
+         'scripts/shared/desktop.py', 'THIRD-PARTY-NOTICES.md', 'docs/development/README.md',
          'docs/development/ui-architecture.md')
 
 
@@ -74,7 +74,7 @@ class UpdateOscarTest(unittest.TestCase):
         self.assertEqual(maven.call_args_list[1].args[1:], ('clean', 'verify'))
         for name in FILES:
             self.assertIn(self.version, (self.root / name).read_text())
-        for name in ('scripts/bootstrap-oscar.sh', 'scripts/bootstrap-oscar.ps1'):
+        for name in ('scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstrap-oscar.ps1'):
             self.assertIn(self.digest, (self.root / name).read_text())
             self.assertIn(self.commit, (self.root / name).read_text())
         self.assertEqual((self.root / f'.tools/oscar-{self.version}/oscar-thin.jar').read_bytes(), self.jar)
@@ -149,7 +149,7 @@ class UpdateOscarTest(unittest.TestCase):
 
     def test_unknown_reference_layout_fails_before_writing(self):
         """Unexpected source layout requires review rather than a partial replacement."""
-        (self.root / 'scripts/desktop.py').write_text('changed layout')
+        (self.root / 'scripts/shared/desktop.py').write_text('changed layout')
         with self.assertRaisesRegex(RuntimeError, 'Expected one reference'):
             UPDATER._references(self.root, self.version, self.commit, self.digest)
         self.assertEqual((self.root / 'pom.xml').read_bytes(), self.originals['pom.xml'])

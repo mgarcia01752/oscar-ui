@@ -9,7 +9,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 WINDOWS = sys.platform == 'win32'
 QT_VERSION = '6.8.3'
 VERSION = ET.parse(ROOT / 'pom.xml').getroot().find(

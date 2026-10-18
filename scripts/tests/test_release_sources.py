@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-spec = importlib.util.spec_from_file_location('sources', Path(__file__).resolve().parents[1] / 'collect-release-sources.py')
+spec = importlib.util.spec_from_file_location('sources', Path(__file__).resolve().parents[1] / 'shared/collect-release-sources.py')
 sources = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sources)
 

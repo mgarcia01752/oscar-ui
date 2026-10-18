@@ -7,7 +7,7 @@ import shutil
 import sys
 import urllib.request
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SOURCES = {
     'qtbase-everywhere-src-6.8.3.tar.xz': 'https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz',
     'qtjambi-6.8.3.tar.gz': 'https://github.com/OmixVisualization/qtjambi/archive/refs/tags/v6.8.3.tar.gz',

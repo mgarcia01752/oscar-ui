@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent $PSScriptRoot
+$Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $Version = '3.2.0'
 $Commit = '701e3506d1384a9de88569729297725fb853ded3'
 $Sha256 = '97b17b191090428eb05706e17b4f3f2dab1f6cb146e43590d0a7742a3a51a890'

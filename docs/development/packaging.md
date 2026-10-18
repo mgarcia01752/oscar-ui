@@ -95,16 +95,16 @@ Existing old release assets are not deleted by these workflows.
 Release packaging requires **Temurin 21.0.10+7**, Python, and the pinned Qt/Oscar
 bootstrap dependencies. Source collection checks that the JDK matches the source
 archive being distributed. Update the workflow JDK pins and
-`scripts/collect-release-sources.py` together when changing Java versions.
+`scripts/shared/collect-release-sources.py` together when changing Java versions.
 
 Windows x64 also requires Visual Studio 2022 C++ build tools with the x64 CRT
 redistributable directory, plus WiX 3.14.1 (`candle.exe` and `light.exe` on
 PATH). CI configures WiX before packaging. From PowerShell:
 
 ```powershell
-./scripts/bootstrap-oscar.ps1
-./scripts/setup-qt.ps1
-./scripts/windows-release.ps1
+./scripts/windows/bootstrap-oscar.ps1
+./scripts/windows/setup-qt.ps1
+./scripts/windows/windows-release.ps1
 ```
 
 On Ubuntu x64, run `./install.sh --development --check` and install the
@@ -112,9 +112,9 @@ reported missing packages, including `fakeroot` and `dpkg-dev`. Select the
 pinned release JDK above, then run:
 
 ```bash
-./scripts/bootstrap-oscar.sh
-./scripts/setup-qt.sh
-./scripts/linux-release.sh
+./scripts/unix/bootstrap-oscar.sh
+./scripts/unix/setup-qt.sh
+./scripts/unix/linux-release.sh
 ```
 
 Outputs are in `dist/windows/release/` and `dist/linux/release/`. Move existing

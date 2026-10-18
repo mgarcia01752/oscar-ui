@@ -2,7 +2,7 @@
 # Installs machine-wide and removes the product in a finally block.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-$Root = Split-Path -Parent $PSScriptRoot
+$Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if ($env:GITHUB_ACTIONS -ne 'true') {
     throw 'Run this machine-changing test only on a disposable GitHub Actions runner.'
 }

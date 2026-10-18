@@ -41,7 +41,7 @@ Run commands from the repository root. Use existing bootstraps documented in
 
 - Java/service changes: `./mvnw -B "-Dmaven.repo.local=$PWD/.m2" test`.
 - Native UI changes: follow the Qt environment setup and opt-in test command
-  in `docs/development/README.md`, then use `./scripts/desktop.sh smoke` where supported.
+  in `docs/development/README.md`, then use `./scripts/unix/desktop.sh smoke` where supported.
   Ordinary Maven runs skip native UI tests; record that distinction.
 - Git tag/release tooling: `python3 -m unittest discover -s tools/git -p 'test_*.py'`.
 - Dependency updater: `python3 -m unittest discover -s tools/development -p 'test_*.py'`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 VERSION=3.2.0
 COMMIT=701e3506d1384a9de88569729297725fb853ded3
 SHA256=97b17b191090428eb05706e17b4f3f2dab1f6cb146e43590d0a7742a3a51a890

@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent $PSScriptRoot
+$Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { throw 'Windows x86_64 required' }
 & python -m venv "$Root/.tools/venv"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

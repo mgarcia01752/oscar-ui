@@ -112,15 +112,15 @@ def _references(root, version, commit, digest):
     escaped = re.escape(current)
     specifications = {
         'pom.xml': [(rf'<oscar.version>{escaped}</oscar.version>', f'<oscar.version>{version}</oscar.version>')],
-        'scripts/bootstrap-oscar.sh': [
+        'scripts/unix/bootstrap-oscar.sh': [
             (rf'^VERSION={escaped}$', f'VERSION={version}'),
             (r'^COMMIT=[0-9a-f]{40}$', f'COMMIT={commit}'),
             (r'^SHA256=[0-9a-f]{64}$', f'SHA256={digest}')],
-        'scripts/bootstrap-oscar.ps1': [
+        'scripts/windows/bootstrap-oscar.ps1': [
             (rf"^\$Version = '{escaped}'$", f"$Version = '{version}'"),
             (r"^\$Commit = '[0-9a-f]{40}'$", f"$Commit = '{commit}'"),
             (r"^\$Sha256 = '[0-9a-f]{64}'$", f"$Sha256 = '{digest}'")],
-        'scripts/desktop.py': [(rf"\.tools/oscar-{escaped}'", f".tools/oscar-{version}'")],
+        'scripts/shared/desktop.py': [(rf"\.tools/oscar-{escaped}'", f".tools/oscar-{version}'")],
         'THIRD-PARTY-NOTICES.md': [
             (rf'^\| Comcast/Oscar {escaped}, commit [0-9a-f]{{40}} \|.*$',
              f'| Comcast/Oscar {version}, commit {commit} | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v{version} |')],

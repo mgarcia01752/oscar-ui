@@ -1,18 +1,18 @@
 # Build an MSI from the runtime-complete, smoke-tested application image.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-$Root = Split-Path -Parent $PSScriptRoot
+$Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $Root
 [xml]$Pom = Get-Content "$Root/pom.xml"
 $Version = $Pom.project.version
 if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$Version") {
     throw "Release tag must match pom.xml version v$Version"
 }
-& "$Root/scripts/desktop.ps1" build
+& "$Root/scripts/windows/desktop.ps1" build
 if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
-& python "$Root/scripts/collect-release-sources.py"
+& python "$Root/scripts/shared/collect-release-sources.py"
 if ($LASTEXITCODE -ne 0) { throw 'Source collection failed' }
-& "$Root/scripts/desktop.ps1" package -Type app-image
+& "$Root/scripts/windows/desktop.ps1" package -Type app-image
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
 $Image = "$Root/dist/windows/app-image/OSCAR-UI"
 # Put transitive native dependencies beside the launcher for Windows DLL lookup.
