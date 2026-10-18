@@ -9,7 +9,7 @@ final class SecretsDialog extends QDialog {
         setWindowTitle("Settings - Global - Secrets");
         setMinimumWidth(500);
         var layout = new QVBoxLayout(this);
-        var note = new QLabel("Session only: values are forgotten when you close Oscar Desktop. "
+        var note = new QLabel("Session only: values are forgotten when you close OSCAR-UI. "
                 + "The shared secret is used for binary export. Encrypted storage is not implemented.");
         note.setWordWrap(true);
         layout.addWidget(note);

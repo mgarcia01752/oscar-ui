@@ -71,7 +71,7 @@ fi
 if git -C "$PROJECT_DIR" show-ref --verify --quiet "refs/tags/$TAG"; then
   echo "Tag already exists locally: $TAG"
 else
-  git -C "$PROJECT_DIR" tag -a "$TAG" -m "Oscar Desktop ${TAG#v}"
+  git -C "$PROJECT_DIR" tag -a "$TAG" -m "OSCAR-UI ${TAG#v}"
   echo "Created local tag: $TAG"
 fi
 

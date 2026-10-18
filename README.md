@@ -1,4 +1,4 @@
-# oscar-ui
+# OSCAR-UI
 
 [![CI status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/java-ci.yml?branch=main&label=CI)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
 [![Java CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
@@ -14,27 +14,27 @@ A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Li
 
 ## Ubuntu download
 
-For Ubuntu 22.04 or 24.04 x64, download `oscar-desktop_<version>_amd64.deb`
+For Ubuntu 22.04 or 24.04 x64, download `oscar-ui_<version>_amd64.deb`
 from the release **Assets**, then install it:
 
 ```bash
-sudo apt install ./oscar-desktop_0.1.0_amd64.deb
+sudo apt install ./oscar-ui_0.1.0_amd64.deb
 ```
 
-Launch **Oscar Desktop** from the application menu. Java, Qt, and ICU are bundled;
+Launch **OSCAR-UI** from the application menu. Java, Qt, and ICU are bundled;
 APT installs the required system display libraries. No repository checkout or
 separate Java installation is needed. Debian package release CI checks installation
 and launch on both Ubuntu versions; other Debian-based distributions are unverified.
 
 ## Windows download
 
-The Windows release workflow produces `Oscar-Desktop-<version>-windows-x64.zip`
+The Windows release workflow produces `OSCAR-UI-<version>-windows-x64.zip`
 for GitHub Releases. Once a release is published:
 
 1. Open this repository's **Releases** page and download the Windows x64 ZIP
    under **Assets** (not GitHub's source-code ZIP).
 2. Extract the entire ZIP.
-3. Open the extracted folder and double-click **Oscar Desktop.exe**.
+3. Open the extracted folder and double-click **OSCAR-UI.exe**.
 
 No repository checkout, Java, Python, Qt installation, or administrator setup
 is needed. Keep the executable, DLLs, `app`, and `runtime` folders together.

@@ -52,7 +52,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ./release/*.deb xvfb
           env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=xcb \
-            xvfb-run -a timeout 40s '/opt/oscar-desktop/bin/Oscar Desktop' \
+            xvfb-run -a timeout 40s '/opt/oscar-ui/bin/OSCAR-UI' \
             --smoke-test "$PWD/src/test/resources/simple-docsis.txt" | tee smoke.log
           grep -q 'UI_SMOKE_OK' smoke.log
   publish:
@@ -77,8 +77,8 @@ jobs:
         run: |
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --draft \
-              --title "Oscar Desktop $RELEASE_TAG" \
-              --notes 'Windows: download the Windows ZIP, extract it, and run Oscar Desktop.exe. Ubuntu: download the DEB and install with sudo apt install ./oscar-desktop_*.deb. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
+              --title "OSCAR-UI $RELEASE_TAG" \
+              --notes 'Windows: download the Windows ZIP, extract it, and run OSCAR-UI.exe. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
           fi
           assets=(release/*.deb)
           test "${#assets[@]}" -eq 1

@@ -2,10 +2,10 @@
 
 Each version has two uploaded application assets:
 
-- `Oscar-Desktop-<version>-windows-x64.zip`: extract the whole ZIP and run
-  `Oscar Desktop.exe`.
-- `oscar-desktop_<version>_amd64.deb`: install with `sudo apt install ./<file>.deb`,
-  then launch Oscar Desktop from the application menu.
+- `OSCAR-UI-<version>-windows-x64.zip`: extract the whole ZIP and run
+  `OSCAR-UI.exe`.
+- `oscar-ui_<version>_amd64.deb`: install with `sudo apt install ./<file>.deb`,
+  then launch OSCAR-UI from the application menu.
 
 Both include Java and Qt; the DEB also includes ICU and declares system display
 library dependencies for APT. Windows includes app-local Visual C++ runtime DLLs.
@@ -14,7 +14,7 @@ these are not application downloads and cannot be removed from the release UI.
 
 Dependency source archives and their SHA-256 manifest are bundled inside each
 application under `app/sources/` on Windows and
-`/opt/oscar-desktop/lib/app/sources/` on Ubuntu. This increases package size but
+`/opt/oscar-ui/lib/app/sources/` on Ubuntu. This increases package size but
 keeps extra source archives and checksum files out of the release asset list.
 Keep bundled license files and the Java runtime's `legal/` directory intact.
 

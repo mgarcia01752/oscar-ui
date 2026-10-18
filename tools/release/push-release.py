@@ -51,7 +51,7 @@ def release(bump, explicit, dry_run):
     if git('merge-base', '--is-ancestor', 'FETCH_HEAD', 'HEAD', check=False).returncode:
         raise RuntimeError('The current branch is behind or diverged from origin; reconcile it first.')
     push = ['push', '--atomic', 'origin', f'HEAD:refs/heads/{branch}', f'refs/tags/{tag}:refs/tags/{tag}']
-    print(f'Oscar Desktop {current} -> {version}; branch {branch}; tag {tag}')
+    print(f'OSCAR-UI {current} -> {version}; branch {branch}; tag {tag}')
     if dry_run:
         print('Dry run: no version edit, commit, tag, or push performed.')
         return
@@ -64,8 +64,8 @@ def release(bump, explicit, dry_run):
         raise RuntimeError('Cannot locate the project version in pom.xml.')
     pom.write_text(updated)
     git('add', '--', 'pom.xml')
-    git('commit', '-m', f'Feature: Release Oscar Desktop {tag}')
-    git('tag', '-a', tag, '-m', f'Oscar Desktop {version}')
+    git('commit', '-m', f'Feature: Release OSCAR-UI {tag}')
+    git('tag', '-a', tag, '-m', f'OSCAR-UI {version}')
     try:
         git(*push)
     except RuntimeError as error:

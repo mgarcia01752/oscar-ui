@@ -14,7 +14,7 @@ shopt -s nullglob
 PACKAGES=("$ROOT"/dist/linux/deb/*.deb)
 [[ "${#PACKAGES[@]}" -eq 1 ]] || { echo 'Expected exactly one generated DEB' >&2; exit 1; }
 PACKAGE="${PACKAGES[0]}"
-[[ "$(dpkg-deb -f "$PACKAGE" Package)" == oscar-desktop ]]
+[[ "$(dpkg-deb -f "$PACKAGE" Package)" == oscar-ui ]]
 [[ "$(dpkg-deb -f "$PACKAGE" Architecture)" == amd64 ]]
 PACKAGE_VERSION="$(dpkg-deb -f "$PACKAGE" Version)"
 [[ "$PACKAGE_VERSION" == "$VERSION" || "$PACKAGE_VERSION" == "$VERSION-1" ]]
@@ -23,8 +23,8 @@ PROBE="$(mktemp -d)"
 trap 'rm -rf -- "$PROBE"' EXIT
 dpkg-deb -x "$PACKAGE" "$PROBE"
 env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen \
-  timeout 40s "$PROBE/opt/oscar-desktop/bin/Oscar Desktop" \
+  timeout 40s "$PROBE/opt/oscar-ui/bin/OSCAR-UI" \
   --smoke-test "$ROOT/src/test/resources/simple-docsis.txt" | tee "$PROBE/smoke.log"
 grep -q 'UI_SMOKE_OK' "$PROBE/smoke.log"
 mkdir -p "$ROOT/dist/linux/release"
-cp "$PACKAGE" "$ROOT/dist/linux/release/oscar-desktop_${VERSION}_amd64.deb"
+cp "$PACKAGE" "$ROOT/dist/linux/release/oscar-ui_${VERSION}_amd64.deb"

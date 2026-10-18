@@ -130,8 +130,8 @@ def package(kind):
     destination = ROOT / 'dist' / ('windows' if WINDOWS else 'linux') / kind
     if destination.exists():
         raise RuntimeError(f'Output already exists: {destination}; move or delete it before rebuilding.')
-    args = [java_tool('jpackage'), '--type', kind, '--name', 'Oscar Desktop', '--app-version', VERSION,
-            '--vendor', 'Oscar Desktop contributors', '--input', app, '--dest', destination,
+    args = [java_tool('jpackage'), '--type', kind, '--name', 'OSCAR-UI', '--app-version', VERSION,
+            '--vendor', 'OSCAR-UI contributors', '--input', app, '--dest', destination,
             '--main-jar', f'oscar-ui-{VERSION}.jar', '--main-class', 'io.oscarui.DesktopApplication',
             '--add-modules', 'java.base,java.desktop,java.logging,java.xml,java.sql,java.naming,java.management,jdk.unsupported,jdk.crypto.ec',
             '--java-options', '-Djava.library.path=$APPDIR/qt/lib',
@@ -141,7 +141,7 @@ def package(kind):
         if WINDOWS:
             args += ['--win-menu', '--win-shortcut', '--win-dir-chooser', '--win-upgrade-uuid', '80186748-531f-4a39-a6da-f5c81a1f0730']
         else:
-            args += ['--linux-package-name', 'oscar-desktop', '--linux-shortcut',
+            args += ['--linux-package-name', 'oscar-ui', '--linux-shortcut',
                      '--install-dir', '/opt']
             if kind == 'deb':
                 args += ['--linux-package-deps',

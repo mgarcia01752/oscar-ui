@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Source collection failed' }
 & "$Root/scripts/desktop.ps1" package -Type app-image
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
-$Image = "$Root/dist/windows/app-image/Oscar Desktop"
+$Image = "$Root/dist/windows/app-image/OSCAR-UI"
 # Put transitive native dependencies beside the launcher for Windows DLL lookup.
 Copy-Item "$Image/app/qt/lib/*.dll" $Image
 $VsWhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
@@ -28,9 +28,9 @@ foreach ($Name in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
     if (!(Test-Path "$Image/$Name")) { throw "Missing runtime: $Name" }
 }
 @'
-Oscar Desktop for Windows x64
+OSCAR-UI for Windows x64
 
-Extract the entire ZIP, then double-click Oscar Desktop.exe.
+Extract the entire ZIP, then double-click OSCAR-UI.exe.
 Keep the app and runtime folders beside the executable.
 Java, Qt, Python, and a repository checkout are not required.
 Licenses and notices are in app/; Java notices are in runtime/legal/.
@@ -50,7 +50,7 @@ try {
     $env:QT_PLUGIN_PATH = ''
     $env:QT_QPA_PLATFORM = 'windows'
     $Fixture = "$Root/src/test/resources/simple-docsis.txt"
-    $Process = Start-Process -FilePath "$Probe/Oscar Desktop.exe" -ArgumentList @('--smoke-test', "`"$Fixture`"") -WorkingDirectory $Probe -PassThru
+    $Process = Start-Process -FilePath "$Probe/OSCAR-UI.exe" -ArgumentList @('--smoke-test', "`"$Fixture`"") -WorkingDirectory $Probe -PassThru
     if (!$Process.WaitForExit(40000)) {
         $Process.Kill()
         throw 'Packaged launcher smoke test timed out'
@@ -66,4 +66,4 @@ try {
 }
 $Output = "$Root/dist/windows/release"
 New-Item -ItemType Directory -Force $Output | Out-Null
-Compress-Archive -Path $Image -DestinationPath "$Output/Oscar-Desktop-$Version-windows-x64.zip"
+Compress-Archive -Path $Image -DestinationPath "$Output/OSCAR-UI-$Version-windows-x64.zip"

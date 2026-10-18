@@ -27,6 +27,7 @@ replay_pid*
 .tools/
 .m2/
 /development/
+/cm-config/
 target/
 dist/
 __pycache__/

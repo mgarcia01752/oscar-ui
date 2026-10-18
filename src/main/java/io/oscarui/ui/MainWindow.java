@@ -57,7 +57,7 @@ public final class MainWindow extends QMainWindow {
 
     public MainWindow(boolean interactive) {
         this.interactive = interactive;
-        setWindowTitle("Oscar Desktop");
+        setWindowTitle("OSCAR-UI");
         resize(1200, 780);
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
@@ -199,9 +199,9 @@ public final class MainWindow extends QMainWindow {
         light.triggered.connect(() -> DesktopTheme.apply(false));
         dark.triggered.connect(() -> DesktopTheme.apply(true));
         var aboutMenu = menuBar().addMenu("&About");
-        var about = action("About &Oscar Desktop", "aboutOscar", null);
-        about.triggered.connect(() -> QMessageBox.about(this, "About Oscar Desktop",
-                "Oscar Desktop 0.1.0\nOscar 3.1.1\nQt Jambi 6.8.3\n\nApache License 2.0"));
+        var about = action("About &OSCAR-UI", "aboutOscar", null);
+        about.triggered.connect(() -> QMessageBox.about(this, "About OSCAR-UI",
+                "OSCAR-UI 0.1.0\nOscar 3.1.1\nQt Jambi 6.8.3\n\nApache License 2.0"));
         aboutMenu.addAction(about);
         var aboutQt = action("About &Qt", "aboutQt", null);
         aboutQt.triggered.connect(() -> QMessageBox.aboutQt(this));
@@ -301,7 +301,7 @@ public final class MainWindow extends QMainWindow {
         String name = file == null ? "Untitled" : file.getFileName().toString();
         fileLabel.setText(name);
         typeLabel.setText(document.path() == null && document.origin() != null ? "Binary" : "Text");
-        setWindowTitle(name + (modified ? " *" : "") + " - Oscar Desktop");
+        setWindowTitle(name + (modified ? " *" : "") + " - OSCAR-UI");
         showStatus("");
     }
 

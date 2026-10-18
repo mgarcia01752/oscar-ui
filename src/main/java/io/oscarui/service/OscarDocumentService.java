@@ -19,7 +19,9 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 
 public final class OscarDocumentService {
-    private static final String REFERENCE_MARKER = "/* Oscar Desktop reference template: not deployment defaults. */";
+    private static final String REFERENCE_MARKER = "/* OSCAR-UI reference template: not deployment defaults. */";
+    // Recognize reference files saved before the application was renamed.
+    private static final String LEGACY_REFERENCE_MARKER = "/* Oscar Desktop reference template: not deployment defaults. */";
     private static final Set<String> VALUE_CODECS = Set.of("integer", "unsigned_integer", "byte", "string",
             "string_null_terminated", "string_bits", "byte_array", "double_byte_array", "mac_address",
             "byte_array_ipv4_address", "byte_array_ipv6_address", "transport_address_ipv4_address",
@@ -137,7 +139,8 @@ public final class OscarDocumentService {
             String text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
             if (text.indexOf('\0') >= 0) throw new InspectionException("Expected UTF-8 configuration text.");
             String beginning = text.startsWith("\uFEFF") ? text.substring(1) : text;
-            return parse(path.toAbsolutePath().normalize(), text, hash(bytes), beginning.startsWith(REFERENCE_MARKER));
+            return parse(path.toAbsolutePath().normalize(), text, hash(bytes), beginning.startsWith(REFERENCE_MARKER)
+                    || beginning.startsWith(LEGACY_REFERENCE_MARKER));
         } catch (java.nio.charset.CharacterCodingException error) {
             throw new InspectionException("Expected UTF-8 configuration text.");
         }

@@ -14,12 +14,12 @@ public final class DesktopApplication {
     public static void main(String[] args) {
         boolean smoke = args.length == 2 && args[0].equals("--smoke-test");
         if (args.length != 0 && !smoke) {
-            System.err.println("Usage: Oscar Desktop [--smoke-test configuration.txt]");
+            System.err.println("Usage: OSCAR-UI [--smoke-test configuration.txt]");
             System.exit(2);
         }
         try {
             QApplication.initialize(new String[0]);
-            QApplication.setApplicationName("Oscar Desktop");
+            QApplication.setApplicationName("OSCAR-UI");
             var window = new MainWindow(!smoke);
             window.show();
             QTimer smokeTimer = new QTimer(window);
@@ -41,7 +41,7 @@ public final class DesktopApplication {
             QApplication.shutdown();
             if (result != 0) System.exit(result);
         } catch (LinkageError | RuntimeException e) {
-            System.err.println("Oscar Desktop could not start. Check Qt 6.8.3 libraries, platform plugins, and display access. " + e.getClass().getSimpleName());
+            System.err.println("OSCAR-UI could not start. Check Qt 6.8.3 libraries, platform plugins, and display access. " + e.getClass().getSimpleName());
             System.exit(1);
         }
     }
