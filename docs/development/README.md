@@ -72,11 +72,14 @@ build. Remote GUI sessions require their own display setup.
 ## Oscar dependency
 
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
-[Oscar v3.1.2](https://github.com/Comcast/Oscar/releases/tag/v3.1.2).
+[Oscar v3.2.0](https://github.com/Comcast/Oscar/releases/tag/v3.2.0).
 Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded
 Maven POM into this project's `.m2` cache. Dependencies still come from Maven
 Central; no Oscar source checkout or source build is required.
-Oscar 3.1.2 adds 123 SNMP security/community OID mappings for USM, VACM,
+Oscar 3.2.0 adds a shared-secret MIC verification API and D3.1 extended MIC
+generation, shared with D4.0. The verification API is available to the UI
+dependency; no shared-secret verification dialog is included in this update.
+It retains the 123 SNMP security/community OID mappings for USM, VACM,
 DH key-change, and community objects. Indexed names still need Net-SNMP
 unless cached; this update does not change the numeric-OID display policy.
 It retains the corrected classifier-error names from 3.1.1:

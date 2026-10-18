@@ -119,7 +119,7 @@ class OscarBinaryServiceTest {
 
     @Test void dispatchesDpoeAndEachPacketCableHeaderThroughOscar() throws Exception {
         var dpoe = open("DPoE { NetworkAccess 1; }");
-        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"), new byte[0]), binary.encode(dpoe, LAB_KEY));
+        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"), new byte[0], true), binary.encode(dpoe, LAB_KEY));
         for (String header : List.of("PacketCable-1.0", "PacketCable-1.5", "PacketCable-2.0")) {
             var source = open(header + " { TelephonyConfigFileBeginEnd 1; }");
             assertFalse(binary.requiresSharedSecret(source));
@@ -179,6 +179,10 @@ class OscarBinaryServiceTest {
     // This fixture has no E-MIC. CM digest covers parameters in file order;
     // legacy CMTS order is NetworkAccess, CmMic, UpstreamSF, DownstreamSF.
     private byte[] expectedDocsis(byte[] network, byte[] flows) throws Exception {
+        return expectedDocsis(network, flows, false);
+    }
+
+    private byte[] expectedDocsis(byte[] network, byte[] flows, boolean legacyDpoePadding) throws Exception {
         var parameters = new ByteArrayOutputStream();
         parameters.writeBytes(network);
         parameters.writeBytes(flows);
@@ -196,8 +200,13 @@ class OscarBinaryServiceTest {
         parameters.writeBytes(new byte[]{7, 16});
         parameters.writeBytes(hmac.doFinal(hmacInput.toByteArray()));
         parameters.write(255);
-        parameters.write(0);
-        while (parameters.size() % 4 != 0) parameters.write(0);
+        if (legacyDpoePadding) {
+            parameters.write(0);
+        }
+        // OSCAR 3.2.0 DOCSIS adds only the bytes needed for four-byte alignment.
+        while (parameters.size() % 4 != 0) {
+            parameters.write(0);
+        }
         return parameters.toByteArray();
     }
 }
