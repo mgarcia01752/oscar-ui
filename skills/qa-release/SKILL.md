@@ -55,5 +55,7 @@ passes when they only ran in CI. Test hook changes with temporary repositories.
 
 For a scoped push, use `tools/git/git-push.sh --master` (current main/master only)
 or `--tag TAG` (existing tag at HEAD matching `pom.xml`). The helper enables the
-hook and runs checks during the push; it never bypasses validation, follows
-other tags, or creates a new release version. Test it with disposable remotes.
+hook and runs checks during the push; those modes never bypass validation,
+follow other tags, or create a new release version. For a new release, use
+`--tag-major`, `--tag-minor`, or `--tag-patch` to delegate to `push-release.sh`;
+these modes commit the version bump and push the branch and new tag together. Test it with disposable remotes.

@@ -5,11 +5,18 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 MODE=""
 TAG=""
+BUMP=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --master|--branch)
       [[ -z "$MODE" ]] || { echo 'Choose only one push mode.' >&2; exit 2; }
       MODE=branch
+      shift
+      ;;
+    --tag-major|--tag-minor|--tag-patch)
+      [[ -z "$MODE" ]] || { echo 'Choose only one push mode.' >&2; exit 2; }
+      MODE=release
+      BUMP="${1#--tag-}"
       shift
       ;;
     --tag)
@@ -20,26 +27,36 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h|--help)
       cat <<'EOF'
-Usage: tools/git/git-push.sh --master | --branch | --tag vMAJOR.MINOR.PATCH
+Usage: tools/git/git-push.sh MODE
+Modes: --master | --branch | --tag TAG | --tag-major | --tag-minor | --tag-patch
 
 --master, --branch  Push only the current main/master branch to origin.
 --tag TAG           Push only an existing release tag at HEAD to origin.
                    The tag must match the pom.xml version.
 
+--tag-major        Bump major, commit, tag, and push branch plus new tag.
+--tag-minor        Bump minor, commit, tag, and push branch plus new tag.
+--tag-patch        Bump patch, commit, tag, and push branch plus new tag.
+
 Requires committed changes and installs the repository-local pre-push hook.
 The hook runs all local checks and blocks upload if any check fails.
-Never force-pushes, creates tags, bumps versions, or commits changes.
+Never force-pushes. Branch/existing-tag modes do not create commits or tags.
+Release-bump modes delegate to push-release.sh and run its preflight checks.
 A tag push can trigger release CI and publication after required checks pass.
-Use push-release.sh for version bumping and creating a new release tag.
+Choose exactly one mode. No version bump is selected by default.
 EOF
       exit 0
       ;;
     *) echo "Unknown argument: $1 (see --help)" >&2; exit 2 ;;
   esac
 done
-[[ -n "$MODE" ]] || { echo 'Choose --master, --branch, or --tag TAG (see --help).' >&2; exit 2; }
+[[ -n "$MODE" ]] || { echo 'Choose a push mode (see --help).' >&2; exit 2; }
 [[ "$(git -C "$ROOT" rev-parse --show-toplevel)" == "$ROOT" ]] || exit 1
 [[ -z "$(git -C "$ROOT" status --porcelain)" ]] || { echo 'Commit or stash changes before pushing.' >&2; exit 1; }
+if [[ "$MODE" == release ]]; then
+  echo "[git-push] Starting $BUMP release bump with local validation."
+  exec bash "$ROOT/tools/git/push-release.sh" "--push-$BUMP"
+fi
 if [[ "$MODE" == branch ]]; then
   BRANCH="$(git -C "$ROOT" symbolic-ref --quiet --short HEAD)" || { echo 'Check out main or master before pushing.' >&2; exit 1; }
   [[ "$BRANCH" == main || "$BRANCH" == master ]] || { echo 'Branch mode only permits main or master.' >&2; exit 1; }

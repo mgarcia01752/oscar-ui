@@ -19,14 +19,25 @@ tools/git/git-push.sh --tag v0.2.5
 
 `--branch` is an alias for `--master`. Choose exactly one mode. The helper
 requires a clean checkout, enables the local pre-push hook, and lets that hook
-run all checks before uploading. Failures stop the push. It does not create
+run all checks before uploading. Failures stop the push. These two modes do not create
 commits or tags, bump versions, force-push, or push other refs. Tag mode also
 requires the tag to match `pom.xml`; replace the example with your actual tag.
 Run from Git Bash on Windows with Python 3 available as `python3`.
 
 A tag push can trigger release CI and publication. To bump a version and create
-a new tag instead, use `tools/git/push-release.sh --push-patch` as described in
-[Release packaging](packaging.md). Conflicting existing hooks are preserved;
+a new release, choose one of:
+
+```bash
+tools/git/git-push.sh --tag-major
+tools/git/git-push.sh --tag-minor
+tools/git/git-push.sh --tag-patch
+```
+
+These options delegate to `push-release.sh --push-major`, `--push-minor`, or
+`--push-patch`. They run preflight checks, update the version, commit, create the
+new tag, and push the branch and tag atomically. The pre-push hook checks the
+final commit again. There is no default bump and modes cannot be combined.
+See [Release packaging](packaging.md). Conflicting existing hooks are preserved;
 resolve the reported conflict rather than bypassing checks.
 
 ## Enable once per checkout

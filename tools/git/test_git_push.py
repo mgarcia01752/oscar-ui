@@ -85,6 +85,24 @@ class GitPushTest(unittest.TestCase):
         self.assertNotEqual(0, self._push('--master').returncode)
         self.assertEqual('', self._git('ls-remote', 'origin'))
 
+    def test_release_bump_modes_delegate_and_propagate_failure(self):
+        """Route each release option to the established helper without duplicating it.
+
+        A fixture helper returns a failure so no release is created or uploaded.
+        """
+        helper = self.root / 'tools/git/push-release.sh'
+        helper.write_text('#!/bin/bash\nprintf "RELEASE_ARGS:%s\\n" "$*"\nexit 7\n', encoding='utf-8')
+        self._git('add', '.')
+        self._git('commit', '-m', 'Release helper fixture')
+        for bump in ('major', 'minor', 'patch'):
+            result = self._push('--tag-' + bump)
+            self.assertEqual(7, result.returncode, result.stderr)
+            self.assertIn('RELEASE_ARGS:--push-' + bump, result.stdout)
+        result = self._push('--master', '--tag-patch')
+        self.assertEqual(2, result.returncode)
+        self.assertNotIn('RELEASE_ARGS:', result.stdout)
+        self.assertEqual('', self._git('ls-remote', 'origin'))
+
     def _git(self, *arguments):
         return subprocess.run(['git', '-C', str(self.root), *arguments], check=True,
                               capture_output=True, text=True, encoding='utf-8').stdout.strip()

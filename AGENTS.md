@@ -91,7 +91,9 @@ Enable its tracked hook with `python3 tools/git/install-hooks.py` in each clone;
 never overwrite existing unrelated hooks or change global Git configuration.
 Use `tools/git/git-push.sh --master` for a main/master-only push or `--tag TAG`
 for an existing release tag at HEAD. Both enable and run the same hook; neither
-creates tags or bumps versions. Release helpers run preflight before version changes and the hook validates the
+creates tags or bumps versions. Use `--tag-major`, `--tag-minor`, or `--tag-patch`
+to delegate version bumping, committing, tagging, and pushing to the release helper.
+Release helpers run preflight before version changes and the hook validates the
 final committed revision before upload. Do not bypass failed checks to push.
 Keep new check suites integrated with this gate and CI. Local success does not
 replace Windows/Ubuntu installer jobs or prove untested platform behavior.

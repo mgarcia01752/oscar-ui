@@ -202,3 +202,7 @@ Use `tools/git/git-push.sh --master` to push only the current `main` or `master`
 branch, or `tools/git/git-push.sh --tag vX.Y.Z` for an existing tag at HEAD.
 Both run the local validation gate through the pre-push hook. See
 [push instructions](pre-push-checks.md#push-a-branch-or-an-existing-tag).
+
+To create a new release, use `tools/git/git-push.sh --tag-major`, `--tag-minor`,
+or `--tag-patch`. Each delegates to the validated release helper and pushes the
+version-bump commit and new tag together.
