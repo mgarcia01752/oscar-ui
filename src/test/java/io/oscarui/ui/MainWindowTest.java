@@ -273,7 +273,8 @@ class MainWindowTest {
             var imported = window.currentDocument();
             assertNull(imported.path());
             assertEquals(input, imported.origin().path());
-            assertEquals("input.cfg", window.findChild(QLabel.class, "documentName").text());
+            assertTrue(window.windowTitle().startsWith("input.cfg"));
+            assertNull(window.findChild(QLabel.class, "documentName"));
             assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
             assertFalse(window.windowTitle().contains("Untitled"));
             assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
@@ -295,7 +296,8 @@ class MainWindowTest {
             await(() -> window.completed() && text.equals(window.currentDocument().path()));
             assertCallback();
             assertEquals(imported.text(), Files.readString(text));
-            assertEquals("decoded.txt", window.findChild(QLabel.class, "documentName").text());
+            assertTrue(window.windowTitle().startsWith("decoded.txt"));
+            assertNull(window.findChild(QLabel.class, "documentName"));
             assertEquals("Text", window.findChild(QLabel.class, "documentType").text());
             assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
             assertFalse(action(window, "fileSave").isEnabled());
@@ -472,7 +474,7 @@ class MainWindowTest {
             respond(window, dialog -> {
                 var combo = dialog.findChild(QComboBox.class, "newFileType");
                 for (int index = 0; index < combo.count(); index++) {
-                    if (combo.itemText(index).startsWith("Docsis-4.0 ")) combo.setCurrentIndex(index);
+                    if (combo.itemText(index).equals("Docsis-4.0")) combo.setCurrentIndex(index);
                 }
                 dialog.findChild(QRadioButton.class, "allTlvsMode").click();
                 dialog.findChild(QPushButton.class, "createDocument").click();
@@ -716,12 +718,15 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            var global = window.findChild(QMenu.class, "globalSettings");
+            var global = window.findChild(QMenu.class, "settingsMenu");
             assertNotNull(global);
             assertTrue(global.actions().contains(action(window, "settingsSecrets")));
-            action(window, "darkMode").trigger();
-            assertTrue(action(window, "darkMode").isChecked());
-            assertFalse(action(window, "lightMode").isChecked());
+            respond(window, dialog -> {
+                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(1);
+                dialog.accept();
+            });
+            action(window, "globalSettings").trigger();
+            assertCallback();
             assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
             respond(window, dialog -> {
                 var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");
@@ -734,9 +739,12 @@ class MainWindowTest {
             });
             action(window, "settingsSecrets").trigger();
             assertCallback();
-            action(window, "lightMode").trigger();
-            assertTrue(action(window, "lightMode").isChecked());
-            assertFalse(action(window, "darkMode").isChecked());
+            respond(window, dialog -> {
+                dialog.findChild(QComboBox.class, "appearanceMode").setCurrentIndex(0);
+                dialog.accept();
+            });
+            action(window, "globalSettings").trigger();
+            assertCallback();
             assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() > 128);
             respond(window, dialog -> {
                 var hash = dialog.findChild(QCheckBox.class, "hashCommunityStrings");

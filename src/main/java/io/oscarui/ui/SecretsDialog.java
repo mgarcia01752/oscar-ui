@@ -6,7 +6,7 @@ final class SecretsDialog extends QDialog {
     SecretsDialog(QWidget parent, SessionSecrets secrets) {
         super(parent);
         setObjectName("secretsDialog");
-        setWindowTitle("Settings - Global - Secrets");
+        setWindowTitle("Settings - Secrets");
         setMinimumWidth(500);
         var layout = new QVBoxLayout(this);
         var note = new QLabel("Session only: values are forgotten when you close OSCAR-UI. "

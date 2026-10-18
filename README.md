@@ -10,6 +10,11 @@
 
 **Work in progress.**
 
+TLV descriptions in Add and Edit reflow source line breaks into paragraphs,
+with a blank line after every two prose sentences.
+The formatter preserves technical wording, lists, and aligned examples; it
+does not rewrite registry data or configuration values.
+
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
 ## Ubuntu download
@@ -117,7 +122,7 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 - **Settings > Global > Show CM/CMTS MIC TLVs** is unchecked by default.
   Enable it to view the generated, read-only MIC entries in the configuration
   tree. This session preference does not change source text or binary export.
-- **Settings > Global > Secrets** provides a masked **shared secret** field.
+- **Settings > Secrets** provides a masked **shared secret** field.
 	Apply keeps its value for this application session only;
 	Clear empties the field and takes effect on Apply. Cancel keeps prior values.
 	No secrets are encrypted or persisted. Binary export uses the session shared
@@ -125,7 +130,7 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	The **Hash community strings** checkbox keeps a session-only preference;
 	it does not hash or transform values yet. Its algorithm and export behavior
 	remain requirements to define.
-- **Settings > Global > Appearance > Dark / Light** switches the application
+- **Settings > Global** opens a dialog with **Appearance: Light / Dark**, which switches the application
 	and its dialogs immediately. The mode applies for this session only.
 
 The binary adapter has lab tests with public test keys and independently

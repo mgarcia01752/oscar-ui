@@ -44,6 +44,7 @@ final class AddTlvDialog extends QDialog {
         list.header().sortIndicatorChanged.connect((column, order) -> sortChoices());
         layout.addWidget(list, 1);
         var description = new QPlainTextEdit();
+        description.setObjectName("tlvDescription");
         description.setReadOnly(true);
         description.setMaximumHeight(135);
         layout.addWidget(description);
@@ -95,7 +96,7 @@ final class AddTlvDialog extends QDialog {
             value.setValidator(numeric ? new QRegularExpressionValidator(new QRegularExpression("[+-]?[0-9]*"), value) : null);
             if (oldValidator != null) oldValidator.dispose();
             valueLabel.setText(numeric ? "Decimal value" : "Value");
-            description.setPlainText(selected == null ? "" : selected.description());
+            description.setPlainText(selected == null ? "" : TlvDescriptionFormatter.format(selected.description()));
             metadata.setText(selected == null ? "No available TLVs"
                     : valueHelp(selected, service.isContainer(document.type(), selected)));
             update.run();

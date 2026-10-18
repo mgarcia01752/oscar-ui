@@ -22,7 +22,6 @@ public final class MainWindow extends QMainWindow {
         thread.setDaemon(true);
         return thread;
     });
-    private final QLabel fileLabel = new QLabel("No file selected");
     private final QLabel typeLabel = new QLabel();
     private final QPlainTextEdit content = new QPlainTextEdit();
     private final QTreeWidget tree = new QTreeWidget();
@@ -61,13 +60,8 @@ public final class MainWindow extends QMainWindow {
         resize(1200, 780);
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
-        var heading = new QHBoxLayout();
-        fileLabel.setWordWrap(true);
-        fileLabel.setObjectName("documentName");
         typeLabel.setObjectName("documentType");
-        heading.addWidget(fileLabel, 1);
-        heading.addWidget(typeLabel);
-        layout.addLayout(heading);
+        statusBar().addPermanentWidget(typeLabel);
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
         status.setVisible(false);
@@ -176,28 +170,22 @@ public final class MainWindow extends QMainWindow {
         content.textChanged.connect(() -> selectAll.setEnabled(!content.toPlainText().isEmpty()));
         edit.addAction(selectAll);
         var settings = menuBar().addMenu("&Settings");
-        var global = settings.addMenu("&Global");
-        global.setObjectName("globalSettings");
+        settings.setObjectName("settingsMenu");
+        var global = action("&Global...", "globalSettings", null);
+        settings.addAction(global);
         showMicTlvs.setCheckable(true);
-        global.addAction(showMicTlvs);
         showMicTlvs.toggled.connect(checked -> updateMicVisibility());
-        global.addAction(secretsAction);
+        global.triggered.connect(() -> {
+            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked());
+            try {
+                if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
+                    showMicTlvs.setChecked(dialog.showMicTlvs());
+                    DesktopTheme.apply(dialog.darkMode());
+                }
+            } finally { dialog.dispose(); }
+        });
+        settings.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
-        var appearance = global.addMenu("&Appearance");
-        var modes = new io.qt.gui.QActionGroup(this);
-        modes.setExclusive(true);
-        var light = action("&Light", "lightMode", null);
-        var dark = action("&Dark", "darkMode", null);
-        for (var mode : List.of(light, dark)) {
-            mode.setCheckable(true);
-            modes.addAction(mode);
-            appearance.addAction(mode);
-        }
-        boolean darkPalette = QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128;
-        dark.setChecked(darkPalette);
-        light.setChecked(!darkPalette);
-        light.triggered.connect(() -> DesktopTheme.apply(false));
-        dark.triggered.connect(() -> DesktopTheme.apply(true));
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &OSCAR-UI", "aboutOscar", null);
         about.triggered.connect(() -> QMessageBox.about(this, "About OSCAR-UI",
@@ -299,7 +287,6 @@ public final class MainWindow extends QMainWindow {
         var file = document.path() != null ? document.path()
                 : document.origin() == null ? null : document.origin().path();
         String name = file == null ? "Untitled" : file.getFileName().toString();
-        fileLabel.setText(name);
         typeLabel.setText(document.path() == null && document.origin() != null ? "Binary" : "Text");
         setWindowTitle(name + (modified ? " *" : "") + " - OSCAR-UI");
         showStatus("");
