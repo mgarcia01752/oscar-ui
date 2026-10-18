@@ -57,6 +57,12 @@ your configuration files remain.
 GitHub's **Source code** ZIP/TAR downloads are for developers, not runnable
 application packages.
 
+## Configuration file security concerns
+
+OSCAR-UI masks recognized secrets on screen; it does not encrypt or protect
+saved configuration files. Read [Configuration file security concerns](docs/configuration-file-security.md)
+for the limits of masking and your responsibility for sensitive files.
+
 ## Development
 
 See the [development guide](docs/development/README.md) for setup, build and test
