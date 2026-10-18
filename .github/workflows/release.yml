@@ -25,3 +25,26 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/ubuntu-release.yml
+  publish:
+    name: Publish verified release
+    needs: [windows, ubuntu]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Verify both installers and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          gh release view "$RELEASE_TAG" --json assets > release-assets.json
+          jq -e --arg msi "OSCAR-UI-${version}-windows-x64.msi" \
+            --arg deb "oscar-ui_${version}_amd64.deb" '
+            .assets as $assets |
+            all([$msi, $deb][]; . as $name |
+              any($assets[]; .name == $name and .state == "uploaded" and .size > 0))
+          ' release-assets.json
+          gh release edit "$RELEASE_TAG" --draft=false

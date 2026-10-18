@@ -82,10 +82,13 @@ their own application asset to the same draft release. Publishing steps serializ
 per tag to avoid concurrent draft creation. Rerunning a platform job replaces
 only that platform's asset. No local build is needed to release from CI.
 
-After both workflows pass and both application assets appear, verify the downloads
-and publish the draft. One platform may finish first; check both before publishing.
-The helper triggers builds, not immediate public publication. Existing old release
-assets are not deleted by these workflows.
+After both platform workflows pass, the coordinator checks that the expected
+Windows MSI and Ubuntu DEB assets are uploaded and nonempty, then automatically
+publishes the release. A failed or skipped required job prevents publication;
+any draft already created remains a draft. The push helper returns after pushing;
+follow the Release workflow in GitHub Actions for the publication result.
+The helper triggers this CI flow; it does not publish from the local machine.
+Existing old release assets are not deleted by these workflows.
 
 ## Build locally
 

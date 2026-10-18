@@ -71,7 +71,7 @@ def release(bump, explicit, dry_run):
     except RuntimeError as error:
         raise RuntimeError(f'{error}\nLocal release commit and tag are retained. Retry without bumping:\n'
                            + shlex.join(['git', *push])) from error
-    print(f'Pushed {tag}. Ubuntu and Windows workflows will attach their packages to one draft release.')
+    print(f'Pushed {tag}. CI will build and test both installers, then automatically publish the release.')
 
 
 def main():
