@@ -30,20 +30,20 @@ Commit pending work first. From a clean checkout:
 
 ```bash
 # Preview the default patch bump (0.1.0 -> 0.1.1).
-tools/push-release.sh --dry-run
+tools/git/push-release.sh --dry-run
 
 # Bump pom.xml, commit, create an annotated tag, and push.
-tools/push-release.sh
+tools/git/push-release.sh
 
 # Alternatively choose a minor/major bump or explicit newer version.
-tools/push-release.sh --push-patch  # default: 0.1.0 -> 0.1.1
-tools/push-release.sh --push-minor  # 0.1.0 -> 0.2.0
-tools/push-release.sh --push-major  # 0.1.0 -> 1.0.0
-tools/push-release.sh --version 0.2.0
+tools/git/push-release.sh --push-patch  # default: 0.1.0 -> 0.1.1
+tools/git/push-release.sh --push-minor  # 0.1.0 -> 0.2.0
+tools/git/push-release.sh --push-major  # 0.1.0 -> 1.0.0
+tools/git/push-release.sh --version 0.2.0
 ```
 
 Run only the command for the release you intend. On Windows, the same helper is
-available as `python tools/release/push-release.py` with the same options.
+available as `python tools/git/push-release.py` with the same options.
 
 The helper checks the current branch against origin and rejects dirty trees,
 detached HEAD, existing tags, and non-increasing versions. It changes only the
@@ -55,7 +55,7 @@ or push. A failure after editing may leave local work to inspect; it never
 resets or deletes user work.
 
 For the original `v0.1.0` or an already prepared version, the Oscar-compatible
-`tools/update-tag.sh --tag v0.1.0 --push` helper remains available. It does not
+`tools/git/update-tag.sh --tag v0.1.0 --push` helper remains available. It does not
 bump or commit; existing tags are never moved. Use a new version for new code.
 
 ## CI-gated platform workflows

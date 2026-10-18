@@ -62,6 +62,20 @@ Canonical skills live in `skills/<name>/SKILL.md`. Expose them through relative
 directory symlinks in both `.agents/skills/` and `.claude/skills/`; do not copy
 their contents. Validate the canonical path and both discovery paths after edits.
 
+## Tools organization
+
+- Keep Git, tag, commit, and release-push helpers and their tests under
+  `tools/git/`. Entry points include `push-release.sh` and `update-tag.sh`;
+  the cross-platform release implementation is `push-release.py` there.
+- Keep developer maintenance helpers and their tests under `tools/development/`,
+  including `update-oscar.py` for pinned dependency updates.
+- Do not add loose wrappers at the root of `tools/` or duplicate implementations.
+  Keep application build, bootstrap, and packaging scripts under `scripts/`.
+- When moving a helper, update its project-root resolution, all script callers,
+  test fixtures, CI commands, documentation, and skill references together.
+  Run the relocated helper's tests from outside the checkout where supported;
+  never push a real release just to validate a move.
+
 ## Releases
 
 - Preserve the two uploaded application assets: Windows MSI and Ubuntu DEB.

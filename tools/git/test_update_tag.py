@@ -13,7 +13,7 @@ class UpdateTagTest(unittest.TestCase):
         self.root = self.directory / "checkout"
         (self.root / "tools/git").mkdir(parents=True)
         source = Path(__file__).resolve().parents[2]
-        for relative in ("tools/update-tag.sh", "tools/git/update-tag.sh"):
+        for relative in ("tools/git/update-tag.sh",):
             shutil.copy2(source / relative, self.root / relative)
         self.git("init", "--quiet")
         self.git("config", "user.name", "Oscar UI tests")
@@ -26,7 +26,7 @@ class UpdateTagTest(unittest.TestCase):
 
     def script(self, *arguments, success=True):
         result = subprocess.run(
-            ["bash", str(self.root / "tools/update-tag.sh"), *arguments],
+            ["bash", str(self.root / "tools/git/update-tag.sh"), *arguments],
             cwd=self.directory, check=False, capture_output=True, text=True,
         )
         if success:

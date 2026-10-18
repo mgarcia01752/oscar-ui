@@ -71,6 +71,10 @@ build. Remote GUI sessions require their own display setup.
 
 ## Oscar dependency
 
+To upgrade the pinned release, use the [OSCAR dependency updater](oscar-dependency-updates.md).
+It downloads the JAR, updates Linux/Windows pins and current-version references,
+installs locally, and runs Maven verification with progress output.
+
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
 [Oscar v3.2.0](https://github.com/Comcast/Oscar/releases/tag/v3.2.0).
 Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded

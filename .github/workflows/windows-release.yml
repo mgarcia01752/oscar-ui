@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test dependency updater
+        shell: pwsh
+        run: python -m unittest discover -s tools/development -p 'test_*.py'
       - name: Configure WiX 3 tools
         shell: pwsh
         run: |

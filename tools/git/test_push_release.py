@@ -11,9 +11,9 @@ class PushReleaseTest(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.base = Path(self.temporary.name)
         self.root = self.base / 'checkout'
-        (self.root / 'tools/release').mkdir(parents=True)
+        (self.root / 'tools/git').mkdir(parents=True)
         source = Path(__file__).resolve().parents[2]
-        for name in ('tools/push-release.sh', 'tools/release/push-release.py'):
+        for name in ('tools/git/push-release.sh', 'tools/git/push-release.py'):
             shutil.copy2(source / name, self.root / name)
         (self.root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><version>0.1.0</version><dependencies><dependency><version>0.1.0</version></dependency></dependencies></project>')
         self.git('init', '-b', 'main')
@@ -30,7 +30,7 @@ class PushReleaseTest(unittest.TestCase):
         return subprocess.run(['git', '-C', str(self.root), *args], check=True, capture_output=True, text=True).stdout.strip()
 
     def run_release(self, *args, success=True):
-        result = subprocess.run(['bash', str(self.root / 'tools/push-release.sh'), *args], cwd=self.base, capture_output=True, text=True)
+        result = subprocess.run(['bash', str(self.root / 'tools/git/push-release.sh'), *args], cwd=self.base, capture_output=True, text=True)
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return result
 

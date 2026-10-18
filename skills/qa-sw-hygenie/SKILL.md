@@ -43,8 +43,8 @@ Run commands from the repository root. Use existing bootstraps documented in
 - Native UI changes: follow the Qt environment setup and opt-in test command
   in `docs/development/README.md`, then use `./scripts/desktop.sh smoke` where supported.
   Ordinary Maven runs skip native UI tests; record that distinction.
-- Git tag tooling: `python3 -m unittest discover -s tools/git -p 'test_*.py'`.
-- Release push tooling: `python3 -m unittest discover -s tools/release -p 'test_*.py'`.
+- Git tag/release tooling: `python3 -m unittest discover -s tools/git -p 'test_*.py'`.
+- Dependency updater: `python3 -m unittest discover -s tools/development -p 'test_*.py'`.
 - Source bundling: `python3 -m unittest discover -s scripts/tests -p 'test_*.py'`.
 - Shell changes: run `bash -n` and ShellCheck if available on changed scripts.
   Parse changed PowerShell with PowerShell when available.

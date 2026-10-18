@@ -30,3 +30,12 @@ Do not run the push-release helper or publish as a validation step.
 Confirm `packaging/release-notes.md` and installer information describe the
 actual bundled components. Keep Windows and Ubuntu installation links valid.
 Report completed checks separately from platform checks still pending.
+
+## OSCAR dependency updates
+
+Use `python3 tools/development/update-oscar.py --version X.Y.Z` for a published upstream release;
+see `docs/development/oscar-dependency-updates.md` for dry-run and recovery.
+Check that Linux/Windows pins, Maven version, attribution cache, and current
+release documentation agree. Preserve historical feature-version statements.
+Run `python3 -m unittest discover -s tools/development -p 'test_*.py'` when
+changing the updater. Its Maven verification is separate from native UI tests.
