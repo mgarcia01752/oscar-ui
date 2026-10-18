@@ -67,6 +67,15 @@ Run commands from the repository root in a terminal on your graphical desktop:
 ./scripts/unix/desktop.sh run
 ```
 
+To rebuild and launch in one command:
+
+```bash
+./scripts/unix/desktop.sh --build-then-run
+```
+
+The UI starts only after the build and tests succeed. Close any previously
+running UI first. Use this option by itself, without `run` or `build`.
+
 For a VM, open the terminal inside the VM's graphical desktop so the application
 uses that session's display. Keep the terminal open while using the application;
 Ctrl+C stops it. Rebuild after Java source changes because `run` uses the existing
@@ -94,7 +103,7 @@ running**; do not copy a filename from an earlier session.
 export DISPLAY=:0
 export XAUTHORITY="/run/user/1000/.mutter-Xwaylandauth.EXAMPLE"
 xdpyinfo >/dev/null
-./scripts/unix/desktop.sh run
+./scripts/unix/desktop.sh --build-then-run
 ```
 
 Run the UI only if `xdpyinfo` succeeds. The window appears on the **VM desktop**,

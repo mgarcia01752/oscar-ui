@@ -158,14 +158,33 @@ def package(kind):
 
 
 def main():
+    """Dispatch desktop commands, optionally rebuilding before interactive launch.
+
+    Reject conflicting modes before platform checks. A failed build propagates
+    without launching the existing application. Use the current GUI environment.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['build', 'run', 'smoke', 'package'])
+    parser.add_argument('command', nargs='?', choices=['build', 'run', 'smoke', 'package'])
+    parser.add_argument('--build-then-run', action='store_true',
+                        help='Build and test the application, then launch it on the current display')
     parser.add_argument('--type', default='app-image', choices=['app-image', 'deb', 'rpm', 'msi', 'exe'])
     args = parser.parse_args()
+    if args.build_then_run and args.command is not None:
+        parser.error('Use --build-then-run without a separate command.')
+    if not args.build_then_run and args.command is None:
+        parser.error('Choose a command or --build-then-run.')
     verify_platform()
-    if args.command == 'build': build()
-    elif args.command == 'package': package(args.type)
-    else: launch(args.command == 'smoke')
+    if args.build_then_run:
+        print('[desktop] Building and testing the application...', flush=True)
+        build()
+        print('[desktop] Build complete; launching the updated UI...', flush=True)
+        launch(False)
+    elif args.command == 'build':
+        build()
+    elif args.command == 'package':
+        package(args.type)
+    else:
+        launch(args.command == 'smoke')
 
 
 if __name__ == '__main__':

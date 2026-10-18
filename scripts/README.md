@@ -27,6 +27,14 @@ for prerequisites, output paths, and rebuilding without overwriting output.
 ./scripts/unix/desktop.sh run
 ```
 
+For a single rebuild-and-launch command, use:
+
+```bash
+./scripts/unix/desktop.sh --build-then-run
+```
+
+It stops if the build fails and uses the current graphical display settings.
+
 `desktop.sh smoke` runs the native UI smoke check. `linux-release.sh` builds and
 checks the DEB without installing it on the developer machine. Ubuntu users
 can also run the root `install.sh --development` to orchestrate setup.
