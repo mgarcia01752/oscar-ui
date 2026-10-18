@@ -3,6 +3,8 @@ import importlib.util
 import io
 from pathlib import Path
 import tempfile
+import sys
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -13,6 +15,12 @@ spec.loader.exec_module(sources)
 
 class ReleaseSourcesTest(unittest.TestCase):
     def test_bundles_matching_sources_and_checksums_per_platform(self):
+        """Verify platform bundles without changing the host Python platform.
+
+        Keep standard-library executable lookup on the real host platform
+        while simulating the collector's Windows and Linux source selection.
+        """
+        host_platform = sys.platform
         for platform, count in [('win32', 3), ('linux', 4)]:
             with self.subTest(platform=platform), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
@@ -20,7 +28,8 @@ class ReleaseSourcesTest(unittest.TestCase):
                 (root / 'jdk').mkdir()
                 (root / 'jdk/release').write_text('IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n')
                 content = b'example source archive'
-                with patch.object(sources, 'ROOT', root), patch.object(sources.sys, 'platform', platform), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
+                with patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
+                    self.assertEqual(host_platform, sys.platform)
                     sources.collect()
                 manifest = (root / 'target/app/sources/SHA256SUMS.txt').read_text().splitlines()
                 self.assertEqual(count, len(manifest))
