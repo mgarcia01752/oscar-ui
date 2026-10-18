@@ -843,9 +843,9 @@ public final class MainWindow extends QMainWindow {
             succeeded = false;
             updateActions();
             Throwable cause = error instanceof ExecutionException ? error.getCause() : error;
-            String message = cause instanceof InspectionException ? cause.getMessage()
+            String message = cause instanceof InspectionException inspection ? inspection.displayMessage(secrets.masking().enabled())
                     : "The document operation failed. Check the file and Oscar dependencies.";
-            if (secrets.masking().enabled()) {
+            if (secrets.masking().enabled() && !(cause instanceof InspectionException)) {
                 message = "The document operation failed. Details are hidden while SNMP obfuscation is enabled.";
             }
             showStatus(message);

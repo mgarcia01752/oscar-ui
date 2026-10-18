@@ -98,7 +98,14 @@ class OscarBinaryServiceTest {
         }
         assertEquals(source.text(), Files.readString(source.path()));
         var snmp = open("Docsis { Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"public\"; }");
-        assertThrows(InspectionException.class, () -> binary.encode(snmp, LAB_KEY));
+        var failure = assertThrows(InspectionException.class, () -> binary.encode(snmp, LAB_KEY));
+        assertTrue(failure.displayMessage(true).contains("Binary export of SNMP statements is not supported"));
+        assertTrue(failure.displayMessage(true).contains("Save as Text"));
+        assertEquals(failure.displayMessage(false), failure.displayMessage(true));
+        assertFalse(failure.displayMessage(true).contains("public"));
+        var rawDiagnostic = new InspectionException("OSCAR rejected synthetic-sensitive-value");
+        assertFalse(rawDiagnostic.displayMessage(true).contains("synthetic-sensitive-value"));
+        assertEquals(rawDiagnostic.getMessage(), rawDiagnostic.displayMessage(false));
         assertFalse(Files.exists(temporary.resolve("db")));
         try (var files = Files.list(temporary)) {
             assertTrue(files.noneMatch(path -> path.getFileName().toString().startsWith(".oscar-ui-")));

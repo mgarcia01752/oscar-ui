@@ -32,3 +32,11 @@ A symbolic column name does not remove the required row index.
 - [ ] Revisit a complete USM user and VACM access/view configuration separately.
   Current records are synthetic masking fixtures, not usable credentials or a
   complete access policy. A VACM group mapping alone grants no access.
+
+## Binary export of SNMP configurations
+
+- [ ] Implement and verify SNMP-bearing binary export in OSCAR-UI using OSCAR,
+  including repeated varbinds, preserved values/order, MIC generation, safe
+  diagnostics, and destination preservation on failure. The current export
+  guard rejects Snmp11/Snmp64 regardless of display masking. Save as Text
+  remains available. Do not remove the guard without end-to-end validation.

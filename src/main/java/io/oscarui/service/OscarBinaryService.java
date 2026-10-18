@@ -114,7 +114,7 @@ public final class OscarBinaryService {
             throw new InspectionException("Set the shared secret in Settings > Secrets before saving binary.");
         }
         if (containsSnmp(document.root())) {
-            throw new InspectionException("Binary export of SNMP statements is not supported yet.");
+            throw new InspectionException(InspectionException.SafeDiagnostic.SNMP_BINARY_EXPORT_UNSUPPORTED);
         }
         try {
             // The pinned legacy compiler logs its key at DEBUG. Disable that

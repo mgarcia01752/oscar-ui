@@ -361,3 +361,8 @@ configuration values remain unchanged.
 - [x] Keep secrets and custom rules out of the settings JSON.
 - [x] Refresh the status indicator on Apply and preserve the setting on Cancel.
 - [x] Test restart, legacy settings, disable, and appearance/masking coexistence.
+
+Binary export currently rejects SNMP statements independently of masking.
+That fixed unsupported-operation diagnostic remains visible while masked and
+suggests Save as Text; upstream diagnostics containing input values remain
+hidden. The export work is tracked in [Development TODO](TODO.md).
