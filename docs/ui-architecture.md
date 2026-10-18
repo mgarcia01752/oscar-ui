@@ -45,7 +45,9 @@ TLV breakdown actions are enabled
 only when idle with an active binary document (`path == null`, `origin != null`).
 Opening text or saving as text disables both even if the document retains a
 binary origin for overwrite protection. New text drafts also disable inspection. Hovering over the disabled Inspect
-menu explains that a binary file must be selected; while busy, it asks the user
+menu explains that a binary file must be selected. The menu-bar action is
+explicitly disabled, and mouse tracking supplies the hint even for disabled
+actions; while busy, it asks the user
 to wait for the current operation.
 
 `OscarBinaryService` renders the immutable bytes from the last open/binary save

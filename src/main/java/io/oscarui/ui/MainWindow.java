@@ -5,6 +5,7 @@ import io.oscarui.service.OscarDocumentService.*;
 import io.qt.core.QTimer;
 import io.qt.core.QEvent;
 import io.qt.gui.QHelpEvent;
+import io.qt.gui.QMouseEvent;
 import io.qt.core.QStandardPaths;
 import io.qt.core.QMetaObject;
 import io.qt.core.QObject;
@@ -277,6 +278,19 @@ public final class MainWindow extends QMainWindow {
             QToolTip.showText(helpEvent.globalPos(), inspectMenu.menuAction().toolTip(), menuBar());
             return true;
         }
+        if (watched == menuBar() && inspectMenu != null && event instanceof QMouseEvent mouseEvent
+                && event.type() == QEvent.Type.MouseMove) {
+            if (menuBar().actionAt(mouseEvent.position().toPoint()) == inspectMenu.menuAction()
+                    && !inspectMenu.menuAction().isEnabled()) {
+                QToolTip.showText(mouseEvent.globalPosition().toPoint(),
+                        inspectMenu.menuAction().toolTip(), menuBar());
+            } else {
+                QToolTip.hideText();
+            }
+        }
+        if (watched == menuBar() && event.type() == QEvent.Type.Leave) {
+            QToolTip.hideText();
+        }
         return super.eventFilter(watched, event);
     }
 
@@ -380,6 +394,7 @@ public final class MainWindow extends QMainWindow {
         settings.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
         inspectMenu = menuBar().addMenu("&Inspect");
+        menuBar().setMouseTracking(true);
         menuBar().installEventFilter(this);
         inspectMenu.setObjectName("inspectMenu");
         inspectMenu.addAction(inspectHexDump);
@@ -792,6 +807,7 @@ public final class MainWindow extends QMainWindow {
         secretsAction.setEnabled(idle);
         boolean binaryActive = idle && document != null && document.path() == null && document.origin() != null;
         inspectMenu.setEnabled(binaryActive);
+        inspectMenu.menuAction().setEnabled(binaryActive);
         inspectMenu.menuAction().setToolTip(binaryActive
                 ? "Inspect the active binary file."
                 : idle ? "A binary file must be selected to inspect the file."
