@@ -26,7 +26,6 @@ replay_pid*
 # Project-local downloaded tools, upstream checkout, and generated bundles
 .tools/
 .m2/
-/development/
 test-config/
 target/
 dist/

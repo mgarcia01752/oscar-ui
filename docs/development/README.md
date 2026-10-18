@@ -11,7 +11,8 @@ project-local bootstrap tools; no machine-specific checkout location is required
 Keep personal configuration files in the ignored `test-config/` directory.
 
 - [Deferred work and follow-up checks](TODO.md)
-- [UI component ownership](ui-architecture.md)
+- [UI architecture](ui-architecture.md)
+- [Verification checklist](checklist.md)
 - [Release packaging and version tags](packaging.md)
 - [Build script layout and commands](../../scripts/README.md)
 - [Agent instructions](../../AGENTS.md)
@@ -139,7 +140,6 @@ Native Qt UI tests are excluded from this Java-only matrix. macOS coverage
 currently means Java compilation and service tests; macOS desktop packaging
 and native GUI support are not implemented.
 
-
 `./scripts/unix/desktop.sh build` builds the desktop bundle and runs the service
 tests. `./scripts/unix/desktop.sh smoke` stages Qt and checks the native workspace,
 menus, tree-to-text selection, and clipboard offscreen with a public sample.
@@ -153,199 +153,22 @@ QT_PLUGIN_PATH="$PWD/target/app/qt/plugins" \
 ./mvnw -B -Dmaven.repo.local="$PWD/.m2" -Doscar.ui.tests=true test
 ```
 
-These tests cover New, All TLVs, Add TLV, first Save, cancellation, unsaved-close
-prompts, failed Open, overwrite refusal, and changes during overwrite confirmation.
-They also cover double-click editing, deletion/cancellation, CRLF selection,
-Binary/Text routing, and masked session-only Secrets settings.
-Binary-save tests also cover direct exports, required secrets, cancellation,
-overwrite conflicts, source protection, and retention of unsaved text edits
-after binary export during a pending replacement prompt.
-Binary-open tests cover menu/shortcut routing, explicit type selection,
-decoded pane agreement, first Text Save, cancellation, malformed input, and
-preservation of the current document. Service fixtures also cover DOCSIS edition
-isolation, DPoE decoding, unsupported PacketCable SNMP, repeated entry order,
-origin retention during edits, aliases, and input size limits.
 Native dialog tests are skipped in ordinary Maven runs without this opt-in.
-Container tests cover immediate-only scaffolding, explicit nested population,
-registry/version isolation, placeholder deletion, no selection-triggered edits,
-last-child removal without automatic refill, and text fidelity.
-Service tests cover all discovered template types, nested insertion, text fidelity,
-safe-save failures, and external-change detection. Windows desktop behavior has
-not yet been verified.
+See the [verification checklist](checklist.md) for coverage, release checks,
+and outstanding desktop verification. The checklist is not evidence that a
+particular platform or release passed; record actual commands and results.
 
-The window title stays **OSCAR-UI**; **Text** or **Binary** appears at the
-bottom right. Filenames and paths are not shown in the window title.
-Operation feedback appears only when needed.
+## Architecture and feature documentation
 
-## Current workspace
-
-TLV descriptions in Add and Edit reflow source line breaks into paragraphs,
-with a blank line after every two prose sentences. The formatter preserves
-technical wording, lists, and aligned examples without rewriting registry data.
-
-The left pane displays an ordered configuration tree with Configuration, TLV,
-and Value columns. TLV paths use dotted notation (for example, `22.8.3`).
-The right pane displays
-original text or decoded binary text. Selecting an entry highlights its text.
-Both panes update together; text edits preserve comments, repeated entries,
-and unrelated formatting.
-
-- **File > New** discovers text types from Oscar's grammar and bundled registries.
-	Choose **Empty** or **All TLVs**, generated through Oscar's template API.
-- **File > Open** detects Text or Binary from content with one file picker.
-  Text headers select the Oscar catalog. Binary decoding tries compatible
-  catalogs and checks that every TLV payload survives the text representation,
-  including nested entries. The older DOCSIS profile is preferred for shared
-  encodings; 4.0-only supported TLVs select DOCSIS 4.0. This identifies a
-  compatible catalog, not the modem's exact version. No format/version prompt
-  is required, and filename extensions do not decide the format.
-  Binary files open as unmodified binary documents without needing a secret.
-  PacketCable SNMP-bearing inputs, unknown TLVs, malformed data, and lossy imports are
-  rejected without replacing the current document. Input and decoded text
-  are limited to 1 MiB. Opening does not verify MICs or full configuration
-  validity. Successful Open and New offer **Add TLV**.
-- **Edit > Add TLV** and the tree context menu offer available children of the
-	selected container, with searchable names, paths, and descriptions. Add and Edit show the data
-	type with an input example or range instead of catalog metadata.
-	The TLV chooser has **TLV** and **Name** columns. Click a header to toggle
-	numeric or alphabetical sorting; TLV paths use dots without brackets.
-
-Adding a container also inserts its immediate registry children as blank
-placeholders. Nested containers stay empty until **Add TLV** or double-click
-explicitly populates that level. Delete unwanted children and enter supported
-values through the existing tree actions; selection alone never edits a file.
-Child counts follow the selected catalog, not fixed numeric ranges. Unsupported
-codecs remain read-only but removable;
-deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
-
-- **Double-click a scalar TLV** (or **Edit > Edit TLV**) to open its current
-	value in the popup. Apply updates that entry; Cancel leaves it unchanged.
-	The Edit popup also offers **Delete TLV** with confirmation. Containers can
-	be opened with **Edit TLV**; deleting one removes all its child TLVs.
-- **Edit > Duplicate TLV** or the tree context menu copies a selected top-level
-	TLV and all its children immediately after the original, then selects the copy.
-	Use this to reuse service flows; edit copied identifiers and values as needed.
-	Catalog instance limits and protected entries are respected. Save writes the changes.
-- **Edit > Del TLV** and the tree context menu delete the selected entry after
-	confirmation. Deleting a container includes its children. Protected entries
-	remain read-only.
-- **File > Save** and its shortcut save the current file in its known format
-  without a format or destination prompt. A new document defaults to Text and
-  asks for its first destination.
-- **File > Save As > Text / Binary** chooses a format and destination. The
-  Save As shortcut offers the same formats. Success changes the active file
-  and clears the modified state; later Save uses that file and format.
-  Both formats use atomic replacement and external-change checks; Save As
-  confirms overwrites. Text cannot replace an imported binary origin, and
-  binary output cannot replace the current text source or its aliases.
-- Binary saving uses Oscar directly, without a Check Config gate, and prompts
-  for a session shared secret only when required and missing. Saving an opened
-  binary writes back to that file and refreshes decoded text and generated MICs.
-  New, Open, and Exit use Save/Discard/Cancel; a successful Save in either
-  format completes the pending action. Encoding errors leave the file and
-  modified document unchanged. Successful encoding is not full validation.
-- **File > Check Config** remains an optional draft-check preview. Minimum
-	rules and complete value/length/dependency validation remain unfinished.
-- **Settings > Global > Show CM/CMTS MIC TLVs** is unchecked by default.
-  Enable it to view the generated, read-only MIC entries in the configuration
-  tree. This session preference does not change source text or binary export.
-- **Settings > Secrets** provides a masked **shared secret** field.
-	Apply keeps its value for this application session only;
-	Clear empties the field and takes effect on Apply. Cancel keeps prior values.
-	No secrets are encrypted or persisted. Binary export uses the session shared
-	secret where required; the community string is not automatically injected.
-  **Obfuscate SNMP secrets** masks recognized community strings, SNMPv3
-  credentials and security identities in the text/tree, clipboard copies,
-  editors, and hex previews. Text uses `********`; protected hex records and
-  their containing parents use `FF FF FF FF`, regardless of secret length.
-  Source text and saved files retain real values. This is display masking,
-  not encryption or hashing. Leave a masked editor field blank to keep its value.
-  **Custom SNMP secrets** accepts a name resolvable by OSCAR or a numeric OID;
-  click **Add**, then **Apply**. Indexed instances match too.
-  **Remove** deletes a custom rule; Cancel discards pending settings changes.
-  Custom rules are forgotten on exit; the checkbox is saved in settings.json.
-  When enabled, **Masked** appears left of the file type with a vertical divider.
-  Inspection while masked omits
-  offsets, original sensitive lengths, and ASCII columns; it uses the saved
-  binary snapshot even when unsaved edits have removed a secret.
-  [Masking architecture and coverage](ui-architecture.md#snmp-display-obfuscation)
-  describes the supported objects and tests.
-- **Settings > Global** opens a dialog with **Appearance: System / Light / Dark**.
-  System is the default and follows the desktop theme reported by Qt.
-  Select **OK** to apply the theme and MIC visibility; **Cancel** keeps the
-  previous settings. Appearance is saved in a per-user `settings.json` on OK
-  and restored at startup. MIC visibility remains session-only.
-  Settings live under Qt's application configuration directory, normally
-  `~/.config/OSCAR-UI/settings.json` on Ubuntu (respecting `XDG_CONFIG_HOME`)
-  and `%LOCALAPPDATA%/OSCAR-UI/settings.json` on Windows. Secrets are not stored.
-  Missing settings use System; unreadable/invalid settings show a status message
-  and use System without overwriting the file. Failed saves keep prior settings.
-
-The binary adapter has lab tests with public test keys and independently
-calculated legacy CM/CMTS MICs: CM-SP-MULPIv3.1-I21-201020, D.1.3.1 / D.2.1,
-printed pp. 736-738; and CM-SP-MULPIv4.0-I12-261014, D.1.3.1 / D.2.1,
-printed pp. 860-862. End/pad markers follow C.1.2.1 / C.1.2.2 in each issue.
-The pinned Oscar compiler emits an explicit zero pad byte after the end marker
-before word alignment; fixture expectations preserve that implementation detail,
-not a requirement to add that byte to every conforming file. These limited
-fixtures do not establish complete-file validity or device interoperability.
-DPoE and PacketCable adapter tests establish API dispatch, not protocol conformance.
-Independent binary-open fixtures use `03 01 01`, the Network Access Control
-Object (type 3, length 1, value 1): CM-SP-MULPIv3.1-I21-201020, C.1.1.3,
-printed p. 594; separately CM-SP-MULPIv4.0-I12-261014, C.1.1.3, printed p. 695.
-These are TLV fragments, not complete deployable configurations. Import compares
-decoded/reparsed TLV payloads against the original snapshot to reject loss; it
-does not claim byte-identical padding or independently verified decoder coverage.
-
-All TLVs files include a reference-template comment, retained when saving.
-This allows reopening Oscar's unmapped legacy placeholders as read-only tree
-entries. The adapter replaces Oscar's `PacketCable-X.X` template header with
-the selected supported header, without changing its generated body.
-
-This is **draft text editing**, not deployable-file validation. The text pane is
-read-only; use the tree actions to add, edit, or delete entries. Validation checks
-catalog membership, available instances,
-scalar syntax, integer syntax, and unsigned codec width. Registry descriptions
-are not interpreted as enums, defaults, or complete validation rules. Length,
-dependency, integrity, and device-interoperability checks remain incomplete.
-Unsupported codecs, PacketCable SNMP binary import, and certificate signing are
-unavailable. Binary export delegates supported integrity generation to Oscar;
-it does not establish complete integrity coverage. DOCSIS 4.0 L2VPN and eDOCSIS/eSAFE editing remain
-deferred. Existing values and generated placeholders are not endorsed as valid
-deployment settings. The DOCSIS 4.0 catalog is used as supplied by Oscar, not
-merged with its separate legacy DOCSIS catalog.
-
-
-### Oscar SNMP mapping cache
-
-Oscar owns the SNMP symbol mapping bundled in its dependency JAR. OSCAR-UI
-does not maintain a separate mapping. Oscar 3.1.2 may initialize
-`res/DottedTextualNetSNMPMap.json` relative to the working directory at runtime;
-this generated cache is ignored by Git.
-
-### Inspect binary files
-
-After opening a binary, choose **Inspect → HexDump** for Oscar's hex/ASCII view,
-or **Inspect → TLV breakdown** for top-level TLV bytes in file order. Both views
-are read-only and show the last opened or saved binary snapshot, not unsaved
-edits. Text documents disable these actions. Nested TLVs remain in their parent
-hex rows; the Configuration tree provides the decoded hierarchy.
-
-The **About → About OSCAR-UI** panel shows build-derived versions and links to
-both projects. **About → Check for updates** checks the latest published stable
-OSCAR-UI release against the installed version. This is a manual network check;
-it does not install updates. Use **View releases and downloads** to download a
-new installer. Draft releases are not offered.
-
-DOCSIS binary saving includes SNMP values from the original configuration, even
-when display masking is enabled. Repeated entries are retained and validated
-before the destination is replaced; masks are never exported as values.
+- [UI architecture](ui-architecture.md): component ownership, document lifecycle,
+  editing, saved-byte inspection, masking, and settings.
+- [Verification checklist](checklist.md): repeatable checks and test-suite mapping.
+- [Development TODO](TODO.md): deferred requirements and known blockers.
+- [UI user guide](../ui/README.md): task-based instructions for each feature.
+- [Configuration examples](../../cm-config/README.md): sample files and limitations.
 
 ## Check Shared Secret
 
 Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.0.
-The dialog masks the supplied key and does not change the editor or selected
-file. See the [architecture and checklist](ui-architecture.md#check-shared-secret)
-for profile detection, result semantics and validation coverage.
-
-For task-based instructions aimed at application users, see the [UI user guide](../ui/README.md).
+See the [architecture](ui-architecture.md#check-shared-secret) for compatible
+profile selection, result semantics, and secret lifetime.

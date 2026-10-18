@@ -96,7 +96,6 @@ if [[ "$CHECK_ONLY" == 1 ]]; then
   exit 0
 fi
 
-mkdir -p "$ROOT/development"
 bash "$ROOT/scripts/unix/bootstrap-oscar.sh"
 QT_DIRECTORY="${QT_HOME:-${ROOT}/.tools/Qt/6.8.3/gcc_64}"
 if [[ ! -x "$QT_DIRECTORY/bin/qmake" ]]; then

@@ -30,8 +30,12 @@ because it appears in the list.
 - Keep dependencies and tools project-local. Do not edit generated `.tools/`,
   `.m2/`, `target/`, or `dist/` as source or install system packages merely to
   validate a change.
-- Update relevant user documentation when commands or behavior change.
-  `development/` is ignored local planning material, not shipped documentation.
+- Keep architecture, development instructions, and deferred requirements in
+  `docs/development/`; do not recreate a parallel root `development/` tree.
+  `ui-architecture.md` owns current behavior, `checklist.md` owns repeatable
+  verification, and `TODO.md` owns deferred work. Avoid duplicate checklists
+  and stale prototype plans. User workflows belong in `docs/ui/`.
+- Update these documents and their links when commands or behavior change.
 
 ## QA skill and validation
 

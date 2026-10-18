@@ -1,10 +1,12 @@
 # Development TODO
 
-[Development guide](README.md) · [Architecture and checklists](ui-architecture.md)
+[Development guide](README.md) · [Architecture](ui-architecture.md) · [Verification checklist](checklist.md)
 
 ## VACM and SNMPv3 symbolic configuration
 
-Status: deferred at the user's request. Keep the working numeric OIDs in
+Status: deferred at the user's request. The investigation below was recorded
+against OSCAR 3.1.2; recheck the currently pinned release before resuming.
+Keep the working numeric OIDs in
 `cm-config/examples/docsis/1gbps-ds-100mbps-us.txt` until this is resolved.
 
 OSCAR 3.1.2 adds base-object mappings for USM, VACM, DH key-change, and community
@@ -41,3 +43,66 @@ A symbolic column name does not remove the required row index.
 - [ ] Support editable PacketCable binary import containing generated SNMP
   statements. That family-specific decoder limitation remains separate from
   DOCSIS export; unknown or lossy imports must still fail before saving.
+
+## Configuration validation
+
+Status: deferred requirements. Binary Save currently works directly through
+OSCAR; optional Check Config is not a mandatory save gate.
+
+- [ ] Define verified minimum rules per supported family/edition: required TLVs,
+  nesting, instances, dependencies, encoded lengths, supported codecs, and
+  required integrity/secret capabilities. Registry presence or successful
+  encoding alone does not establish these rules.
+- [ ] If a mandatory gate is authorized later, check and encode the same immutable
+  document/type/secret snapshot off-thread; invalidate results when it changes.
+  Keep stable check IDs, location, severity, and pass/fail/unverified results.
+- [ ] Exercise stale checks, cancellation, missing secrets, encoder/write failures,
+  and pending New/Open/Exit behavior without damaging files or document state.
+- [ ] Extend independently verified complete-file and integrity fixtures beyond
+  the limited adapter tests before making interoperability claims.
+
+## Encrypted secret persistence
+
+Status: deferred by request; requirements are not finalized. Shared-secret values
+remain session-only. Display obfuscation and password fields are not encryption.
+The former hashing-preference placeholder was replaced by display masking;
+it is not a pending implementation of a selected hashing algorithm.
+
+- [ ] Agree supported Linux/Windows environments, threat model, key ownership,
+  credential scope, unlock behavior, and backup/migration/recovery policy.
+- [ ] Evaluate Linux Secret Service and Windows Credential Manager as candidate
+  backends behind a platform-independent service; no backend is selected yet.
+- [ ] Define create/replace/clear/cancel and stored-status behavior. Untouched
+  values should remain unchanged; failures must preserve previous credentials.
+- [ ] Keep only credential references in ordinary preferences. Never fall back
+  to plaintext when storage is missing/locked, or store a key beside ciphertext.
+- [ ] Define secret consumption and explicit export behavior independently of
+  encrypted local storage; verify OSCAR's input encoding without implicit trim.
+- [ ] Test restart, locked/unavailable store, replacement, clear, migration,
+  cancellation, and diagnostic secrecy on both platforms before enabling it.
+
+## Additional editing scope
+
+- [ ] Establish upstream/API and generic-adapter requirements for unsupported
+  codecs and new families; do not invent per-TLV controls or duplicate registries.
+- [ ] Keep DOCSIS 4.0 L2VPN and eDOCSIS/eSAFE editing deferred until requirements
+  and verified support are available. Catalog presence is not sufficient.
+- [ ] Keep certificate signing outside the current editor capability.
+
+## Verification backlog
+
+These items consolidate earlier unchecked prototype notes. Some have partial
+fixture coverage; close them only with specific evidence, not because a feature
+exists or an installer launches.
+
+- [ ] Record a complete developer setup on a clean supported Ubuntu VM and a
+  Windows development machine, separately from packaged-app installation.
+- [ ] Record native Windows dialog/shortcut, theme, browser-link, and close/cancel
+  checks; verify Ubuntu/Windows real system-theme notifications and both palettes.
+- [ ] Broaden supported-codec and full-file independent fixtures, including
+  family/version/length/instance metadata semantics and unsupported cases.
+- [ ] Exercise compatible registry additions/removals/changes without UI edits.
+- [ ] Inject template-export failures and verify current-document recovery.
+- [ ] Expand edit/delete coverage for stale/protected selections, BOM/CRLF,
+  quoted/numeric notation, selection retention, save/reopen, and instance slots.
+  Existing focused tests do not establish exhaustive coverage.

@@ -8,7 +8,11 @@ description: Check OSCAR-UI release readiness and keep the configuration example
 Read root `AGENTS.md` and `docs/development/TODO.md`. For package or workflow
 changes, use [software hygiene](../qa-sw-hygenie/SKILL.md) for the existing
 platform checks and read `docs/development/packaging.md` for the release flow.
-Do not run the push-release helper or publish as a validation step.
+Use `docs/development/checklist.md` for repeatable verification and keep current
+behavior in `ui-architecture.md` and deferred requirements in `TODO.md` in that
+directory. Do not recreate local architecture/checklist copies under a root
+`development/` directory. Do not run the push-release helper or publish as a
+validation step.
 
 ## Configuration example catalog
 

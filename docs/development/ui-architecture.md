@@ -1,4 +1,11 @@
-# UI component ownership
+# OSCAR-UI architecture
+
+[Development guide](README.md) · [Verification checklist](checklist.md) · [Deferred work](TODO.md)
+
+This document describes the current implementation. Optional configuration
+checks are incomplete; successful encoding is not deployment validation.
+
+## UI component ownership
 
 `MainWindow` arranges panes, owns actions and document state, and coordinates
 asynchronous service operations. Widgets and their callbacks run on the Qt UI
@@ -14,7 +21,10 @@ thread. Oscar parsing, validation, and serialization remain in the service layer
 | `SecretsDialog` / `CustomSnmpRulesPane` | Session shared secret, SNMP masking, and custom object rules |
 | `SaveFormatDialog` | Text/Binary choice; the main window performs the save |
 | `BinaryInspectionDialog` | Read-only, monospace HexDump and top-level TLV listings |
-| `BinaryCheckDialog` | Configuration-check results |
+| `BinaryCheckDialog` | Optional draft configuration-check results |
+| `TlvHexDialog` | Selected instance and nested TLV hex rows with descriptions |
+| `AboutDialog` | Build-derived package versions, links, and manual update checks |
+| `SharedSecretCheckDialog` / `SharedSecretField` | Independent MIC verification and momentary secret reveal |
 | `TlvDescriptionFormatter` | Presentation-only description reflow |
 
 Panes keep their internal maps private and expose domain operations. The tree
@@ -37,6 +47,114 @@ the UI's editable-codec allowlist deliberately supports fewer codecs than Oscar.
 Follow [coding-style](../../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
 [development guide](README.md) after moving UI responsibilities.
+
+## Document and service boundaries
+
+`OscarDocumentService` owns immutable source snapshots, source spans, registry
+lookup, transactional edits, and text saves. `OscarBinaryService` owns content
+detection, binary import/export, and immutable saved-byte snapshots.
+`BinaryTreeProjection` maps OSCAR-compiled instances back to source occurrences.
+The main window submits document work to its worker and applies completed
+results together on the Qt thread; closing stops polling and cancels pending work.
+No widget maintains a separate DOCSIS parser, registry, or encoder.
+
+The workspace is a horizontal splitter with **Configuration | TLV | Value**
+on the left and read-only source text on the right. Dotted TLV paths identify
+registry definitions; instance/source identity distinguishes repeated entries.
+Selecting a row highlights its source span. The main caption is **OSCAR-UI**;
+file type and optional **Masked** status appear at bottom right, without paths.
+
+## Catalogs and new documents
+
+Use OSCAR's bundled DOCSIS, DOCSIS 4.0, DPoE, and PacketCable registries through
+its parser/resolver and `TlvRegistry` APIs. Do not merge catalogs, infer headers
+from filenames, or copy definitions into the UI. Codec-based controls use
+structured metadata; descriptions are not enums, defaults, or protocol rules.
+New codecs or families may require upstream and adapter work.
+OSCAR owns the SNMP symbol LUT in its JAR; the UI does not maintain a copy.
+Its runtime may create the ignored `res/DottedTextualNetSNMPMap.json` cache.
+Indexed-symbol limitations remain in [TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
+
+New requires an explicit supported type and offers Empty or All TLVs.
+All TLVs calls `ConfigurationFileExport.EXPORT_DEFAULT_TLV` on the worker and
+retains a reference-template marker for reopening unmapped placeholders as
+read-only entries. The adapter substitutes the selected supported PacketCable
+header for the exporter's placeholder header; the body remains upstream output.
+Empty drafts and templates are unsaved and do not establish valid deployment
+values. Successful New/Open offers Add TLV once; cancellation and generation
+failure preserve the previous document. Queue Add directly from successful
+load completion rather than a separate zero-delay callback that can race later
+operations. Cancelling Add preserves the new draft.
+
+## Automatic open and safe saving
+
+Open reads a bounded snapshot (1 MiB) and detects content rather than extensions.
+Recognized UTF-8 text uses its declared header and must pass the text compilation
+check below. A failed recognized text compilation does not fall back to binary.
+Binary compatibility candidates are Docsis, Docsis-4.0, DPoE, then PacketCable
+1.0/1.5/2.0. Accept only a complete import whose re-encoded ordered TLV payloads
+match the original. Unknown, truncated, unsupported, or lossy inputs fail without
+replacing the active document. Shared encodings choose the first compatible
+profile; this does not prove a device's exact DOCSIS edition.
+
+Text retains original source/path/hash. Binary retains decoded text plus an
+immutable origin path/hash/byte snapshot, with no active text path. Open is
+unmodified and does not ask for a shared secret or verify MICs. Text compilation
+is unsigned validation; it does not sign or write a deployment binary.
+
+Save uses the active format and destination; new drafts ask for a text path.
+Save As chooses Text/Binary and destination. Only a successful write changes the
+active format/path, clears modified, and completes pending New/Open/Exit actions.
+Text saves preserve formatting without implicit signing. Binary saves compile
+original values through OSCAR with the session shared secret when required,
+validate the decoded/re-encoded payloads before replacement, and refresh the
+saved bytes/hash and generated MIC display. Masking never changes export values.
+
+Writes use temporary-file replacement and external-change hashes. Save As
+confirms overwrite against the observed destination hash. Text cannot overwrite
+its imported binary origin or aliases; binary cannot overwrite the active text
+source or aliases. Binary Save can replace its own origin. Cancellation, missing
+secrets, encoder errors, and write failures preserve document and destination.
+Save/Discard/Cancel protects replacement and exit while modified.
+
+Check Config is an optional draft preview, not a gate on Binary Save. Minimum
+rules, complete encoded-value checks, and interoperability remain unfinished;
+future requirements are tracked in [TODO](TODO.md#configuration-validation).
+
+## TLV editing transactions
+
+Add/Edit/Del operate on exact source instances, reparse the proposed result,
+and refresh both panes together. Stale selections, invalid values, cancellation,
+and failures preserve the document. Unchanged Apply is a no-op. Edits do not
+write files; they preserve surrounding comments, line endings, repeated entries,
+and disk/origin protection. Cut/Paste and direct text editing are unavailable.
+
+Add filters registry children by the complete parent path and instance limits.
+The searchable chooser has sortable **TLV | Name** columns: numeric component
+order for dotted paths, alphabetical name order, both reversible. Sorting and
+search preserve the selected definition and entered value. Help shows a data
+type and example/range. Description formatting reflows prose into paragraphs
+of at most two sentences while preserving lists and aligned technical examples.
+
+Adding a Parent TLV scaffolds only its immediate registry children as blank
+placeholders; nested parents remain empty until explicitly populated through
+Add or double-click. Selection/expansion alone never mutates data. Removing the
+last child leaves the parent's empty `Name;` form, without automatic refill.
+Unsupported placeholders may be removable while remaining noneditable;
+unmapped/protected entries and deferred DOCSIS 4.0 scope retain their restrictions.
+
+Double-clicking a scalar prefills the current value, including unsaved edits.
+Parent TLVs have no editable scalar. Delete from the editor/menu confirms the
+selected instance and all descendants, with Cancel as the safe default, then
+selects the surviving parent and frees the instance slot. Duplicate copies an
+eligible top-level TLV and its entire source subtree immediately after it,
+respecting instance limits/protected entries and selecting the copy. Copied
+identifiers may need user edits. Compound SNMP edits are described below.
+
+Generated CM/CMTS MIC entries are hidden in the tree by default. Settings →
+Global can reveal them for the session; they remain read-only and unavailable
+for Add/Delete. The filter applies to the applicable top-level MIC definitions,
+not unrelated nested or PacketCable entries. Source text and export are unchanged.
 
 ## TLV editor terminology
 
@@ -68,15 +186,6 @@ walker (`TlvDictionary.getTopLevelByteLength`, `TlvBuilder.nextTLVIndex`) and
 Rows preserve top-level instance order and nested bytes; padding/end markers
 appear only in HexDump. This is not a recursive decoded TLV tree.
 
-Inspection checklist:
-
-- [x] Menu order and binary-only enablement, including busy states.
-- [x] Disable the Inspect menu for no file/text; show a prerequisite hover hint.
-- [x] Read-only, selectable, monospace listings with no line wrapping.
-- [x] Original snapshot retained after edits or external file deletion.
-- [x] Repeated TLV order, padding/end-marker handling, and text-save gating.
-- [ ] Verify native dialogs on Windows.
-
 ## Keyboard shortcuts
 
 Use Qt standard key bindings, with one action owning each shortcut. File → Save
@@ -97,14 +206,6 @@ the destination chooser. Saving is disabled while busy or without changes.
 Qt resolves platform-specific standard bindings; macOS generally uses Command
 instead of Control, but native macOS UI support is not verified. Copy and Select
 All also follow the focused text widget's behavior in dialogs.
-
-Hotkey checklist:
-
-- [x] One Save action for menu clicks and Ctrl+S; no duplicate shortcut binding.
-- [x] Ctrl+S keyboard event saves a new text document through its chooser.
-- [x] Save uses the active binary format without a format-selection prompt.
-- [x] Save enablement follows pending operations and modified state.
-- [ ] Verify physical keyboard shortcuts on Windows.
 
 ## System appearance and JSON preferences
 
@@ -138,16 +239,6 @@ contents, or MIC visibility. Settings are outside the installation directory and
 survive uninstall. Noninteractive smoke/tests skip user settings unless a test
 injects a temporary settings store.
 
-Appearance checklist:
-
-- [x] Default to System; retain explicit Light and Dark choices.
-- [x] Follow system color-scheme notifications without overriding explicit choices.
-- [x] Persist the selection in per-user JSON and restore it on restart.
-- [x] Cancel leaves preferences unchanged; failed writes preserve prior state.
-- [x] Reject malformed/unsupported JSON without changing its contents.
-- [x] Keep all secrets and document contents out of the settings file.
-- [ ] Verify real desktop theme notifications on Ubuntu and Windows.
-
 ## About and release checks
 
 `AboutDialog` owns the branded About panel, project links, build versions, and
@@ -168,15 +259,6 @@ cancels its work on close. Connections have finite timeouts and bounded response
 size. No document, secrets, or settings are sent. Checks are user initiated;
 updates are downloaded manually through the GitHub releases link.
 
-About checklist:
-
-- [x] Show OSCAR-UI branding and build-derived dependency versions.
-- [x] Link both OSCAR and OSCAR-UI GitHub repositories.
-- [x] Compare numeric release versions, including development builds.
-- [x] Keep the UI responsive while checking; report offline failures.
-- [x] Exercise successful and failed checks using deterministic native tests.
-- [ ] Verify external browser launching on installed Ubuntu and Windows builds.
-
 Window captions use OSCAR-UI only for the main window. Dialogs use task titles
 such as Add TLV, Settings - Global, or About without an application suffix.
 Startup leaves Qt's application display name unset, preventing its native
@@ -196,10 +278,6 @@ underlying source, edits, and saved files intact. Source-offset mapping preserve
 selection highlighting. Text files retain their original contents: existing
 OSCAR comments can be hidden, but missing comments are not synthesized. Copy
 copies the visible preview. The preference is session-only, like MIC visibility.
-
-- [x] Request OSCAR comments for binary imports by default.
-- [x] Apply visibility on OK; Cancel preserves the previous choice.
-- [x] Preserve source text and selection offsets when hiding comments.
 
 ## Selected TLV hex
 
@@ -222,18 +300,11 @@ with hierarchical indentation. Every row includes its complete type, length,
 and value bytes; a parent's hex therefore includes its children. A scalar has
 one row. Encoding runs on the existing worker, keeping the UI responsive.
 
-- [x] Show parent and nested child bytes with indentation.
-- [x] Preserve repeated-instance selection and current edits.
-- [x] Support scalar selection and OSCAR's DOCSIS 4.0 length widths.
-- [x] Disable the action while busy and for non-TLV selections.
-
 Double-clicking the **Name** column in the TLV hex popup opens a separate,
 read-only description dialog for that exact row, including nested children.
 Descriptions come from OSCAR's registry and use the shared paragraph formatter.
 Missing descriptions show an explicit fallback. Double-clicking Hex does not
 open a description; expansion remains available through the tree arrows.
-
-- [x] Open the selected hex row's OSCAR description on name double-click.
 
 ## Compile text before opening
 
@@ -273,23 +344,16 @@ A failed text check does not fall back to binary decoding or replace the current
 document. Empty files and incomplete reference templates are rejected when
 OSCAR cannot encode them; creating/editing new drafts remains available.
 
-- [x] Compile text through OSCAR before display, without signing credentials.
-- [x] Preserve original source and repeated/nested TLV ordering.
-- [x] Display OSCAR diagnostics and retain the prior document on failure.
-- [x] Validate the example containing SNMP read/write communities.
-- [x] Build loaded TLV rows from OSCAR-encoded instances and decoded values.
-- [x] Keep all twelve example SNMP statements separate from remarks.
-- [x] Verify binary child order and source targeting after edits.
-- [x] Label incomplete editing scaffolds as uncompiled drafts.
-
-
 ## SNMP display obfuscation
 
 **Settings → Secrets → Obfuscate SNMP secrets** replaces the previous inert
 hashing checkbox. It changes presentation only: source, document nodes, binary
 bytes, compilation, and saved files keep their real values. The shared secret
-retains its existing independent password field. No encryption or hashing is
-performed, and neither rules nor secrets are persisted in settings JSON.
+retains its existing independent password field. Apply retains it for the session;
+Clear takes effect on Apply, Cancel preserves the prior value, and closing the
+application clears the session secret. No community value is injected into exports. No encryption or hashing is
+performed. Custom rules and secret values are session-only; only the masking
+checkbox is persisted as described below.
 
 `SnmpSecretMask` owns immutable session rules and fixed replacements:
 `********` in text and `FF FF FF FF` in hex. Built-in arrays match OSCAR TLV
@@ -332,15 +396,6 @@ original offsets or ASCII columns. If safe snapshot mapping fails, the entire
 listing becomes the fixed hex mask; raw bytes are never used as a fallback.
 Masked previews are not compilable/exportable replacement configurations.
 
-- [x] Mask direct SNMP communities and security identities by registry name/path.
-- [x] Mask USM/DH credentials and identity-bearing SNMP/VACM indexes.
-- [x] Add/remove custom names and OIDs with validation and duplicate checks.
-- [x] Use fixed text/hex masks independent of original secret length.
-- [x] Refresh text, TLV values, clipboard, and parent hex consistently.
-- [x] Preserve selection offsets and keep real values through edit/save.
-- [x] Mask the binary snapshot even after unsaved deletion of a secret.
-- [x] Keep rules session-only and preserve prior settings on Cancel.
-
 Deferred symbolic SNMPv3/VACM configuration and its acceptance checks are
 tracked in [Development TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
 
@@ -357,11 +412,6 @@ separator immediately left of Text/Binary when masking is enabled. Both the
 label and separator are hidden when disabled. The tooltip explains that saved
 configuration values remain unchanged.
 
-- [x] Restore the checkbox on startup and preserve it across appearance changes.
-- [x] Keep secrets and custom rules out of the settings JSON.
-- [x] Refresh the status indicator on Apply and preserve the setting on Cancel.
-- [x] Test restart, legacy settings, disable, and appearance/masking coexistence.
-
 Binary export compiles original source values through OSCAR, including DOCSIS
 SNMP statements, regardless of masking. Compile validation captures upstream
 failures before writing, and the saved bytes are decoded and compared against
@@ -370,10 +420,6 @@ top-level TLV separately to preserve repeated SNMP entries and source order;
 retain OSCAR-generated TLV comments. Unknown or lossy imports remain rejected.
 Editable PacketCable import with generated SNMP remains deferred in
 [Development TODO](TODO.md). Raw upstream diagnostics remain hidden while masked.
-
-- [x] Save/reopen the community, USM, and VACM fixture without storing masks.
-- [x] Preserve compiled bytes after masked preview and repeated binary saves.
-- [x] Preserve the existing destination when SNMP compilation fails.
 
 ## SNMP statement editing
 
@@ -384,10 +430,6 @@ not just the first token, and preserves neighboring TLVs and binary origin.
 Sensitive existing entries remain hidden in the editor while masking is on;
 leaving the field blank keeps the original statement. Enter the full compound
 value to replace it. Validation messages do not echo supplied credentials.
-
-- [x] Edit Snmp11 after text-to-binary saving and save/reopen the changed binary.
-- [x] Keep the editor and preview masked while retaining real output values.
-- [x] Reject additional statements in a proposed SNMP value.
 
 ## Check Shared Secret
 
@@ -406,16 +448,7 @@ Invalid CM integrity, text input, missing MICs and unsupported algorithms show
 **Unable to Check**, rather than a misleading key verdict. Work runs off the
 GUI thread; neither secret values nor binary content appear in diagnostics.
 
-- [x] Mask the key and require a key and selected file before checking.
-- [x] Use OSCAR MIC verification with automatic compatible profile selection.
-- [x] Check standard, implicit and explicit MICs with HMAC-MD5/MMH.
-- [x] Preserve input bytes and keep checker state outside editor/settings.
-- [x] Test correct/wrong keys, rejected input, and native dialog behavior.
-
 Shared-secret entry in Settings → Secrets and Tools → Check Shared Secret uses
 one `SharedSecretField` control. Its eye icon reveals the value only while held;
 release, pointer exit, focus loss, dialog deactivation or hiding masks it again.
 Disabled fields remain masked. The icon follows the active palette.
-
-- [x] Add momentary eye-button reveal to both shared-secret dialogs.
-- [x] Test release and interrupted-hold masking in both dialogs.

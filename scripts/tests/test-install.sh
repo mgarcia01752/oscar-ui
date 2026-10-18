@@ -25,7 +25,7 @@ curl() { printf '%s\n' 'Unexpected download' >&2; return 99; }
 bash() {
   if [[ "${TEST_STOP_BOOTSTRAP:-}" == 1 ]]; then
     [[ "$1" == */scripts/unix/bootstrap-oscar.sh ]] || return 99
-    [[ -d "${1%/scripts/unix/bootstrap-oscar.sh}/development" ]] || return 99
+    [[ ! -e "${1%/scripts/unix/bootstrap-oscar.sh}/development" ]] || return 99
     return 77
   fi
   command bash "$@"
@@ -88,5 +88,5 @@ printf '%s\n' 'PASS: preflight does not create development directory'
 export TEST_STOP_BOOTSTRAP=1
 status=0
 /bin/bash "$TEMP_ROOT/install.sh" --development >/dev/null || status=$?
-[[ "$status" == 77 && -d "$TEMP_ROOT/development" ]]
-printf '%s\n' 'PASS: setup creates development directory before bootstrap'
+[[ "$status" == 77 && ! -e "$TEMP_ROOT/development" ]]
+printf '%s\n' 'PASS: setup delegates to bootstrap without a duplicate documentation tree'
