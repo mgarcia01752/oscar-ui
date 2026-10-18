@@ -454,10 +454,10 @@ its text grammar. It remains listed; compile validation prevents acceptance.
 The upstream discrepancy is tracked in [TODO](TODO.md).
 
 Snmp64 Add/Edit controls are covered for every supported PacketCable header.
-OSCAR 3.2.0's two-byte varbind export converts even IpAddress values to ASCII
-hex; the editor displays that upstream value and rejects its invalid format.
-See [the upstream blocker](TODO.md#packetcable-snmp64-value-export); this UI
-coverage does not establish lossless PacketCable SNMP binary import/editing.
+OSCAR 3.2.1 fixes the two-byte varbind export conversion; projected IpAddress
+values now prefill as dotted IPv4 and pass validation unchanged. The native
+regression checks insertion and replacement against the pinned release.
+PacketCable SNMP binary import remains deferred separately.
 
 ## Check Shared Secret
 
@@ -467,7 +467,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.2.0 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.2.1 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.

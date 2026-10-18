@@ -67,7 +67,6 @@ both the tree and decoded text. Unresolved portions remain numeric; OSCAR may
 return a partial name such as `iso.3.6...`. For text files, the source is
 preserved and the tree shows OSCAR-resolved names.
 
-PacketCable Snmp64 uses these same controls and validation. OSCAR 3.2.0 has
-an export limitation: projected Snmp64 values can appear as ASCII hex with
-an incompatible type. Such values fail validation. PacketCable SNMP binary
-import is still unsupported; full Snmp64 round-trip editing awaits an OSCAR fix.
+PacketCable Snmp64 uses these same controls and validation. OSCAR 3.2.1 fixes
+value export so projected IPv4 values retain their expected format. PacketCable
+SNMP binary import remains unsupported; this fix does not remove that limit.

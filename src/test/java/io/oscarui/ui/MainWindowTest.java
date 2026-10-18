@@ -136,10 +136,8 @@ class MainWindowTest {
                         editDialog.findChild(QLineEdit.class, "snmpOid").text());
                 assertEquals("IpAddress", editDialog.findChild(QComboBox.class, "snmpType").currentText());
                 var valueInput = editDialog.findChild(QLineEdit.class, "snmpValue");
-                // OSCAR 3.2.0 exports Snmp64 IpAddress values as ASCII hex.
-                // Keep the defect visible: the editor must reject that malformed value.
-                assertEquals("31:39:32:2E:30:2E:32:2E:31", valueInput.text());
-                assertFalse(editDialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                assertEquals("192.0.2.1", valueInput.text());
+                assertTrue(editDialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
                 valueInput.setText("192.0.2.2");
                 assertTrue(editDialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
                 var edited = service.replaceValue(document, snmpNode, editDialog.selection().value());
