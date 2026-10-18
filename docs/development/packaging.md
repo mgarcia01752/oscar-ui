@@ -180,6 +180,8 @@ and remove its launcher at `/usr/share/applications/oscar-ui-OSCAR-UI.desktop`.
 It does not invoke `xdg-desktop-menu`: minimal/headless Ubuntu systems may lack
 its writable menu directories, which previously caused removal to fail with
 exit status 3. The desktop entry retains its absolute installed icon path.
+The installer uses separate `install -d` and `install -m` commands, supported
+by GNU and BSD install, so isolated maintainer-script tests also run on macOS.
 Removal errors are not suppressed; only the package's own launcher is removed.
 CI checks that the registered launcher matches the bundled entry and disappears
 after uninstall on Ubuntu 22.04 and 24.04, while user configurations survive.

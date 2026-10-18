@@ -3,7 +3,8 @@
 set -eu
 case "$1" in
     configure|abort-upgrade|abort-remove|abort-deconfigure)
-        install -D -m 644 /opt/oscar-ui/lib/oscar-ui-OSCAR-UI.desktop \
+        install -d -m 755 /usr/share/applications
+        install -m 644 /opt/oscar-ui/lib/oscar-ui-OSCAR-UI.desktop \
             /usr/share/applications/oscar-ui-OSCAR-UI.desktop
         ;;
     *)

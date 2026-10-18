@@ -26,8 +26,11 @@ class DebMaintainerTest(unittest.TestCase):
                               capture_output=True, text=True)
 
     def test_headless_install_and_remove_preserve_unrelated_files(self):
-        self.assertEqual(self.run_script('postinst', 'configure').returncode, 0)
+        result = self.run_script('postinst', 'configure')
+        self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.target.read_bytes(), self.source.read_bytes())
+        self.assertEqual(self.target.stat().st_mode & 0o777, 0o644)
+        self.assertEqual(self.target.parent.stat().st_mode & 0o777, 0o755)
         other = self.target.with_name('other.desktop')
         other.write_text('keep')
         self.assertEqual(self.run_script('prerm', 'remove').returncode, 0)
@@ -39,7 +42,8 @@ class DebMaintainerTest(unittest.TestCase):
         self.assertEqual(self.run_script('prerm', 'remove').returncode, 0)
 
     def test_upgrade_and_aborted_removal_restore_launcher(self):
-        self.assertEqual(self.run_script('postinst', 'configure').returncode, 0)
+        result = self.run_script('postinst', 'configure')
+        self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.run_script('prerm', 'upgrade').returncode, 0)
         self.assertFalse(self.target.exists())
         self.assertEqual(self.run_script('postinst', 'abort-remove').returncode, 0)
