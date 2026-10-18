@@ -192,7 +192,7 @@ and unrelated formatting.
   compatible catalog, not the modem's exact version. No format/version prompt
   is required, and filename extensions do not decide the format.
   Binary files open as unmodified binary documents without needing a secret.
-  SNMP-bearing inputs, unknown TLVs, malformed data, and lossy imports are
+  PacketCable SNMP-bearing inputs, unknown TLVs, malformed data, and lossy imports are
   rejected without replacing the current document. Input and decoded text
   are limited to 1 MiB. Opening does not verify MICs or full configuration
   validity. Successful Open and New offer **Add TLV**.
@@ -300,7 +300,7 @@ catalog membership, available instances,
 scalar syntax, integer syntax, and unsigned codec width. Registry descriptions
 are not interpreted as enums, defaults, or complete validation rules. Length,
 dependency, integrity, and device-interoperability checks remain incomplete.
-Unsupported codecs, SNMP insertion/import/export, and certificate signing are
+Unsupported codecs, PacketCable SNMP binary import, and certificate signing are
 unavailable. Binary export delegates supported integrity generation to Oscar;
 it does not establish complete integrity coverage. DOCSIS 4.0 L2VPN and eDOCSIS/eSAFE editing remain
 deferred. Existing values and generated placeholders are not endorsed as valid
@@ -328,3 +328,7 @@ both projects. **About → Check for updates** checks the latest published stabl
 OSCAR-UI release against the installed version. This is a manual network check;
 it does not install updates. Use **View releases and downloads** to download a
 new installer. Draft releases are not offered.
+
+DOCSIS binary saving includes SNMP values from the original configuration, even
+when display masking is enabled. Repeated entries are retained and validated
+before the destination is replaced; masks are never exported as values.

@@ -35,8 +35,9 @@ A symbolic column name does not remove the required row index.
 
 ## Binary export of SNMP configurations
 
-- [ ] Implement and verify SNMP-bearing binary export in OSCAR-UI using OSCAR,
-  including repeated varbinds, preserved values/order, MIC generation, safe
-  diagnostics, and destination preservation on failure. The current export
-  guard rejects Snmp11/Snmp64 regardless of display masking. Save as Text
-  remains available. Do not remove the guard without end-to-end validation.
+- [x] Export DOCSIS SNMP configurations through OSCAR using original source
+  values, independently of display masking. Validate save/reopen, repeated
+  varbinds, compiled bytes, and destination preservation on compile failure.
+- [ ] Support editable PacketCable binary import containing generated SNMP
+  statements. That family-specific decoder limitation remains separate from
+  DOCSIS export; unknown or lossy imports must still fail before saving.

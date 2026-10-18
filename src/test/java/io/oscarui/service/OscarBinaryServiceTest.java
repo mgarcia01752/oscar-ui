@@ -51,6 +51,38 @@ class OscarBinaryServiceTest {
         assertFalse(Arrays.equals(encoded, changedKey));
     }
 
+    @Test void exportsOriginalSnmpValuesWhileMaskedAndReopensBinary() throws Exception {
+        var sourcePath = Path.of("cm-config/examples/docsis/1gbps-ds-100mbps-us.txt");
+        var source = binary.openAuto(sourcePath);
+        var destination = temporary.resolve("snmp.bin");
+        byte[] expected = binary.encode(source, LAB_KEY);
+        var masked = new SnmpSecretMask(true, List.of());
+        var preview = new ConfigurationTextPreview(source.text(), true, masked.replacements(source));
+        assertFalse(preview.text().contains("lab-user"));
+        assertArrayEquals(expected, binary.encode(source, LAB_KEY));
+        var saved = binary.saveDocument(source, destination, null, LAB_KEY);
+        assertArrayEquals(expected, Files.readAllBytes(destination));
+        assertEquals(source.text(), Files.readString(sourcePath));
+        var reopened = binary.openAuto(destination);
+        assertEquals(16, reopened.root().childTlvs().stream()
+                .filter(node -> node.tlvName().equals("Snmp11")).count());
+        assertTrue(reopened.text().contains("lab-user"));
+        assertTrue(reopened.text().contains("lab-group"));
+        assertTrue(reopened.text().contains("public"));
+        assertTrue(reopened.text().contains("private"));
+        assertFalse(reopened.text().contains("********"));
+        var invalid = new OscarDocumentService.Document(source.path(),
+                source.text().replace("IpAddress \"0.0.0.0\"", "IpAddress \"not-an-address\""),
+                source.configurationType(), source.root(), source.diskHash(), false);
+        assertThrows(InspectionException.class,
+                () -> binary.saveDocument(invalid, destination, saved.origin().diskHash(), LAB_KEY));
+        assertArrayEquals(expected, Files.readAllBytes(destination));
+
+        assertArrayEquals(expected, binary.encode(saved, LAB_KEY));
+        binary.saveDocument(saved, destination, saved.origin().diskHash(), LAB_KEY);
+        assertArrayEquals(expected, Files.readAllBytes(destination));
+    }
+
     @Test void usesDocsis40TypeAndItsEncoderRequirements() throws Exception {
         var source = open("""
                 Docsis-4.0 {
@@ -98,14 +130,8 @@ class OscarBinaryServiceTest {
         }
         assertEquals(source.text(), Files.readString(source.path()));
         var snmp = open("Docsis { Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"public\"; }");
-        var failure = assertThrows(InspectionException.class, () -> binary.encode(snmp, LAB_KEY));
-        assertTrue(failure.displayMessage(true).contains("Binary export of SNMP statements is not supported"));
-        assertTrue(failure.displayMessage(true).contains("Save as Text"));
-        assertEquals(failure.displayMessage(false), failure.displayMessage(true));
-        assertFalse(failure.displayMessage(true).contains("public"));
-        var rawDiagnostic = new InspectionException("OSCAR rejected synthetic-sensitive-value");
-        assertFalse(rawDiagnostic.displayMessage(true).contains("synthetic-sensitive-value"));
-        assertEquals(rawDiagnostic.getMessage(), rawDiagnostic.displayMessage(false));
+        byte[] encodedSnmp = binary.encode(snmp, LAB_KEY);
+        assertTrue(encodedSnmp.length > 0);
         assertFalse(Files.exists(temporary.resolve("db")));
         try (var files = Files.list(temporary)) {
             assertTrue(files.noneMatch(path -> path.getFileName().toString().startsWith(".oscar-ui-")));

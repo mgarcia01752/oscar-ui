@@ -362,7 +362,15 @@ configuration values remain unchanged.
 - [x] Refresh the status indicator on Apply and preserve the setting on Cancel.
 - [x] Test restart, legacy settings, disable, and appearance/masking coexistence.
 
-Binary export currently rejects SNMP statements independently of masking.
-That fixed unsupported-operation diagnostic remains visible while masked and
-suggests Save as Text; upstream diagnostics containing input values remain
-hidden. The export work is tracked in [Development TODO](TODO.md).
+Binary export compiles original source values through OSCAR, including DOCSIS
+SNMP statements, regardless of masking. Compile validation captures upstream
+failures before writing, and the saved bytes are decoded and compared against
+re-encoded TLV payloads before destination replacement. Decode each physical
+top-level TLV separately to preserve repeated SNMP entries and source order;
+retain OSCAR-generated TLV comments. Unknown or lossy imports remain rejected.
+Editable PacketCable import with generated SNMP remains deferred in
+[Development TODO](TODO.md). Raw upstream diagnostics remain hidden while masked.
+
+- [x] Save/reopen the community, USM, and VACM fixture without storing masks.
+- [x] Preserve compiled bytes after masked preview and repeated binary saves.
+- [x] Preserve the existing destination when SNMP compilation fails.

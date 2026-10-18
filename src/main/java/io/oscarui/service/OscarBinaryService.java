@@ -113,9 +113,7 @@ public final class OscarBinaryService {
         if (requiresSharedSecret(document) && (sharedSecret == null || sharedSecret.isEmpty())) {
             throw new InspectionException("Set the shared secret in Settings > Secrets before saving binary.");
         }
-        if (containsSnmp(document.root())) {
-            throw new InspectionException(InspectionException.SafeDiagnostic.SNMP_BINARY_EXPORT_UNSUPPORTED);
-        }
+        OscarTextCompileCheck.validate(document.text());
         try {
             // The pinned legacy compiler logs its key at DEBUG. Disable that
             // specific logger before passing session credentials to Oscar.
@@ -302,26 +300,32 @@ public final class OscarBinaryService {
                     throw new InspectionException("Unknown binary TLV; editable import would lose data.");
                 }
                 String name = dictionary.getTlvDefinition(identifier).getString("TlvName");
-                if (name.equals("Snmp11") || name.equals("Snmp64")) {
-                    throw new InspectionException("Editable binary import of SNMP statements is not supported yet.");
+                if (configurationType.family().equals("packetcable")
+                        && (name.equals("Snmp11") || name.equals("Snmp64"))) {
+                    throw new InspectionException("Editable PacketCable binary import of SNMP statements is not supported yet.");
                 }
             }
-            var snapshot = new TlvBuilder();
-            snapshot.add(new TlvVariableBinding(bytes, lengthFieldBytesByTlvType));
-            var exporter = new ConfigurationFileExport(snapshot, configurationType.id());
-            exporter.setDotTextOIDOutputFormat(false);
-            String text = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_FOUND_TLV, false);
+            var decodedSource = new StringBuilder(configurationType.header()).append(" {\n");
+            for (String entry : original) {
+                var snapshot = new TlvBuilder();
+                snapshot.add(new TlvVariableBinding(HexFormat.of().parseHex(entry), lengthFieldBytesByTlvType));
+                var exporter = new ConfigurationFileExport(snapshot, configurationType.id());
+                exporter.setDotTextOIDOutputFormat(false);
+                String exported = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_FOUND_TLV, false);
+                var decodedEntry = documents.parseDecodedTree(exported, configurationType);
+                String normalized = decodedEntry.text();
+                int bodyStart = normalized.indexOf('{', decodedEntry.root().sourceStartOffset()) + 1;
+                decodedSource.append(normalized, bodyStart, decodedEntry.root().terminatorOffset()).append('\n');
+            }
+            String text = decodedSource.append("}\n").toString();
             if (text.length() > OscarInspectionService.MAX_BYTES) {
                 throw new InspectionException("The decoded configuration exceeds the text size limit.");
             }
             Path origin = path.toAbsolutePath().normalize();
             var document = documents.decoded(text, configurationType, new BinaryOrigin(origin,
                     java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)), bytes));
-            if (containsSnmp(document.root())) {
-                throw new InspectionException("Editable binary import of SNMP statements is not supported yet.");
-            }
-            var imported = new ConfigurationFileImport(new StringBuilder(document.text()));
-            if (!original.equals(payloads(imported.toByteArray(), lengthFieldBytesByTlvType))) {
+            byte[] imported = OscarTextCompileCheck.compile(document.text());
+            if (!original.equals(payloads(imported, lengthFieldBytesByTlvType))) {
                 throw new InspectionException("Oscar cannot preserve this binary configuration as editable text; import cancelled.");
             }
             return document;
@@ -381,8 +385,5 @@ public final class OscarBinaryService {
         }
     }
 
-    private boolean containsSnmp(Node node) {
-        return node.tlvName().equals("Snmp11") || node.tlvName().equals("Snmp64")
-                || node.childTlvs().stream().anyMatch(this::containsSnmp);
-    }
+
 }

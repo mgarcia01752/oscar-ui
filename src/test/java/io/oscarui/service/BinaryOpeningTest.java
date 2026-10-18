@@ -125,7 +125,7 @@ class BinaryOpeningTest {
                 .findFirst().orElseThrow().encodedValueText());
     }
 
-    @Test void opensSupportedFamiliesAndReportsUnsupportedGeneratedSnmp() throws Exception {
+    @Test void opensSupportedFamiliesAndReportsUnsupportedPacketCableSnmp() throws Exception {
         for (String header : List.of("Docsis-4.0", "DPoE", "PacketCable-1.0", "PacketCable-1.5", "PacketCable-2.0")) {
             String entries = header.startsWith("PacketCable") ? "TelephonyConfigFileBeginEnd 1;"
                     : "NetworkAccess 1;" + (header.equals("Docsis-4.0") ? """
