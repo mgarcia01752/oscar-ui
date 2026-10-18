@@ -2,8 +2,8 @@
 
 Each version has two uploaded application assets:
 
-- `OSCAR-UI-<version>-windows-x64.zip`: extract the whole ZIP and run
-  `OSCAR-UI.exe`.
+- `OSCAR-UI-<version>-windows-x64.msi`: run the installer and launch
+  OSCAR-UI from the Start menu.
 - `oscar-ui_<version>_amd64.deb`: install with `sudo apt install ./<file>.deb`,
   then launch OSCAR-UI from the application menu.
 
@@ -54,10 +54,13 @@ bump or commit; existing tags are never moved. Use a new version for new code.
 
 ## Independent platform workflows
 
-- **Windows release** (`windows-release.yml`) builds and smoke-tests the native
-  executable in a relocated directory with developer tools removed from PATH.
+- **Windows release** (`windows-release.yml`) builds the MSI from the complete application image, then verifies
+  silent install, Start menu/desktop shortcuts, uninstaller registration, native
+  launch without developer tools on PATH, and silent uninstall.
 - **Ubuntu release** (`ubuntu-release.yml`) builds on Ubuntu 22.04 and checks
-  installation and X11 launch under Xvfb on Ubuntu 22.04 and 24.04.
+  installation, X11 launch under Xvfb, and APT removal on Ubuntu 22.04 and 24.04.
+  Both platforms verify that a user configuration outside the installation
+  directory survives removal. Installer logs are retained as CI artifacts.
 
 Both run on version-tag pushes and support manual dispatch. They upload only
 their own application asset to the same draft release. Publishing steps serialize
@@ -78,7 +81,8 @@ archive being distributed. Update the workflow JDK pins and
 `scripts/collect-release-sources.py` together when changing Java versions.
 
 Windows x64 also requires Visual Studio 2022 C++ build tools with the x64 CRT
-redistributable directory. From PowerShell:
+redistributable directory, plus WiX 3.14.1 (`candle.exe` and `light.exe` on
+PATH). CI configures WiX before packaging. From PowerShell:
 
 ```powershell
 ./scripts/bootstrap-oscar.ps1
@@ -86,8 +90,9 @@ redistributable directory. From PowerShell:
 ./scripts/windows-release.ps1
 ```
 
-On Ubuntu x64, install `fakeroot`, `dpkg-deb`, and the display libraries listed by
-`install.sh`, then run:
+On Ubuntu x64, run `./install.sh --development --check` and install the
+reported missing packages, including `fakeroot` and `dpkg-dev`. Select the
+pinned release JDK above, then run:
 
 ```bash
 ./scripts/bootstrap-oscar.sh
@@ -96,15 +101,16 @@ On Ubuntu x64, install `fakeroot`, `dpkg-deb`, and the display libraries listed 
 ```
 
 Outputs are in `dist/windows/release/` and `dist/linux/release/`. Move existing
-`dist/windows/app-image` or `dist/linux/deb` output aside before rebuilding.
+`dist/windows/app-image`, `dist/windows/msi`, or `dist/linux/deb` output aside before rebuilding.
 The Linux helper extracts and tests its DEB without installing system files.
-The Windows ZIP does not need WiX. Plain `desktop.sh`/`desktop.ps1 package` is a
+The Windows MSI requires WiX 3; it wraps the prepared application image so
+the app-local runtime DLLs remain included. Plain `desktop.sh`/`desktop.ps1 package` is a
 lower-level command; use the release helper to include corresponding sources.
 
 ## Verification
 
 Before publishing, test Windows on a clean PC without Java, Qt, or Visual Studio:
-extract into a path containing spaces, launch, open text/binary configurations,
+install into a path containing spaces, launch, open text/binary configurations,
 edit/duplicate/delete TLVs, save, and reopen. Check themes and cancel/overwrite
 prompts. CI's Windows host already has system runtimes, so its smoke test does
 not establish clean-PC compatibility. Windows packages are currently unsigned.
@@ -124,3 +130,36 @@ and `oscar-ui.ico` for Windows. The ICO contains 16, 24, 32, 48, 64, 128, and
 256 pixel sizes converted from `oscar-ui-light-icon.png`; regenerate it when
 that source artwork changes. These assets are included in the normal packages,
 not uploaded as additional release assets.
+
+To regenerate the Windows icon on a development system with `python3-pil`:
+
+```sh
+python3 - <<'PY'
+from PIL import Image
+with Image.open("docs/images/oscar-ui-light-icon.png") as source:
+    source.save("docs/images/oscar-ui.ico",
+                sizes=[(size, size) for size in (16, 24, 32, 48, 64, 128, 256)])
+PY
+```
+
+Run this from the repository root with the system Python that provides Pillow.
+Normal builds use the committed ICO and do not run image conversion.
+
+## Uninstall and upgrade behavior
+
+Windows MSI installs machine-wide (administrator permission required) and registers
+an uninstaller in Settings → Apps → Installed apps. The Start menu entry is
+included; the installer offers a desktop shortcut. The stable upgrade UUID
+`80186748-531f-4a39-a6da-f5c81a1f0730` identifies future versions of this product.
+CI verifies fresh installation and removal; cross-version upgrades still need
+validation with two released MSI versions. The old portable ZIP is not an MSI
+installation and is not automatically removed.
+
+Ubuntu removal uses `sudo apt remove oscar-ui`. CI checks that package-owned
+files, including its desktop entry, are removed. Both uninstallers leave user
+configuration files outside the installation directory intact. Do not store
+personal files under Program Files or `/opt/oscar-ui`.
+
+Only the MSI and DEB are uploaded as release assets. Windows installation tests
+run only on disposable GitHub Actions runners; the local packaging script builds
+and tests the image without installing the MSI on the developer's machine.

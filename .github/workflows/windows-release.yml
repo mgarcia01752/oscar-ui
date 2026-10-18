@@ -19,19 +19,41 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Configure WiX 3 tools
+        shell: pwsh
+        run: |
+          $WixBin = Join-Path ${env:ProgramFiles(x86)} 'WiX Toolset v3.14/bin'
+          if (!(Test-Path "$WixBin/candle.exe") -or !(Test-Path "$WixBin/light.exe")) {
+            choco install wixtoolset --version=3.14.1 --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'WiX installation failed' }
+          }
+          if (!(Test-Path "$WixBin/candle.exe") -or !(Test-Path "$WixBin/light.exe")) {
+            throw 'WiX 3 compiler/linker missing'
+          }
+          $WixBin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install pinned Oscar
         shell: pwsh
         run: ./scripts/bootstrap-oscar.ps1
       - name: Install pinned Qt
         shell: pwsh
         run: ./scripts/setup-qt.ps1
-      - name: Build and test portable application
+      - name: Build MSI and test application image
         shell: pwsh
         run: ./scripts/windows-release.ps1
+      - name: Verify MSI install, launch, and uninstall
+        shell: pwsh
+        run: ./scripts/test-windows-install.ps1
+      - name: Upload installer logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-logs
+          path: target/installer-logs/
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: dist/windows/release/*.zip
+          path: dist/windows/release/*.msi
           if-no-files-found: error
   publish:
     if: startsWith(github.ref, 'refs/tags/')
@@ -56,9 +78,9 @@ jobs:
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --draft \
               --title "OSCAR-UI $RELEASE_TAG" \
-              --notes 'Windows: download the Windows ZIP, extract it, and run OSCAR-UI.exe. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
+              --notes 'Windows: download and run the MSI installer, then launch OSCAR-UI from the Start menu. Uninstall through Windows Installed apps. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Remove on Ubuntu with sudo apt remove oscar-ui. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
           fi
-          assets=(release/*.zip)
+          assets=(release/*.msi)
           test "${#assets[@]}" -eq 1
           test -f "${assets[0]}"
           gh release upload "$RELEASE_TAG" "${assets[0]}" --clobber

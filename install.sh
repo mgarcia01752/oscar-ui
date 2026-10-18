@@ -5,6 +5,7 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DEVELOPMENT=0
 CHECK_ONLY=0
 
+# Print setup options and the boundary between local and system changes.
 usage() {
   printf '%s\n' \
     'Usage: ./install.sh --development [--check]' \
@@ -46,7 +47,10 @@ if [[ -n "${JAVA_HOME:-}" ]]; then
 fi
 
 PACKAGES=(
-  ca-certificates curl coreutils python3 python3-venv
+  # Repository tools, Maven downloads, Qt bootstrap, and icon conversion.
+  ca-certificates curl coreutils git unzip python3 python3-venv python3-pil
+  # Debian packaging and headless X11 launch verification.
+  dpkg-dev fakeroot xvfb xauth
   libgl1 libegl1 libdbus-1-3 libfontconfig1 libfreetype6
   libx11-xcb1 libxkbcommon0 libxkbcommon-x11-0
   libxcb1 libxcb-cursor0 libxcb-icccm4 libxcb-image0
@@ -87,7 +91,7 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
   exit 1
 fi
 
-printf '%s\n' 'System prerequisites verified (Java 21 and Qt runtime libraries).'
+printf '%s\n' 'System prerequisites verified (Java 21, Qt, development and DEB tools).'
 if [[ "$CHECK_ONLY" == 1 ]]; then
   exit 0
 fi

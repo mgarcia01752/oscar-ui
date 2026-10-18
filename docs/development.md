@@ -8,7 +8,7 @@ behavior. For ready-to-run downloads, use the installation instructions in the
 
 Run development commands from the repository root. Use Java 21 and the
 project-local bootstrap tools; no machine-specific checkout location is required.
-Keep personal configuration files in the ignored `cm-config/` directory.
+Keep personal configuration files in the ignored `test-config/` directory.
 
 - [UI component ownership](ui-architecture.md)
 - [Release packaging and version tags](packaging.md)
@@ -37,8 +37,22 @@ UI using the Maven wrapper. Existing Qt installations can be selected with
 system prerequisites, without downloading or building anything.
 
 After a successful setup, launch with `./scripts/desktop.sh run`. A graphical
-desktop is required for normal use. Native installer packaging tools such as
-`rpm` and `fakeroot` are not part of development setup.
+desktop is required for normal use. Prerequisite checks also cover Git, `unzip`,
+Pillow (`python3-pil`) for icon conversion, `dpkg-dev` and `fakeroot` for DEB
+packaging, and `xvfb`/`xauth` for headless X11 verification. Maven is downloaded
+by the wrapper; Qt's `aqtinstall` is installed in `.tools/venv`. No system Maven,
+Qt development packages, or separate Python pip installation is needed.
+
+Normal development accepts any Java 21 JDK. Release source bundling additionally
+requires **Temurin 21.0.10+7**, as described in [packaging](packaging.md);
+passing development preflight does not verify that release-specific pin.
+RPM packaging and Windows build tools are outside this Linux setup.
+
+Validate installer changes without installing packages or downloading tools:
+
+```sh
+bash scripts/test-install.sh
+```
 
 ### Run the application
 
@@ -269,3 +283,10 @@ deferred. Existing values and generated placeholders are not endorsed as valid
 deployment settings. The DOCSIS 4.0 catalog is used as supplied by Oscar, not
 merged with its separate legacy DOCSIS catalog.
 
+
+### Oscar SNMP mapping cache
+
+Oscar owns the SNMP symbol mapping bundled in its dependency JAR. OSCAR-UI
+does not maintain a separate mapping. Oscar 3.1.1 may initialize
+`res/DottedTextualNetSNMPMap.json` relative to the working directory at runtime;
+this generated cache is ignored by Git.

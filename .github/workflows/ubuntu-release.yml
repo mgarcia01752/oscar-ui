@@ -47,14 +47,37 @@ jobs:
         with:
           name: linux-release
           path: release
+      - name: Create user configuration preservation fixture
+        run: |
+          mkdir -p "$HOME/oscar-ui-test-config"
+          cp src/test/resources/simple-docsis.txt "$HOME/oscar-ui-test-config/configuration.txt"
       - name: Install and launch the packaged application
         run: |
           sudo apt-get update
-          sudo apt-get install -y ./release/*.deb xvfb
+          sudo apt-get install -y ./release/*.deb xvfb xauth
           env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=xcb \
             xvfb-run -a timeout 40s '/opt/oscar-ui/bin/OSCAR-UI' \
             --smoke-test "$PWD/src/test/resources/simple-docsis.txt" | tee smoke.log
           grep -q 'UI_SMOKE_OK' smoke.log
+          dpkg-query -L oscar-ui | while IFS= read -r entry; do
+            if [ -f "$entry" ] || [ -L "$entry" ]; then
+              printf '%s\n' "$entry"
+            fi
+          done > installed-files.txt
+          test -s installed-files.txt
+          grep -q '\.desktop$' installed-files.txt
+      - name: Remove package and verify cleanup
+        if: always()
+        run: |
+          sudo apt-get remove -y oscar-ui
+          test "$(dpkg-query -W -f='${Status}' oscar-ui 2>/dev/null || true)" != 'install ok installed'
+          test ! -e /opt/oscar-ui/bin/OSCAR-UI
+          if [ -f installed-files.txt ]; then
+            while IFS= read -r entry; do
+              test ! -e "$entry" && test ! -L "$entry"
+            done < installed-files.txt
+          fi
+          cmp src/test/resources/simple-docsis.txt "$HOME/oscar-ui-test-config/configuration.txt"
   publish:
     if: startsWith(github.ref, 'refs/tags/')
     needs: linux-install
@@ -78,7 +101,7 @@ jobs:
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --draft \
               --title "OSCAR-UI $RELEASE_TAG" \
-              --notes 'Windows: download the Windows ZIP, extract it, and run OSCAR-UI.exe. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
+              --notes 'Windows: download and run the MSI installer, then launch OSCAR-UI from the Start menu. Uninstall through Windows Installed apps. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Remove on Ubuntu with sudo apt remove oscar-ui. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
           fi
           assets=(release/*.deb)
           test "${#assets[@]}" -eq 1

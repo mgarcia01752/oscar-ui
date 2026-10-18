@@ -39,12 +39,20 @@ you do not need to download the repository.
 
 ## Windows (x64)
 
-1. Download `OSCAR-UI-<version>-windows-x64.zip`.
-2. Extract the entire ZIP.
-3. Open the extracted folder and double-click **OSCAR-UI.exe**.
+1. Download `OSCAR-UI-<version>-windows-x64.msi`.
+2. Run the installer and follow the prompts (administrator permission required).
+3. Launch **OSCAR-UI** from the Start menu.
 
-Keep the executable, DLLs, `app`, and `runtime` folders together. The application
-is currently unsigned, so Windows may display a SmartScreen warning.
+The installer is currently unsigned, so Windows may display a SmartScreen warning.
+
+## Uninstall
+
+- **Windows:** Settings → Apps → Installed apps → OSCAR-UI → Uninstall.
+- **Ubuntu:** run `sudo apt remove oscar-ui`.
+
+Keep your configuration files in your own folders, outside the application
+installation directory. Uninstall removes the application and bundled runtime;
+your configuration files remain.
 
 GitHub's **Source code** ZIP/TAR downloads are for developers, not runnable
 application packages.

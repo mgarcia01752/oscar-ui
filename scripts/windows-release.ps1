@@ -1,4 +1,4 @@
-# Build a portable release from an already bootstrapped Windows checkout.
+# Build an MSI from the runtime-complete, smoke-tested application image.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $Root = Split-Path -Parent $PSScriptRoot
@@ -30,8 +30,8 @@ foreach ($Name in @('msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll')) {
 @'
 OSCAR-UI for Windows x64
 
-Extract the entire ZIP, then double-click OSCAR-UI.exe.
-Keep the app and runtime folders beside the executable.
+Launch OSCAR-UI from the Start menu.
+Uninstall using Windows Settings > Apps > Installed apps.
 Java, Qt, Python, and a repository checkout are not required.
 Licenses and notices are in app/; Java notices are in runtime/legal/.
 '@ | Set-Content "$Image/START-HERE.txt"
@@ -66,4 +66,16 @@ try {
 }
 $Output = "$Root/dist/windows/release"
 New-Item -ItemType Directory -Force $Output | Out-Null
-Compress-Archive -Path $Image -DestinationPath "$Output/OSCAR-UI-$Version-windows-x64.zip"
+# Package the prepared image so Qt and Visual C++ DLLs stay in the installer.
+$InstallerOutput = "$Root/dist/windows/msi"
+if (Test-Path $InstallerOutput) { throw "Output already exists: $InstallerOutput" }
+$JPackage = if ($env:JAVA_HOME) { "$env:JAVA_HOME/bin/jpackage.exe" } else { 'jpackage.exe' }
+& $JPackage --type msi --name OSCAR-UI --app-version $Version `
+    --vendor 'OSCAR-UI contributors' --app-image $Image --dest $InstallerOutput `
+    --install-dir OSCAR-UI --license-file "$Root/LICENSE" `
+    --win-menu --win-menu-group OSCAR-UI --win-shortcut --win-shortcut-prompt `
+    --win-dir-chooser --win-upgrade-uuid '80186748-531f-4a39-a6da-f5c81a1f0730'
+if ($LASTEXITCODE -ne 0) { throw 'MSI packaging failed' }
+$Installers = @(Get-ChildItem "$InstallerOutput/*.msi")
+if ($Installers.Count -ne 1) { throw 'Expected exactly one MSI' }
+Copy-Item $Installers[0].FullName "$Output/OSCAR-UI-$Version-windows-x64.msi"

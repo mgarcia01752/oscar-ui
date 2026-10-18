@@ -43,7 +43,7 @@ their contents. Validate the canonical path and both discovery paths after edits
 
 ## Releases
 
-- Preserve the two uploaded application assets: Windows ZIP and Ubuntu DEB.
+- Preserve the two uploaded application assets: Windows MSI and Ubuntu DEB.
   Keep corresponding dependency sources and checksums inside packages.
   GitHub's automatic source archives are separate from these uploaded assets.
 - Keep Ubuntu and Windows workflows compatible with the shared release draft.

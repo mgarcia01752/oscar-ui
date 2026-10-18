@@ -55,6 +55,13 @@ expect_failure 'sudo apt-get install libxcb-cursor0' --development --check
 unset TEST_MISSING
 printf '%s\n' 'PASS: missing runtime package'
 
+for dependency in git unzip python3-pil dpkg-dev fakeroot xvfb xauth; do
+  export TEST_MISSING="$dependency"
+  expect_failure "sudo apt-get install $dependency" --development --check
+  unset TEST_MISSING
+done
+printf '%s\n' 'PASS: missing development and packaging dependencies'
+
 export TEST_JAVA=17
 expect_failure 'Select a Java 21 JDK' --development --check
 unset TEST_JAVA

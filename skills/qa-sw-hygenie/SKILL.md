@@ -60,8 +60,10 @@ wording. Documentation-only changes need link/path and consistency checks.
 
 Read `docs/packaging.md` and the affected workflow/helper. Confirm:
 
-- Windows ZIP and Ubuntu DEB include a usable launcher and runtime; users do
+- Windows MSI and Ubuntu DEB include a usable launcher and runtime; users do
   not need the repository or a separately installed Java development kit.
+- Verify install, launch, and uninstall in both platform workflows, including
+  shortcut cleanup and preservation of user configurations outside install paths.
 - Only those two application assets are uploaded. Dependency sources, notices,
   and checksums remain inside packages and match the bundled dependencies.
 - Ubuntu install checks cover 22.04 and 24.04. macOS Java CI is not evidence of

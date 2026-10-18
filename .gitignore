@@ -27,9 +27,12 @@ replay_pid*
 .tools/
 .m2/
 /development/
-/cm-config/
+test-config/
 target/
 dist/
 __pycache__/
 *.py[cod]
 *.log
+
+# Runtime SNMP cache initialized from the Oscar dependency
+/res/DottedTextualNetSNMPMap.json
