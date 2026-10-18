@@ -52,6 +52,12 @@ and validation of code, TLV handling, build tooling, or release changes.
 Choose checks appropriate to the actual change; documentation-only changes
 do not require a native application rebuild.
 
+Use [qa-release](skills/qa-release/SKILL.md) for release readiness and changes
+to configuration examples. Whenever files under `cm-config/examples/` are
+added, changed, renamed, or removed, update `cm-config/README.md` in the same
+change. Keep its example links, descriptions, units, and limitations current;
+do not explain hidden or Git-ignored directories in that user-facing README.
+
 Canonical skills live in `skills/<name>/SKILL.md`. Expose them through relative
 directory symlinks in both `.agents/skills/` and `.claude/skills/`; do not copy
 their contents. Validate the canonical path and both discovery paths after edits.
