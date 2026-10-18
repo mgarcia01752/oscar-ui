@@ -77,9 +77,12 @@ Review `git diff` after success. The helper does not commit, tag, push, or publi
 ## Test the helper
 
 ```bash
-python3 -m unittest discover -s tools/development -p 'test_*.py'
+python3 -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s tools/development -p 'test_*.py'
 ```
 
 Tests use synthetic release metadata and JARs, mocked downloads/Maven calls,
 and temporary checkouts. They do not update the real dependency or publish a
 release. CI runs them on Ubuntu, macOS, and the Windows release runner.
+
+CI treats implicit text-file encodings as errors in this suite. Repository
+text is UTF-8, including when tests run on Windows with a CP1252 locale.

@@ -73,12 +73,12 @@ class UpdateOscarTest(unittest.TestCase):
         self.assertIn('install-file', maven.call_args_list[0].args[1])
         self.assertEqual(maven.call_args_list[1].args[1:], ('clean', 'verify'))
         for name in FILES:
-            self.assertIn(self.version, (self.root / name).read_text())
+            self.assertIn(self.version, (self.root / name).read_text(encoding='utf-8'))
         for name in ('scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstrap-oscar.ps1'):
-            self.assertIn(self.digest, (self.root / name).read_text())
-            self.assertIn(self.commit, (self.root / name).read_text())
+            self.assertIn(self.digest, (self.root / name).read_text(encoding='utf-8'))
+            self.assertIn(self.commit, (self.root / name).read_text(encoding='utf-8'))
         self.assertEqual((self.root / f'.tools/oscar-{self.version}/oscar-thin.jar').read_bytes(), self.jar)
-        self.assertIn('Oscar 3.2.0 adds', (self.root / 'docs/development/README.md').read_text())
+        self.assertIn('Oscar 3.2.0 adds', (self.root / 'docs/development/README.md').read_text(encoding='utf-8'))
 
     def test_build_failure_restores_references(self):
         """An incompatible dependency cannot leave tracked references half updated."""
@@ -149,7 +149,7 @@ class UpdateOscarTest(unittest.TestCase):
 
     def test_unknown_reference_layout_fails_before_writing(self):
         """Unexpected source layout requires review rather than a partial replacement."""
-        (self.root / 'scripts/shared/desktop.py').write_text('changed layout')
+        (self.root / 'scripts/shared/desktop.py').write_text('changed layout', encoding='utf-8')
         with self.assertRaisesRegex(RuntimeError, 'Expected one reference'):
             UPDATER._references(self.root, self.version, self.commit, self.digest)
         self.assertEqual((self.root / 'pom.xml').read_bytes(), self.originals['pom.xml'])
