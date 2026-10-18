@@ -23,6 +23,42 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void aboutShowsLinksAndChecksWithoutBlockingUi() throws Exception {
+        var result = new java.util.concurrent.CompletableFuture<String>();
+        var dialog = new AboutDialog(null, result::get);
+        dialog.show();
+        try {
+            var button = dialog.findChild(QPushButton.class, "checkUpdatesButton");
+            var status = dialog.findChild(QLabel.class, "updateStatus");
+            assertTrue(dialog.findChildren(QLabel.class).stream()
+                    .anyMatch(label -> label.text().contains("https://github.com/Comcast/Oscar")));
+            assertTrue(dialog.findChildren(QLabel.class).stream()
+                    .anyMatch(label -> label.text().contains("https://github.com/mgarcia01752/oscar-ui")));
+            button.click();
+            assertFalse(button.isEnabled());
+            assertEquals("Checking GitHub…", status.text());
+            result.complete("Update available: v0.2.0. Installed: 0.1.0.");
+            await(button::isEnabled);
+            assertTrue(status.text().startsWith("Update available"));
+            dialog.grab().save("target/about-dialog.png");
+        } finally {
+            dialog.close();
+            dialog.stopChecking();
+            dialog.dispose();
+        }
+        var failed = new AboutDialog(null, () -> { throw new java.io.IOException("offline"); });
+        failed.show();
+        try {
+            failed.checkUpdates();
+            await(() -> failed.findChild(QPushButton.class, "checkUpdatesButton").isEnabled());
+            assertTrue(failed.findChild(QLabel.class, "updateStatus").text().startsWith("Unable"));
+        } finally {
+            failed.close();
+            failed.stopChecking();
+            failed.dispose();
+        }
+    }
+
     @Test void appearancePersistsAndSystemChangesRespectOverrides() throws Exception {
         var store = new io.oscarui.service.AppearanceSettingsStore(temporary.resolve("settings.json"));
         var window = new MainWindow(false, store);

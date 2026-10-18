@@ -11,6 +11,9 @@ import io.qt.gui.QAction;
 import java.nio.file.Path;
 
 public final class DesktopApplication {
+    private static final String APPLICATION_NAME = "OSCAR-UI";
+    private static final String LINUX_DESKTOP_FILE_NAME = "oscar-ui-OSCAR-UI";
+
     /**
      * Starts the Qt application, or runs the requested native smoke check.
      *
@@ -25,8 +28,9 @@ public final class DesktopApplication {
             System.exit(2);
         }
         try {
-            QApplication.initialize(new String[0]);
-            QApplication.setApplicationName("OSCAR-UI");
+            QApplication.initialize(APPLICATION_NAME, new String[0]);
+            QApplication.setApplicationDisplayName(APPLICATION_NAME);
+            QApplication.setDesktopFileName(LINUX_DESKTOP_FILE_NAME);
             var window = new MainWindow(!smoke);
             window.show();
             QTimer smokeTimer = new QTimer(window);
@@ -56,6 +60,12 @@ public final class DesktopApplication {
     }
 
     private static boolean verifyStarterMenus(MainWindow window) {
+        if (!QApplication.arguments().getFirst().equals(APPLICATION_NAME)
+                || !QApplication.applicationName().equals(APPLICATION_NAME)
+                || !QApplication.applicationDisplayName().equals(APPLICATION_NAME)
+                || !QApplication.desktopFileName().equals(LINUX_DESKTOP_FILE_NAME)) {
+            return false;
+        }
         var menus = window.menuBar().actions();
         if (menus.size() != 5
             || !menus.get(0).text().equals("&File")

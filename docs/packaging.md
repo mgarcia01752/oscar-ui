@@ -163,3 +163,12 @@ personal files under Program Files or `/opt/oscar-ui`.
 Only the MSI and DEB are uploaded as release assets. Windows installation tests
 run only on disposable GitHub Actions runners; the local packaging script builds
 and tests the image without installing the MSI on the developer's machine.
+
+## Linux dock identity
+
+Qt is initialized with the application name `OSCAR-UI` before any windows are
+created. Its desktop-file ID is `oscar-ui-OSCAR-UI`, matching jpackage's generated
+launcher filename. `packaging/linux/OSCAR-UI.desktop` adds
+`StartupWMClass=OSCAR-UI` for X11 matching while retaining jpackage's substituted
+launcher and icon paths. Ubuntu CI checks the installed entry's name and class;
+the native smoke test checks the application's startup identity.

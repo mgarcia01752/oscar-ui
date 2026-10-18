@@ -366,12 +366,27 @@ public final class MainWindow extends QMainWindow {
         inspectTlvBreakdown.triggered.connect(() -> showBinaryInspection(BinaryInspectionDialog.View.TLV_BREAKDOWN));
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &OSCAR-UI", "aboutOscar", null);
-        about.triggered.connect(() -> QMessageBox.about(this, "About OSCAR-UI",
-                "OSCAR-UI 0.1.0\nOscar 3.1.1\nQt Jambi 6.8.3\n\nApache License 2.0"));
+        about.triggered.connect(() -> showAbout(false));
         aboutMenu.addAction(about);
+        var updates = action("Check for &updates…", "checkUpdates", null);
+        updates.triggered.connect(() -> showAbout(true));
+        aboutMenu.addAction(updates);
         var aboutQt = action("About &Qt", "aboutQt", null);
         aboutQt.triggered.connect(() -> QMessageBox.aboutQt(this));
         aboutMenu.addAction(aboutQt);
+    }
+
+    private void showAbout(boolean checkUpdates) {
+        var dialog = new AboutDialog(this);
+        try {
+            if (checkUpdates) {
+                dialog.checkUpdates();
+            }
+            dialog.exec();
+        } finally {
+            dialog.stopChecking();
+            dialog.dispose();
+        }
     }
 
     private void showBinaryInspection(BinaryInspectionDialog.View view) {

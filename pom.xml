@@ -22,7 +22,9 @@
   </profiles>
   <build>
     <resources>
-      <resource><directory>src/main/resources</directory></resource>
+      <resource><directory>src/main/resources</directory>
+        <filtering>true</filtering><includes><include>build-info.properties</include></includes>
+      </resource>
       <resource>
         <directory>docs/images</directory><targetPath>icons</targetPath>
         <includes><include>oscar-ui-light-icon.png</include><include>oscar-ui-dark-icon.png</include></includes>

@@ -132,3 +132,30 @@ Appearance checklist:
 - [x] Reject malformed/unsupported JSON without changing its contents.
 - [x] Keep all secrets and document contents out of the settings file.
 - [ ] Verify real desktop theme notifications on Ubuntu and Windows.
+
+## About and release checks
+
+`AboutDialog` owns the branded About panel, project links, build versions, and
+manual update status. Maven filters `build-info.properties` from the project,
+Oscar, and Qt Jambi versions so packaged and development builds report their
+actual build versions. About → Check for updates opens the same dialog and
+starts the check; the dialog also offers a retry button.
+
+`ReleaseUpdateService` reads GitHub's latest published stable OSCAR-UI release
+API without credentials. It compares numeric major/minor/patch components with
+the installed version, treating an equal-number development build as older than
+the stable release. Drafts and prereleases are excluded. Unknown versions and
+invalid metadata are reported as check failures, never as up-to-date results.
+The dialog uses a worker and UI-thread timer, disables duplicate requests, and
+cancels its work on close. Connections have finite timeouts and bounded response
+size. No document, secrets, or settings are sent. Checks are user initiated;
+updates are downloaded manually through the GitHub releases link.
+
+About checklist:
+
+- [x] Show OSCAR-UI branding and build-derived dependency versions.
+- [x] Link both OSCAR and OSCAR-UI GitHub repositories.
+- [x] Compare numeric release versions, including development builds.
+- [x] Keep the UI responsive while checking; report offline failures.
+- [x] Exercise successful and failed checks using deterministic native tests.
+- [ ] Verify external browser launching on installed Ubuntu and Windows builds.

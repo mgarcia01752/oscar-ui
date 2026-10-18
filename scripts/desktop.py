@@ -142,7 +142,8 @@ def package(kind):
         if WINDOWS:
             args += ['--win-menu', '--win-shortcut', '--win-dir-chooser', '--win-upgrade-uuid', '80186748-531f-4a39-a6da-f5c81a1f0730']
         else:
-            args += ['--linux-package-name', 'oscar-ui', '--linux-shortcut',
+            args += ['--resource-dir', ROOT / 'packaging/linux',
+                     '--linux-package-name', 'oscar-ui', '--linux-shortcut',
                      '--install-dir', '/opt']
             if kind == 'deb':
                 args += ['--linux-package-deps',

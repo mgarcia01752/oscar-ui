@@ -305,3 +305,9 @@ or **Inspect → TLV breakdown** for top-level TLV bytes in file order. Both vie
 are read-only and show the last opened or saved binary snapshot, not unsaved
 edits. Text documents disable these actions. Nested TLVs remain in their parent
 hex rows; the Configuration tree provides the decoded hierarchy.
+
+The **About → About OSCAR-UI** panel shows build-derived versions and links to
+both projects. **About → Check for updates** checks the latest published stable
+OSCAR-UI release against the installed version. This is a manual network check;
+it does not install updates. Use **View releases and downloads** to download a
+new installer. Draft releases are not offered.

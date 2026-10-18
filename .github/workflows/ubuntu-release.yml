@@ -66,6 +66,9 @@ jobs:
           done > installed-files.txt
           test -s installed-files.txt
           grep -q '\.desktop$' installed-files.txt
+          desktop_entry=/opt/oscar-ui/lib/oscar-ui-OSCAR-UI.desktop
+          grep -qx 'Name=OSCAR-UI' "$desktop_entry"
+          grep -qx 'StartupWMClass=OSCAR-UI' "$desktop_entry"
       - name: Remove package and verify cleanup
         if: always()
         run: |
