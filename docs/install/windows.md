@@ -44,6 +44,14 @@ notepad "%TEMP%\oscar-ui-install.log"
 Include the error message and the lines surrounding `Return value 3`, if present,
 when reporting the problem. Review logs for personal information before sharing.
 
+## Update
+
+Close OSCAR-UI and download the newer Windows MSI from
+[GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
+Run the new installer and follow its prompts, then launch OSCAR-UI from the
+Start menu. To remove the installed version manually, use the Uninstall steps
+below.
+
 ## Uninstall
 
 Open **Settings → Apps → Installed apps → OSCAR-UI → Uninstall**.

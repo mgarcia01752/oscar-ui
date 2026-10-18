@@ -85,6 +85,11 @@ final class AboutDialog extends QDialog {
         checkButton.clicked.connect(this::checkUpdates);
         updateLayout.addWidget(checkButton);
         updateLayout.addWidget(link("View releases and downloads", ReleaseUpdateService.UI_PROJECT + "/releases/latest"));
+        String installGuide = System.getProperty("os.name", "").startsWith("Windows") ? "windows" : "ubuntu";
+        var updateInstructions = link("How to update or uninstall OSCAR-UI",
+                ReleaseUpdateService.UI_PROJECT + "/blob/main/docs/install/" + installGuide + ".md#update");
+        updateInstructions.setObjectName("updateUninstallLink");
+        updateLayout.addWidget(updateInstructions);
         layout.addWidget(updates);
         var buttons = new QDialogButtonBox();
         buttons.addButton(QDialogButtonBox.StandardButton.Close);

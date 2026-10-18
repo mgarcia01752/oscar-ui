@@ -41,6 +41,17 @@ If you installed directly from Downloads and saw
 that notice alone does not mean installation failed. Confirm the status above;
 if it reports `install ok installed`, no reinstall is needed.
 
+## Update
+
+Close OSCAR-UI and download the newer DEB from
+[GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
+Install it using the same steps above, substituting the actual downloaded
+filename. `sudo apt install ./<downloaded-filename>.deb` upgrades the installed
+package; you do not need to uninstall first.
+
+OSCAR-UI does not currently provide an APT repository. `sudo apt update` does
+not discover new OSCAR-UI releases from GitHub.
+
 ## Uninstall
 
 ```bash
