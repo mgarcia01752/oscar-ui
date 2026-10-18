@@ -6,6 +6,8 @@ import static io.qt.gui.QPalette.ColorRole.*;
 
 /** Application-wide, session-only palette shared by existing and new dialogs. */
 final class DesktopTheme {
+    private DesktopTheme() {}
+
     static void apply(boolean dark) {
         // Fusion honors explicit palettes consistently on Linux and Windows.
         QApplication.setStyle("Fusion");
@@ -29,6 +31,4 @@ final class DesktopTheme {
         QApplication.setPalette(palette);
         palette.dispose();
     }
-
-    private DesktopTheme() {}
 }

@@ -50,12 +50,12 @@ class MainWindowTest {
 
     @Test void tlvColumnsSortNumericallyAndAlphabeticallyWithoutChangingSelection() throws Exception {
         var service = new OscarDocumentService();
-        var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
-        var document = service.create(type, false);
-        var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family());
+        var configurationType = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+        var document = service.create(configurationType, false);
+        var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(configurationType.family());
         var choices = java.util.List.of(registry.find(java.util.List.of(18)),
                 registry.find(java.util.List.of(2)), registry.find(java.util.List.of(1)));
-        var dialog = new AddTlvDialog(null, service, document, document.root(), choices);
+        var dialog = new TlvEditorDialog(null, service, document, document.root(), choices);
         try {
             dialog.show();
             var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
@@ -116,7 +116,7 @@ class MainWindowTest {
                 action(window, "editTlv").trigger();
                 await(() -> window.completed() && window.currentDocument() != original);
                 assertCallback();
-                assertEquals(remaining - 1, window.currentDocument().root().children().size());
+                assertEquals(remaining - 1, window.currentDocument().root().childTlvs().size());
                 assertTrue(action(window, "fileSave").isEnabled());
             }
             assertFalse(window.currentDocument().text().contains("ServiceFlowReference"));
@@ -191,8 +191,8 @@ class MainWindowTest {
             var service = new OscarDocumentService();
             service.types();
             assertTrue(service.choices(original, original.root()).stream()
-                    .noneMatch(entry -> service.isGeneratedMic(original.type(), entry.path())));
-            assertFalse(service.isGeneratedMic(original.type(), java.util.List.of(24, 6)));
+                    .noneMatch(entry -> service.isGeneratedMic(original.configurationType(), entry.path())));
+            assertFalse(service.isGeneratedMic(original.configurationType(), java.util.List.of(24, 6)));
             assertFalse(window.windowTitle().contains("*"));
         } finally { window.close(); window.dispose(); }
     }
@@ -202,10 +202,10 @@ class MainWindowTest {
         window.show();
         try {
             var service = new OscarDocumentService();
-            var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
-            var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family());
+            var configurationType = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+            var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(configurationType.family());
             var definition = registry.find(java.util.List.of(22));
-            window.createDocument(type, false);
+            window.createDocument(configurationType, false);
             await(() -> window.completed() && window.currentDocument() != null);
             respond(window, dialog -> {
                 dialog.findChild(QLineEdit.class, "tlvSearch").setText(definition.name());
@@ -213,7 +213,7 @@ class MainWindowTest {
                 dialog.findChild(QPushButton.class, "confirmAddTlv").click();
             });
             action(window, "addTlv").trigger();
-            await(() -> window.completed() && !window.currentDocument().root().children().isEmpty());
+            await(() -> window.completed() && !window.currentDocument().root().childTlvs().isEmpty());
             assertCallback();
             var tree = window.findChild(QTreeWidget.class, "configurationTree");
             var classifier = tree.topLevelItem(0).child(0);
@@ -349,7 +349,7 @@ class MainWindowTest {
             action(window, "fileNew").trigger();
             await(() -> window.completed() && window.currentDocument() != null);
             assertCallback();
-            assertTrue(window.currentDocument().root().children().isEmpty());
+            assertTrue(window.currentDocument().root().childTlvs().isEmpty());
             assertTrue(action(window, "fileSave").isEnabled());
             respond(window, dialog -> {
                 assertEquals("addTlvDialog", dialog.objectName());
@@ -362,7 +362,7 @@ class MainWindowTest {
                 dialog.findChild(QPushButton.class, "confirmAddTlv").click();
             });
             action(window, "addTlv").trigger();
-            await(() -> window.completed() && window.currentDocument().root().children().size() == 1);
+            await(() -> window.completed() && window.currentDocument().root().childTlvs().size() == 1);
             assertCallback();
             assertTrue(window.currentDocument().text().contains("NetworkAccess 1;"));
             assertEquals("NetworkAccess", window.findChild(QTreeWidget.class, "configurationTree").currentItem().text(0));
@@ -408,7 +408,7 @@ class MainWindowTest {
             assertCallback();
             assertEquals(file, window.currentDocument().path());
             respond(window, QDialog::reject);
-            window.createDocument(window.currentDocument().type(), false);
+            window.createDocument(window.currentDocument().configurationType(), false);
             await(() -> window.completed() && window.currentDocument().path() == null && QApplication.activeModalWidget() == null);
             respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Cancel).click());
             window.close();
@@ -426,8 +426,8 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            var type = new OscarDocumentService().types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
-            window.createDocument(type, false);
+            var configurationType = new OscarDocumentService().types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+            window.createDocument(configurationType, false);
             await(() -> window.completed() && window.currentDocument() != null);
             var original = window.currentDocument();
             Path destination = temporary.resolve("existing.txt");
@@ -481,7 +481,7 @@ class MainWindowTest {
             });
             action(window, "fileNew").trigger();
             await(() -> window.completed() && window.currentDocument().reference());
-            assertEquals("Docsis-4.0", window.currentDocument().type().header());
+            assertEquals("Docsis-4.0", window.currentDocument().configurationType().header());
             assertNull(window.currentDocument().path());
             var template = window.currentDocument();
             respond(window, QDialog::reject);
@@ -610,8 +610,8 @@ class MainWindowTest {
     @Test void saveShortcutUsesTextWithoutFormatPrompt() throws Exception {
         var window = new MainWindow(false);
         try {
-            var type = new OscarDocumentService().types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
-            window.createDocument(type, false);
+            var configurationType = new OscarDocumentService().types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
+            window.createDocument(configurationType, false);
             await(() -> window.completed() && window.succeeded());
             Path destination = temporary.resolve("shortcut.txt");
             respond(window, chooser -> {

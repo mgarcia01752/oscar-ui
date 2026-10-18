@@ -10,7 +10,7 @@ final class BinaryCheckDialog extends QDialog {
                       BooleanSupplier sharedSecretSet, Runnable settings) {
         super(parent);
         setObjectName("binaryCheckDialog");
-        setWindowTitle("Check Config - " + document.type().header());
+        setWindowTitle("Check Config - " + document.configurationType().header());
         resize(760, 450);
         var layout = new QVBoxLayout(this);
         var note = new QLabel("Optional draft checks; complete configuration validation is unfinished. "

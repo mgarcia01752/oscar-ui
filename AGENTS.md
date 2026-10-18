@@ -20,6 +20,18 @@ These shared instructions apply to all agents working in this repository.
 
 ## QA skill and validation
 
+Use [coding-style](skills/coding-style/SKILL.md) when writing or reviewing
+project-owned code. Every public method and public constructor requires a full
+function documentation banner. Use braces and multiline bodies for Java
+`if`, `else if`, and `else` branches; do not write single-line conditionals.
+After fields and constructors, order methods by visibility: public, protected,
+package-private, then private.
+Use descriptive domain names and typed identifiers for map keys. Replace magic
+protocol numbers with named definitions, checking upstream Oscar and the pinned
+API before adding constants, codec lists, or other potentially redundant code.
+Keep substantial panes and dialogs in focused classes, following
+[UI component ownership](docs/ui-architecture.md).
+
 Use [qa-sw-hygenie](skills/qa-sw-hygenie/SKILL.md) for software hygiene reviews
 and validation of code, TLV handling, build tooling, or release changes.
 Choose checks appropriate to the actual change; documentation-only changes

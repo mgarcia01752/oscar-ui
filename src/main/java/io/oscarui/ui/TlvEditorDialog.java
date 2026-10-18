@@ -9,27 +9,71 @@ import io.qt.widgets.*;
 import java.util.List;
 import java.util.Locale;
 
-final class AddTlvDialog extends QDialog {
+final class TlvEditorDialog extends QDialog {
     record Selection(TlvDefinition definition, String value) {}
+
     private final QLineEdit value = new QLineEdit();
+
     private final QTreeWidget list = new QTreeWidget();
+
     private TlvDefinition selected;
+
     private boolean deletionRequested;
 
-    AddTlvDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
+    private static final class TlvItem extends QTreeWidgetItem {
+        private final TlvDefinition definition;
+
+        TlvItem(TlvDefinition definition) {
+            super(List.of(pathText(definition), definition.name()));
+            this.definition = definition;
+        }
+
+        /**
+         * Orders a TLV row using the active Name or numeric TLV-path column.
+         *
+         * <p>Name ties use the numeric path; non-TLV rows use Qt ordering.
+         * The row must belong to its chooser tree on the Qt UI thread.
+         *
+         * @param other non-null row to compare with this row
+         * @return negative, zero, or positive according to the selected order
+         */
+        @Override
+        public int compareTo(QTreeWidgetItem other) {
+            if (!(other instanceof TlvItem item)) {
+                return super.compareTo(other);
+            }
+            if (treeWidget().header().sortIndicatorSection() == 1) {
+                int nameComparison = definition.name().compareToIgnoreCase(item.definition.name());
+                if (nameComparison != 0) {
+                    return nameComparison;
+                }
+            }
+            var left = definition.path();
+            var right = item.definition.path();
+            for (int index = 0; index < Math.min(left.size(), right.size()); index++) {
+                int componentComparison = Integer.compare(left.get(index), right.get(index));
+                if (componentComparison != 0) {
+                    return componentComparison;
+                }
+            }
+            return Integer.compare(left.size(), right.size());
+        }
+    }
+
+    TlvEditorDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
                  OscarDocumentService.Node insertionParent, List<TlvDefinition> choices) {
         this(parent, service, document, insertionParent, choices, null);
     }
 
-    AddTlvDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
+    TlvEditorDialog(QWidget parent, OscarDocumentService service, OscarDocumentService.Document document,
                  OscarDocumentService.Node insertionParent, List<TlvDefinition> choices,
                  OscarDocumentService.Node editing) {
         super(parent);
         setObjectName(editing == null ? "addTlvDialog" : "editTlvDialog");
-        setWindowTitle((editing == null ? "Add TLV - " : "Edit TLV - ") + document.type().header());
+        setWindowTitle((editing == null ? "Add TLV - " : "Edit TLV - ") + document.configurationType().header());
         resize(620, 540);
         var layout = new QVBoxLayout(this);
-        layout.addWidget(new QLabel("Parent: " + insertionParent.name()));
+        layout.addWidget(new QLabel("Parent: " + insertionParent.tlvName()));
         var search = new QLineEdit();
         search.setObjectName("tlvSearch");
         search.setPlaceholderText("Search TLVs");
@@ -81,10 +125,10 @@ final class AddTlvDialog extends QDialog {
         buttons.rejected.connect(this::reject);
         layout.addWidget(buttons);
         Runnable update = () -> {
-            boolean container = selected != null && service.isContainer(document.type(), selected);
-            boolean supported = selected != null && service.editingIssue(document.type(), selected).isEmpty();
+            boolean container = selected != null && service.isContainer(document.configurationType(), selected);
+            boolean supported = selected != null && service.editingIssue(document.configurationType(), selected).isEmpty();
             value.setEnabled(supported && !container);
-            String issue = selected == null ? "" : service.valueIssue(document.type(), selected, value.text());
+            String issue = selected == null ? "" : service.valueIssue(document.configurationType(), selected, value.text());
             validation.setText(!value.text().isEmpty() || !supported ? issue : "");
             add.setEnabled(supported && issue.isEmpty() && (editing == null || !container));
         };
@@ -94,11 +138,13 @@ final class AddTlvDialog extends QDialog {
             boolean numeric = selected != null && java.util.Set.of("integer", "unsigned_integer", "byte").contains(selected.codec());
             var oldValidator = value.validator();
             value.setValidator(numeric ? new QRegularExpressionValidator(new QRegularExpression("[+-]?[0-9]*"), value) : null);
-            if (oldValidator != null) oldValidator.dispose();
+            if (oldValidator != null) {
+                oldValidator.dispose();
+            }
             valueLabel.setText(numeric ? "Decimal value" : "Value");
             description.setPlainText(selected == null ? "" : TlvDescriptionFormatter.format(selected.description()));
             metadata.setText(selected == null ? "No available TLVs"
-                    : valueHelp(selected, service.isContainer(document.type(), selected)));
+                    : valueHelp(selected, service.isContainer(document.configurationType(), selected)));
             update.run();
         });
         value.textChanged.connect(text -> update.run());
@@ -113,8 +159,14 @@ final class AddTlvDialog extends QDialog {
                     || entry.supportedVersion().toLowerCase(Locale.ROOT).contains(query)).toList();
             visible.forEach(entry -> list.addTopLevelItem(new TlvItem(entry)));
             sortChoices();
-            if (!visible.isEmpty()) list.setCurrentItem(list.topLevelItem(0));
-            else { description.clear(); metadata.setText("No available TLVs"); update.run(); }
+            if (!visible.isEmpty()) {
+                list.setCurrentItem(list.topLevelItem(0));
+            }
+            else {
+                description.clear();
+                metadata.setText("No available TLVs");
+                update.run();
+            }
         });
         search.textChanged.emit("");
         if (editing != null) {
@@ -122,61 +174,16 @@ final class AddTlvDialog extends QDialog {
             list.setEnabled(false);
             list.setMaximumHeight(75);
             resize(620, 340);
-            value.setText(editing.value());
+            value.setText(editing.encodedValueText());
             value.setFocus();
             value.selectAll();
         }
     }
 
-    private void sortChoices() {
-        var items = new java.util.ArrayList<TlvItem>();
-        for (int index = 0; index < list.topLevelItemCount(); index++) {
-            items.add((TlvItem) list.topLevelItem(index));
-        }
-        items.sort((left, right) -> left.compareTo(right));
-        if (list.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder) {
-            java.util.Collections.reverse(items);
-        }
-        var current = list.currentItem();
-        boolean blocked = list.blockSignals(true);
-        try {
-            while (list.topLevelItemCount() > 0) list.takeTopLevelItem(0);
-            items.forEach(list::addTopLevelItem);
-            list.setCurrentItem(current);
-        } finally { list.blockSignals(blocked); }
-    }
-
-    private static String pathText(TlvDefinition definition) {
-        return definition.path().stream().map(String::valueOf)
-                .collect(java.util.stream.Collectors.joining("."));
-    }
-
-    private static final class TlvItem extends QTreeWidgetItem {
-        private final TlvDefinition definition;
-
-        TlvItem(TlvDefinition definition) {
-            super(List.of(pathText(definition), definition.name()));
-            this.definition = definition;
-        }
-
-        @Override public int compareTo(QTreeWidgetItem other) {
-            if (!(other instanceof TlvItem item)) return super.compareTo(other);
-            if (treeWidget().header().sortIndicatorSection() == 1) {
-                int names = definition.name().compareToIgnoreCase(item.definition.name());
-                if (names != 0) return names;
-            }
-            var left = definition.path();
-            var right = item.definition.path();
-            for (int index = 0; index < Math.min(left.size(), right.size()); index++) {
-                int order = Integer.compare(left.get(index), right.get(index));
-                if (order != 0) return order;
-            }
-            return Integer.compare(left.size(), right.size());
-        }
-    }
-
     static String valueHelp(TlvDefinition definition, boolean container) {
-        if (container) return "Container | Add values to its child TLVs";
+        if (container) {
+            return "Container | Add values to its child TLVs";
+        }
         return switch (definition.codec()) {
             case "unsigned_integer" -> "Unsigned integer | Range: 0 to "
                     + java.math.BigInteger.ONE.shiftLeft(definition.lengthMax() * 8)
@@ -200,8 +207,8 @@ final class AddTlvDialog extends QDialog {
     }
 
     static boolean confirmDeletion(QWidget parent, OscarDocumentService.Node node) {
-        String message = "Delete " + node.name() + "?"
-                + (node.children().isEmpty() ? "" : "\nAll child TLVs will also be deleted.");
+        String message = "Delete " + node.tlvName() + "?"
+                + (node.childTlvs().isEmpty() ? "" : "\nAll child TLVs will also be deleted.");
         return QMessageBox.question(parent, "Delete TLV", message,
                 new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
                 QMessageBox.StandardButton.Cancel) == QMessageBox.StandardButton.Yes;
@@ -210,4 +217,27 @@ final class AddTlvDialog extends QDialog {
     boolean deletionRequested() { return deletionRequested; }
 
     Selection selection() { return new Selection(selected, value.text()); }
+
+    private void sortChoices() {
+        var items = new java.util.ArrayList<TlvItem>();
+        for (int index = 0; index < list.topLevelItemCount(); index++) {
+            items.add((TlvItem) list.topLevelItem(index));
+        }
+        items.sort((left, right) -> left.compareTo(right));
+        if (list.header().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder) {
+            java.util.Collections.reverse(items);
+        }
+        var current = list.currentItem();
+        boolean blocked = list.blockSignals(true);
+        try {
+            while (list.topLevelItemCount() > 0) list.takeTopLevelItem(0);
+            items.forEach(list::addTopLevelItem);
+            list.setCurrentItem(current);
+        } finally { list.blockSignals(blocked); }
+    }
+
+    private static String pathText(TlvDefinition definition) {
+        return definition.path().stream().map(String::valueOf)
+                .collect(java.util.stream.Collectors.joining("."));
+    }
 }

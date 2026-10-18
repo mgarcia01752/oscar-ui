@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TlvDescriptionFormatterTest {
+    @Test void doubleSpacesInProseDoNotDisableParagraphBreaks() {
+        assertEquals("First sentence. Second sentence.\n\nThird sentence.",
+                TlvDescriptionFormatter.format("First sentence.  Second sentence.  Third sentence."));
+    }
+
     @Test void separatesEveryTwoSentencesAndKeepsTrailingSentence() {
         String formatted = TlvDescriptionFormatter.format("First sentence. Second sentence! Third sentence? Fourth sentence. Fifth sentence.");
         assertEquals("First sentence. Second sentence!\n\nThird sentence? Fourth sentence.\n\nFifth sentence.", formatted);

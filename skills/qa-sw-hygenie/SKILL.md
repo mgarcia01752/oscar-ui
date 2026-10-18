@@ -11,6 +11,13 @@ Read root `AGENTS.md`, inspect tracked and staged diffs plus untracked files,
 and identify affected behavior before selecting checks. Keep fixes scoped to
 the request. Distinguish a confirmed defect from a proposed improvement.
 
+For code changes, apply [coding-style](../coding-style/SKILL.md): check public
+method documentation banners and reject single-line conditional statements.
+Also check domain-specific names, meaningful map-key types, and named protocol
+constants. Search Oscar for existing definitions before accepting duplicated
+codec lists or mappings; distinguish UI editing restrictions from registry
+support.
+
 ## TLV and UI checks
 
 - Machine TLV identifiers must not contain whitespace. Human-facing labels

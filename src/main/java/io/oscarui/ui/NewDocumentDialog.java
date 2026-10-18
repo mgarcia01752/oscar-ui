@@ -5,10 +5,10 @@ import io.qt.widgets.*;
 import java.util.List;
 
 final class NewDocumentDialog extends QDialog {
-    record Selection(FileType type, boolean allTlvs) {}
+    record Selection(FileType configurationType, boolean includeAllTlvs) {}
     private final List<FileType> types;
-    private final QComboBox type = new QComboBox();
-    private final QRadioButton all = new QRadioButton("All TLVs");
+    private final QComboBox configurationTypeSelector = new QComboBox();
+    private final QRadioButton includeAllTlvsButton = new QRadioButton("All TLVs");
 
     NewDocumentDialog(QWidget parent, List<FileType> types) {
         super(parent);
@@ -18,21 +18,21 @@ final class NewDocumentDialog extends QDialog {
         setMinimumWidth(480);
         var layout = new QVBoxLayout(this);
         var form = new QFormLayout();
-        type.setObjectName("newFileType");
-        types.forEach(entry -> type.addItem(entry.toString()));
-        type.setCurrentIndex(-1);
-        type.setPlaceholderText("Select type");
-        form.addRow("Configuration type", type);
+        configurationTypeSelector.setObjectName("newFileType");
+        types.forEach(entry -> configurationTypeSelector.addItem(entry.toString()));
+        configurationTypeSelector.setCurrentIndex(-1);
+        configurationTypeSelector.setPlaceholderText("Select type");
+        form.addRow("Configuration type", configurationTypeSelector);
         layout.addLayout(form);
         var modes = new QHBoxLayout();
         var empty = new QRadioButton("Empty");
         empty.setChecked(true);
-        all.setObjectName("allTlvsMode");
+        includeAllTlvsButton.setObjectName("allTlvsMode");
         var group = new QButtonGroup(this);
         group.addButton(empty);
-        group.addButton(all);
+        group.addButton(includeAllTlvsButton);
         modes.addWidget(empty);
-        modes.addWidget(all);
+        modes.addWidget(includeAllTlvsButton);
         modes.addStretch();
         layout.addLayout(modes);
         var buttons = new QDialogButtonBox();
@@ -42,9 +42,9 @@ final class NewDocumentDialog extends QDialog {
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(this::accept);
         buttons.rejected.connect(this::reject);
-        type.currentIndexChanged.connect(index -> create.setEnabled(index >= 0));
+        configurationTypeSelector.currentIndexChanged.connect(index -> create.setEnabled(index >= 0));
         layout.addWidget(buttons);
     }
 
-    Selection selection() { return new Selection(types.get(type.currentIndex()), all.isChecked()); }
+    Selection selection() { return new Selection(types.get(configurationTypeSelector.currentIndex()), includeAllTlvsButton.isChecked()); }
 }

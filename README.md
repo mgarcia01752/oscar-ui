@@ -17,6 +17,8 @@ does not rewrite registry data or configuration values.
 
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
+For code organization, see [UI component ownership](docs/ui-architecture.md).
+
 ## Ubuntu download
 
 For Ubuntu 22.04 or 24.04 x64, download `oscar-ui_<version>_amd64.deb`
@@ -130,8 +132,9 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	The **Hash community strings** checkbox keeps a session-only preference;
 	it does not hash or transform values yet. Its algorithm and export behavior
 	remain requirements to define.
-- **Settings > Global** opens a dialog with **Appearance: Light / Dark**, which switches the application
-	and its dialogs immediately. The mode applies for this session only.
+- **Settings > Global** opens a dialog with **Appearance: Light / Dark**.
+  Select **OK** to apply the theme and MIC visibility; **Cancel** keeps the
+  previous settings. These preferences apply for this session only.
 
 The binary adapter has lab tests with public test keys and independently
 calculated legacy CM/CMTS MICs: CM-SP-MULPIv3.1-I21-201020, D.1.3.1 / D.2.1,

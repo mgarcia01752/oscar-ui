@@ -7,7 +7,6 @@ import io.qt.core.Qt;
 import io.qt.gui.QAction;
 import io.qt.gui.QCloseEvent;
 import io.qt.gui.QKeySequence;
-import io.qt.gui.QTextCursor;
 import io.qt.widgets.*;
 import java.nio.file.Path;
 import java.util.*;
@@ -15,45 +14,88 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public final class MainWindow extends QMainWindow {
-    private final OscarDocumentService service = new OscarDocumentService();
-    private final OscarBinaryService binaryService = new OscarBinaryService(service);
+    private final OscarDocumentService documentService = new OscarDocumentService();
+
+    private final OscarBinaryService binaryService = new OscarBinaryService(documentService);
+
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
         Thread thread = new Thread(task, "oscar-document");
         thread.setDaemon(true);
         return thread;
     });
+
     private final QLabel typeLabel = new QLabel();
-    private final QPlainTextEdit content = new QPlainTextEdit();
-    private final QTreeWidget tree = new QTreeWidget();
+
+    private final ConfigurationTextPane configurationTextPane = new ConfigurationTextPane();
+
+    private final ConfigurationTreePane configurationTreePane = new ConfigurationTreePane();
+
     private final QLabel status = new QLabel();
-    private final Map<QTreeWidgetItem, Node> nodes = new HashMap<>();
-    private final Map<Node, Node> parents = new IdentityHashMap<>();
+
     private final QAction newFile = action("&New...", "fileNew", QKeySequence.StandardKey.New);
+
     private final QAction open = action("&Open...", "fileOpen", QKeySequence.StandardKey.Open);
+
     private final QAction save = action("&Save", "fileSave", null);
+
     private final QAction saveAs = action("&Text...", "fileSaveAs", null);
+
     private final QAction addTlv = action("Add &TLV...", "addTlv", null);
+
     private final QAction duplicateTlv = action("Duplicate TLV", "duplicateTlv", null);
+
     private final QAction deleteTlv = action("&Del TLV...", "deleteTlv", null);
+
     private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
+
     private final QAction binarySaveAs = action("&Binary...", "fileSaveAsBinary", null);
+
     private final QAction saveShortcut = action("Save", "saveShortcut", QKeySequence.StandardKey.Save);
+
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
+
     private final QAction configChecks = action("Check Config...", "configChecks", null);
+
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
+
     private final QAction showMicTlvs = action("Show CM/CMTS MIC TLVs", "showMicTlvs", null);
+
     private final SessionSecrets secrets = new SessionSecrets();
+
     private QMenu saveAsMenu;
+
     private final QTimer poller = new QTimer(this);
+
     private final boolean interactive;
+
     private Document document;
+
     private boolean modified;
+
     private Future<Runnable> pending;
+
     private boolean completed;
+
     private boolean succeeded;
 
-    public MainWindow() { this(true); }
+    /**
+     * Creates the interactive application window on the Qt UI thread.
+     *
+     * <p>Owns its child widgets and background worker until the window closes.
+     */
+    public MainWindow() {
+        this(true);
+    }
 
+    /**
+     * Creates the application window with optional interactive prompts.
+     *
+     * <p>Must be called on the Qt UI thread. Closing the window stops its
+     * worker and clears session secrets.
+     *
+     * @param interactive true to show prompts and open the editor after loading;
+     *                    false for automated smoke and dialog tests
+     */
     public MainWindow(boolean interactive) {
         this.interactive = interactive;
         setWindowTitle("OSCAR-UI");
@@ -65,18 +107,9 @@ public final class MainWindow extends QMainWindow {
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
         status.setVisible(false);
-        content.setObjectName("configurationText");
-        content.setReadOnly(true);
-        content.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap);
-        tree.setObjectName("configurationTree");
-        tree.setHeaderLabels(List.of("Configuration", "TLV", "Value"));
-        tree.setMinimumWidth(240);
-        tree.setColumnWidth(0, 240);
-        tree.setColumnWidth(1, 100);
-        tree.setAlternatingRowColors(true);
         var splitter = new QSplitter(Qt.Orientation.Horizontal);
-        splitter.addWidget(tree);
-        splitter.addWidget(content);
+        splitter.addWidget(configurationTreePane);
+        splitter.addWidget(configurationTextPane);
         splitter.setStretchFactor(0, 1);
         splitter.setStretchFactor(1, 2);
         splitter.setSizes(List.of(380, 780));
@@ -84,45 +117,144 @@ public final class MainWindow extends QMainWindow {
         layout.addWidget(status);
         setCentralWidget(central);
         buildMenus();
-        tree.currentItemChanged.connect((current, previous) -> {
-            Node node = nodes.get(current);
-            if (node != null && !node.path().isEmpty()) {
-                var cursor = content.textCursor();
-                cursor.setPosition(textPosition(node.start()));
-                cursor.setPosition(textPosition(node.end()), QTextCursor.MoveMode.KeepAnchor);
-                content.setTextCursor(cursor);
-                content.ensureCursorVisible();
-            }
+        configurationTreePane.currentItemChanged.connect((current, previous) -> {
+            configurationTextPane.highlight(configurationTreePane.selectedTlv());
             updateActions();
         });
-        tree.itemDoubleClicked.connect((item, column) -> {
-            tree.setCurrentItem(item);
-            Node selected = nodes.get(item);
-            if (document != null && service.canPopulate(document, selected)) populateContainer(selected);
-            else editSelectedTlv();
+        configurationTreePane.itemDoubleClicked.connect((item, column) -> {
+            configurationTreePane.setCurrentItem(item);
+            Node selected = configurationTreePane.selectedTlv();
+            if (document != null && documentService.canPopulate(document, selected)) {
+                populateContainer(selected);
+            }
+            else {
+                editSelectedTlv();
+            }
         });
-        tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu);
-        tree.customContextMenuRequested.connect(point -> {
-            var item = tree.itemAt(point);
-            if (item == null) return;
-            tree.setCurrentItem(item);
-            var menu = new QMenu(tree);
-            menu.addAction(addTlv);
-            menu.addAction(editTlv);
-            menu.addAction(duplicateTlv);
-            menu.addAction(deleteTlv);
-            menu.exec(tree.viewport().mapToGlobal(point));
-            menu.dispose();
-        });
+        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv));
         poller.timeout.connect(this::receiveResult);
         poller.start(40);
         updateActions();
     }
 
+    /**
+     * Starts opening a configuration with automatic format detection.
+     *
+     * <p>Call on the Qt UI thread. An active operation causes this request to
+     * be ignored; failures retain the current document and update the status.
+     *
+     * @param configurationPath non-null path of the configuration to open
+     */
+    public void openFile(Path configurationPath) {
+        if (pending != null) {
+            return;
+        }
+        submit(() -> binaryService.openAuto(configurationPath), loaded -> {
+            display(loaded, false);
+            if (interactive) {
+                chooseTlv();
+            }
+        });
+    }
+
+    /**
+     * Starts decoding a binary file using the specified configuration family.
+     *
+     * <p>Call on the Qt UI thread. An active operation causes this request to
+     * be ignored; a decode failure leaves the current document unchanged.
+     *
+     * @param configurationPath non-null binary configuration path
+     * @param configurationType non-null Oscar configuration type for decoding
+     */
+    public void openBinaryFile(Path configurationPath, FileType configurationType) {
+        if (pending != null) {
+            return;
+        }
+        submit(() -> binaryService.open(configurationPath, configurationType), loaded -> {
+            display(loaded, false);
+            if (interactive) {
+                chooseTlv();
+            }
+        });
+    }
+
+    /**
+     * Starts creating a configuration or reference template.
+     *
+     * <p>Call on the Qt UI thread. The completed document is marked modified.
+     * Requests during another operation are ignored.
+     *
+     * @param configurationType non-null Oscar configuration type to create
+     * @param includeAllTlvs true for a reference template, false for a new draft
+     */
+    public void createDocument(FileType configurationType, boolean includeAllTlvs) {
+        submit(() -> documentService.create(configurationType, includeAllTlvs), created -> {
+            display(created, true);
+            if (interactive) {
+                chooseTlv();
+            }
+        });
+    }
+
+    /**
+     * Reports whether the most recent background operation has completed.
+     *
+     * <p>Read on the Qt UI thread; starting another operation clears this flag.
+     *
+     * @return true after a result or failure has been handled
+     */
+    public boolean completed() {
+        return completed;
+    }
+
+    /**
+     * Reports whether the last operation succeeded with a loaded document.
+     *
+     * <p>Read on the Qt UI thread after completion has been observed.
+     *
+     * @return true when the last operation succeeded and a document is present
+     */
+    public boolean succeeded() {
+        return succeeded && document != null;
+    }
+
+    /**
+     * Returns the current document snapshot without modifying it.
+     *
+     * <p>Read on the Qt UI thread; background results replace this snapshot.
+     *
+     * @return current document, or null before a document has been loaded
+     */
+    public Document currentDocument() {
+        return document;
+    }
+
+    @Override protected void closeEvent(QCloseEvent event) {
+        if (interactive && pending != null) {
+            event.ignore();
+            showStatus("Wait for the current operation to finish.");
+            return;
+        }
+        if (interactive && modified) {
+            event.ignore();
+            withDiscardPermission(() -> { modified = false; QTimer.singleShot(0, () -> close()); });
+            return;
+        }
+        poller.stop();
+        if (pending != null) {
+            pending.cancel(true);
+        }
+        worker.shutdownNow();
+        secrets.close();
+        super.closeEvent(event);
+    }
+
     private QAction action(String label, String name, QKeySequence.StandardKey shortcut) {
         var action = new QAction(label, this);
         action.setObjectName(name);
-        if (shortcut != null) action.setShortcut(new QKeySequence(shortcut));
+        if (shortcut != null) {
+            action.setShortcut(new QKeySequence(shortcut));
+        }
         return action;
     }
 
@@ -161,13 +293,13 @@ public final class MainWindow extends QMainWindow {
         edit.addSeparator();
         var copy = action("&Copy", "editCopy", QKeySequence.StandardKey.Copy);
         copy.setEnabled(false);
-        copy.triggered.connect(content::copy);
-        content.copyAvailable.connect(copy::setEnabled);
+        copy.triggered.connect(configurationTextPane::copy);
+        configurationTextPane.copyAvailable.connect(copy::setEnabled);
         edit.addAction(copy);
         var selectAll = action("Select &All", "editSelectAll", QKeySequence.StandardKey.SelectAll);
         selectAll.setEnabled(false);
-        selectAll.triggered.connect(content::selectAll);
-        content.textChanged.connect(() -> selectAll.setEnabled(!content.toPlainText().isEmpty()));
+        selectAll.triggered.connect(configurationTextPane::selectAll);
+        configurationTextPane.textChanged.connect(() -> selectAll.setEnabled(!configurationTextPane.toPlainText().isEmpty()));
         edit.addAction(selectAll);
         var settings = menuBar().addMenu("&Settings");
         settings.setObjectName("settingsMenu");
@@ -197,7 +329,9 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void chooseFile() {
-        if (pending != null) return;
+        if (pending != null) {
+            return;
+        }
         withDiscardPermission(() -> {
             var selection = QFileDialog.getOpenFileName(this, "Open configuration", "",
                     "Configuration files (*.txt *.conf *.cfg *.bin *.cm *.mta);;All files (*)");
@@ -208,79 +342,31 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void chooseNew() {
-        submit(service::types, types -> {
+        submit(documentService::types, types -> {
             var dialog = new NewDocumentDialog(this, types);
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                 var selection = dialog.selection();
-                createDocument(selection.type(), selection.allTlvs());
+                createDocument(selection.configurationType(), selection.includeAllTlvs());
             }
             dialog.dispose();
-        });
-    }
-
-    public void openFile(Path path) {
-        if (pending != null) return;
-        submit(() -> binaryService.openAuto(path), loaded -> {
-            display(loaded, false);
-            if (interactive) chooseTlv();
-        });
-    }
-
-    public void openBinaryFile(Path path, FileType type) {
-        if (pending != null) return;
-        submit(() -> binaryService.open(path, type), loaded -> {
-            display(loaded, false);
-            if (interactive) chooseTlv();
-        });
-    }
-
-    public void createDocument(FileType type, boolean allTlvs) {
-        submit(() -> service.create(type, allTlvs), created -> {
-            display(created, true);
-            if (interactive) chooseTlv();
         });
     }
 
     private void display(Document current, boolean changed) {
         document = current;
         modified = changed;
-        nodes.clear();
-        parents.clear();
-        tree.clear();
-        content.setPlainText(current.text());
-        var rootItem = new QTreeWidgetItem(List.of(current.root().name(), "", ""));
-        tree.addTopLevelItem(rootItem);
-        populate(rootItem, current.root());
+        configurationTextPane.displaySource(current.text());
+        configurationTreePane.displayRoot(current.root());
         updateMicVisibility();
-        rootItem.setExpanded(true);
-        tree.setCurrentItem(rootItem);
         updateDocumentLabels();
         updateActions();
     }
 
-    private void populate(QTreeWidgetItem item, Node node) {
-        nodes.put(item, node);
-        item.setText(1, node.path().contains(-1) ? "" : node.path().stream()
-                .map(String::valueOf).collect(java.util.stream.Collectors.joining(".")));
-        item.setToolTip(0, node.path().contains(-1) ? "Unmapped reference entry" : node.path().toString());
-        for (Node child : node.children()) {
-            var childItem = new QTreeWidgetItem(List.of(child.name(), "", child.value()));
-            item.addChild(childItem);
-            parents.put(child, node);
-            populate(childItem, child);
-        }
-    }
-
     private void updateMicVisibility() {
-        if (document == null) return;
-        nodes.forEach((item, node) -> {
-            if (!service.isGeneratedMic(document.type(), node.path())) return;
-            if (!showMicTlvs.isChecked() && tree.currentItem() == item) {
-                tree.setCurrentItem(item.parent());
-            }
-            item.setHidden(!showMicTlvs.isChecked());
-            item.setToolTip(0, node.path() + " — Generated integrity field (read-only)");
-        });
+        if (document == null) {
+            return;
+        }
+        configurationTreePane.setMicVisibility(tlvNode -> documentService.isGeneratedMic(document.configurationType(), tlvNode.tlvPath()), showMicTlvs.isChecked());
     }
 
     private void updateDocumentLabels() {
@@ -298,39 +384,30 @@ public final class MainWindow extends QMainWindow {
     }
 
     private Node insertionParent() {
-        if (document == null) return null;
-        Node selected = nodes.get(tree.currentItem());
-        if (selected == null) return document.root();
-        return selected.container() ? selected : parents.getOrDefault(selected, document.root());
+        if (document == null) {
+            return null;
+        }
+        return configurationTreePane.insertionParent();
     }
 
     private void chooseTlv() {
-        if (document == null || pending != null) return;
+        if (document == null || pending != null) {
+            return;
+        }
         Document original = document;
         Node parent = insertionParent();
-        if (service.canPopulate(original, parent)) {
+        if (documentService.canPopulate(original, parent)) {
             populateContainer(parent);
             return;
         }
-        submit(() -> service.choices(original, parent), choices -> {
-            var dialog = new AddTlvDialog(this, service, original, parent, choices);
+        submit(() -> documentService.choices(original, parent), choices -> {
+            var dialog = new TlvEditorDialog(this, documentService, original, parent, choices);
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                 var selection = dialog.selection();
-                submit(() -> service.insert(original, parent, selection.definition(), selection.value()),
+                submit(() -> documentService.insert(original, parent, selection.definition(), selection.value()),
                         changed -> {
                             display(changed, true);
-                            Node updatedParent = parent.path().isEmpty() ? changed.root() : nodes.values().stream()
-                                    .filter(node -> node.start() == parent.start() && node.path().equals(parent.path()))
-                                    .findFirst().orElse(changed.root());
-                            Node inserted = updatedParent.children().get(updatedParent.children().size() - 1);
-                            nodes.forEach((item, node) -> {
-                                if (node == inserted) {
-                                    for (var ancestor = item.parent(); ancestor != null; ancestor = ancestor.parent()) ancestor.setExpanded(true);
-                                    item.setExpanded(true);
-                                    tree.setCurrentItem(item);
-                                    tree.scrollToItem(item);
-                                }
-                            });
+                            configurationTreePane.selectLastChild(parent);
                         });
             }
             dialog.dispose();
@@ -338,111 +415,119 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void populateContainer(Node container) {
-        if (document == null || pending != null || !service.canPopulate(document, container)) return;
-        Document original = document;
-        submit(() -> service.populate(original, container), changed -> {
-            display(changed, true);
-            selectCorresponding(container);
-            var selected = tree.currentItem();
-            if (selected != null) selected.setExpanded(true);
-        });
-    }
-
-    private int textPosition(int sourcePosition) {
-        // QTextDocument collapses CRLF to one paragraph separator.
-        int position = sourcePosition;
-        for (int index = 0; index < sourcePosition - 1; index++) {
-            if (document.text().charAt(index) == '\r' && document.text().charAt(index + 1) == '\n') position--;
+        if (document == null || pending != null || !documentService.canPopulate(document, container)) {
+            return;
         }
-        return position;
-    }
-
-    private void selectCorresponding(Node previous) {
-        nodes.forEach((item, node) -> {
-            if (node.start() == previous.start() && node.path().equals(previous.path())) {
-                for (var ancestor = item.parent(); ancestor != null; ancestor = ancestor.parent()) ancestor.setExpanded(true);
-                tree.setCurrentItem(item);
-                tree.scrollToItem(item);
-            }
+        Document original = document;
+        submit(() -> documentService.populate(original, container), changed -> {
+            display(changed, true);
+            configurationTreePane.selectCorresponding(container);
+            configurationTreePane.expandSelection();
         });
     }
 
     private boolean canOpenEditor(Node node) {
-        return document != null && node != null && (service.canEdit(document, node)
-                || node.container() && service.canDelete(document, node));
+        return document != null && node != null && (documentService.canEdit(document, node)
+                || node.isContainer() && documentService.canDelete(document, node));
     }
 
     private void editSelectedTlv() {
-        Node selected = nodes.get(tree.currentItem());
-        if (pending != null || !canOpenEditor(selected)) return;
+        Node selected = configurationTreePane.selectedTlv();
+        if (pending != null || !canOpenEditor(selected)) {
+            return;
+        }
         Document original = document;
-        var dialog = new AddTlvDialog(this, service, original, parents.get(selected),
-                List.of(service.definition(original, selected)), selected);
+        var dialog = new TlvEditorDialog(this, documentService, original, configurationTreePane.parentOf(selected),
+                List.of(documentService.definition(original, selected)), selected);
         try {
-            if (dialog.exec() != QDialog.DialogCode.Accepted.value()) return;
+            if (dialog.exec() != QDialog.DialogCode.Accepted.value()) {
+                return;
+            }
             if (dialog.deletionRequested()) {
                 deleteNode(original, selected);
                 return;
             }
             String value = dialog.selection().value();
-            submit(() -> service.replaceValue(original, selected, value), changed -> {
-                if (changed == original) return;
+            submit(() -> documentService.replaceValue(original, selected, value), changed -> {
+                if (changed == original) {
+                    return;
+                }
                 display(changed, true);
-                selectCorresponding(selected);
+                configurationTreePane.selectCorresponding(selected);
             });
         } finally { dialog.dispose(); }
     }
 
     private void duplicateSelectedTlv() {
-        Node selected = nodes.get(tree.currentItem());
-        if (pending != null || !service.canDuplicate(document, selected)) return;
+        Node selected = configurationTreePane.selectedTlv();
+        if (pending != null || !documentService.canDuplicate(document, selected)) {
+            return;
+        }
         Document original = document;
-        int index = original.root().children().indexOf(selected) + 1;
-        submit(() -> service.duplicate(original, selected), changed -> {
+        int index = original.root().childTlvs().indexOf(selected) + 1;
+        submit(() -> documentService.duplicate(original, selected), changed -> {
             display(changed, true);
-            selectCorresponding(changed.root().children().get(index));
-            tree.currentItem().setExpanded(true);
+            configurationTreePane.selectCorresponding(changed.root().childTlvs().get(index));
+            configurationTreePane.expandSelection();
         });
     }
 
     private void deleteSelectedTlv() {
-        Node selected = nodes.get(tree.currentItem());
-        if (pending != null || document == null || !service.canDelete(document, selected)) return;
-        if (!AddTlvDialog.confirmDeletion(this, selected)) return;
+        Node selected = configurationTreePane.selectedTlv();
+        if (pending != null || document == null || !documentService.canDelete(document, selected)) {
+            return;
+        }
+        if (!TlvEditorDialog.confirmDeletion(this, selected)) {
+            return;
+        }
         deleteNode(document, selected);
     }
 
     private void deleteNode(Document original, Node selected) {
-        Node parent = parents.get(selected);
-        submit(() -> service.delete(original, selected), changed -> {
+        Node parent = configurationTreePane.parentOf(selected);
+        submit(() -> documentService.delete(original, selected), changed -> {
             display(changed, true);
-            selectCorresponding(parent);
+            configurationTreePane.selectCorresponding(parent);
         });
     }
 
     private void showSecrets() {
-        if (pending != null) return;
+        if (pending != null) {
+            return;
+        }
         var dialog = new SecretsDialog(this, secrets);
         try { dialog.exec(); } finally { dialog.dispose(); }
     }
 
     private void checkBinary() {
-        if (pending != null || document == null) return;
-        var dialog = new BinaryCheckDialog(this, service, document, secrets::hasShared, this::showSecrets);
+        if (pending != null || document == null) {
+            return;
+        }
+        var dialog = new BinaryCheckDialog(this, documentService, document, secrets::hasShared, this::showSecrets);
         try { dialog.exec(); } finally { dialog.dispose(); }
     }
 
     private void saveCurrent(Runnable afterSave) {
-        if (document == null || pending != null) return;
-        if (document.path() == null && document.origin() != null) saveBinary(false, afterSave);
-        else saveDocument(false, afterSave);
+        if (document == null || pending != null) {
+            return;
+        }
+        if (document.path() == null && document.origin() != null) {
+            saveBinary(false, afterSave);
+        }
+        else {
+            saveDocument(false, afterSave);
+        }
     }
 
     private void saveBinary(boolean choosePath, Runnable afterSave) {
-        if (pending != null || document == null) return;
+        if (pending != null || document == null) {
+            return;
+        }
         if (binaryService.requiresSharedSecret(document) && !secrets.hasShared()) {
             showSecrets();
-            if (!secrets.hasShared()) return;
+            if (!secrets.hasShared()) {
+                return;
+            }
         }
         Document original = document;
         Path destination = original.path() == null && original.origin() != null ? original.origin().path() : null;
@@ -451,16 +536,20 @@ public final class MainWindow extends QMainWindow {
             var selection = QFileDialog.getSaveFileName(this, "Save configuration binary",
                     destination == null ? "configuration.bin" : destination.toString(),
                     "Binary configuration (*.bin *.cm *.mta);;All files (*)", QFileDialog.Option.DontConfirmOverwrite);
-            if (selection == null || selection.result == null || selection.result.isEmpty()) return;
+            if (selection == null || selection.result == null || selection.result.isEmpty()) {
+                return;
+            }
             destination = Path.of(selection.result).toAbsolutePath().normalize();
         }
         Path target = destination;
         String sharedSecret = secrets.sharedValue();
-        submit(() -> service.destinationHash(target), observedHash -> {
+        submit(() -> documentService.destinationHash(target), observedHash -> {
             if (pickedDestination && observedHash != null && QMessageBox.question(this, "Replace file?",
                     "Replace " + target.getFileName() + "?",
                     new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No),
-                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) return;
+                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) {
+                return;
+            }
             String expected = original.origin() != null && target.equals(original.origin().path())
                     ? original.origin().diskHash() : observedHash;
             submit(() -> binaryService.saveDocument(original, target, expected, sharedSecret), saved -> {
@@ -471,50 +560,50 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void chooseSaveFormat() {
-        if (pending != null || document == null) return;
-        var dialog = new QDialog(this);
-        dialog.setObjectName("saveFormatDialog");
-        dialog.setWindowTitle("Save configuration");
-        var layout = new QVBoxLayout(dialog);
-        layout.addWidget(new QLabel("Choose a save format. Binary exports through Oscar; Text preserves editable source."));
-        var buttons = new QDialogButtonBox();
-        var text = buttons.addButton("Text", QDialogButtonBox.ButtonRole.ActionRole);
-        text.setObjectName("chooseTextSave");
-        var binary = buttons.addButton("Binary", QDialogButtonBox.ButtonRole.ActionRole);
-        binary.setObjectName("chooseBinarySave");
-        boolean[] binarySelected = {false};
-        text.clicked.connect(dialog::accept);
-        binary.clicked.connect(() -> { binarySelected[0] = true; dialog.accept(); });
-        buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
-        buttons.rejected.connect(dialog::reject);
-        layout.addWidget(buttons);
-        int result;
-        try { result = dialog.exec(); } finally { dialog.dispose(); }
-        if (result != QDialog.DialogCode.Accepted.value()) return;
-        if (binarySelected[0]) saveBinary(true, () -> {});
-        else saveDocument(true, () -> {});
+        if (pending != null || document == null) {
+            return;
+        }
+        var dialog = new SaveFormatDialog(this);
+        try {
+            if (dialog.exec() != QDialog.DialogCode.Accepted.value()) {
+                return;
+            }
+            if (dialog.selectedFormat() == SaveFormatDialog.SaveFormat.BINARY) {
+                saveBinary(true, () -> {});
+            } else {
+                saveDocument(true, () -> {});
+            }
+        } finally {
+            dialog.dispose();
+        }
     }
 
     private void saveDocument(boolean choosePath, Runnable afterSave) {
-        if (document == null || pending != null) return;
+        if (document == null || pending != null) {
+            return;
+        }
         Path destination = document.path();
         boolean pickedDestination = choosePath || destination == null;
         if (choosePath || destination == null) {
             var selection = QFileDialog.getSaveFileName(this, "Save configuration text",
                     destination == null ? "configuration.txt" : destination.toString(),
                     "Configuration text (*.txt *.conf *.cfg);;All files (*)", QFileDialog.Option.DontConfirmOverwrite);
-            if (selection == null || selection.result == null || selection.result.isEmpty()) return;
+            if (selection == null || selection.result == null || selection.result.isEmpty()) {
+                return;
+            }
             destination = Path.of(selection.result).toAbsolutePath().normalize();
         }
         Path target = destination;
         Document original = document;
-        submit(() -> service.destinationHash(target), observedHash -> {
+        submit(() -> documentService.destinationHash(target), observedHash -> {
             if (pickedDestination && observedHash != null && QMessageBox.question(this, "Replace file?",
                     "Replace " + target.getFileName() + "?",
                     new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No),
-                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) return;
+                    QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes) {
+                return;
+            }
             String expected = target.equals(original.path()) ? original.diskHash() : observedHash;
-            submit(() -> service.save(original, target, expected), saved -> {
+            submit(() -> documentService.save(original, target, expected), saved -> {
                 document = saved;
                 modified = false;
                 updateDocumentLabels();
@@ -525,17 +614,26 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void withDiscardPermission(Runnable proceed) {
-        if (!modified) { proceed.run(); return; }
+        if (!modified) {
+            proceed.run();
+            return;
+        }
         var answer = QMessageBox.question(this, "Unsaved changes", "Save changes to the current configuration?",
                 new QMessageBox.StandardButtons(QMessageBox.StandardButton.Save,
                         QMessageBox.StandardButton.Discard, QMessageBox.StandardButton.Cancel),
                 QMessageBox.StandardButton.Cancel);
-        if (answer == QMessageBox.StandardButton.Save) saveCurrent(proceed);
-        else if (answer == QMessageBox.StandardButton.Discard) proceed.run();
+        if (answer == QMessageBox.StandardButton.Save) {
+            saveCurrent(proceed);
+        }
+        else if (answer == QMessageBox.StandardButton.Discard) {
+            proceed.run();
+        }
     }
 
     private <Result> void submit(Callable<Result> operation, Consumer<Result> apply) {
-        if (pending != null) return;
+        if (pending != null) {
+            return;
+        }
         completed = false;
         succeeded = false;
         pending = worker.submit(() -> {
@@ -547,15 +645,21 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void receiveResult() {
-        if (pending == null || !pending.isDone()) return;
+        if (pending == null || !pending.isDone()) {
+            return;
+        }
         try {
             Runnable apply = pending.get();
             pending = null;
             completed = true;
             succeeded = true;
             updateActions();
-            if (document != null) updateDocumentLabels();
-            else showStatus("");
+            if (document != null) {
+                updateDocumentLabels();
+            }
+            else {
+                showStatus("");
+            }
             apply.run();
         } catch (ExecutionException | RuntimeException error) {
             pending = null;
@@ -566,7 +670,9 @@ public final class MainWindow extends QMainWindow {
             String message = cause instanceof InspectionException ? cause.getMessage()
                     : "The document operation failed. Check the file and Oscar dependencies.";
             showStatus(message);
-            if (interactive) QMessageBox.warning(this, "Document operation failed", message);
+            if (interactive) {
+                QMessageBox.warning(this, "Document operation failed", message);
+            }
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();
             pending = null;
@@ -589,33 +695,11 @@ public final class MainWindow extends QMainWindow {
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
         configChecks.setEnabled(idle && document != null);
-        Node selected = nodes.get(tree.currentItem());
-        duplicateTlv.setEnabled(idle && service.canDuplicate(document, selected));
-        deleteTlv.setEnabled(idle && document != null && service.canDelete(document, selected));
+        Node selected = configurationTreePane.selectedTlv();
+        duplicateTlv.setEnabled(idle && documentService.canDuplicate(document, selected));
+        deleteTlv.setEnabled(idle && document != null && documentService.canDelete(document, selected));
         editTlv.setEnabled(idle && canOpenEditor(selected));
         Node parent = insertionParent();
-        addTlv.setEnabled(idle && parent != null && parent.container() && !parent.path().contains(-1));
-    }
-
-    public boolean completed() { return completed; }
-    public boolean succeeded() { return succeeded && document != null; }
-    public Document currentDocument() { return document; }
-
-    @Override protected void closeEvent(QCloseEvent event) {
-        if (interactive && pending != null) {
-            event.ignore();
-            showStatus("Wait for the current operation to finish.");
-            return;
-        }
-        if (interactive && modified) {
-            event.ignore();
-            withDiscardPermission(() -> { modified = false; QTimer.singleShot(0, () -> close()); });
-            return;
-        }
-        poller.stop();
-        if (pending != null) pending.cancel(true);
-        worker.shutdownNow();
-        secrets.close();
-        super.closeEvent(event);
+        addTlv.setEnabled(idle && parent != null && parent.isContainer() && !parent.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE));
     }
 }
