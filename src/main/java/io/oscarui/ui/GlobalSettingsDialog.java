@@ -5,9 +5,10 @@ import io.qt.widgets.*;
 
 final class GlobalSettingsDialog extends QDialog {
     private final QCheckBox showMicTlvsCheckbox = new QCheckBox("Show CM/CMTS MIC TLVs");
+    private final QCheckBox showTextTlvNumbersCheckbox = new QCheckBox("Show TLV numbers beside configuration text");
     private final QComboBox appearanceSelector = new QComboBox();
 
-    GlobalSettingsDialog(QWidget parent, boolean showMic, Appearance appearance) {
+    GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance) {
         super(parent);
         setObjectName("globalSettingsDialog");
         setWindowTitle("Settings - Global");
@@ -16,6 +17,9 @@ final class GlobalSettingsDialog extends QDialog {
         showMicTlvsCheckbox.setObjectName("showMicCheckbox");
         showMicTlvsCheckbox.setChecked(showMic);
         layout.addWidget(showMicTlvsCheckbox);
+        showTextTlvNumbersCheckbox.setObjectName("showTextTlvNumbersCheckbox");
+        showTextTlvNumbersCheckbox.setChecked(showTextTlvNumbers);
+        layout.addWidget(showTextTlvNumbersCheckbox);
         appearanceSelector.setObjectName("appearanceMode");
         appearanceSelector.addItem("System");
         appearanceSelector.addItem("Light");
@@ -33,5 +37,6 @@ final class GlobalSettingsDialog extends QDialog {
     }
 
     boolean showMicTlvs() { return showMicTlvsCheckbox.isChecked(); }
+    boolean showTextTlvNumbers() { return showTextTlvNumbersCheckbox.isChecked(); }
     Appearance appearance() { return Appearance.values()[appearanceSelector.currentIndex()]; }
 }

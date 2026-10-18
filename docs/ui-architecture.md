@@ -181,3 +181,21 @@ such as Add TLV, Settings - Global, or About without an application suffix.
 Startup leaves Qt's application display name unset, preventing its native
 platform title formatter from appending OSCAR-UI to dialog captions. The
 application name and desktop-file identity remain OSCAR-UI identifiers.
+
+## TLV numbers in the text pane
+
+Settings → Global includes **Show TLV numbers beside configuration text**, checked
+by default each session. OK applies the choice to the current and subsequently
+opened documents; Cancel keeps the previous choice. This display option is
+session-only, like MIC visibility; the appearance JSON is unchanged.
+
+`ConfigurationTextPane` draws a separate left-hand column aligned with source
+lines, using the parsed nodes' dotted TLV paths. Parent and nested TLVs retain
+full paths; repeated instances retain their own source-line positions. Multiple
+TLVs on one line list their numbers in source order. Unknown TLVs have no guessed
+number. The column scrolls vertically with the text. It does not modify the
+configuration source, saved files, copied text, or selection offsets.
+
+- [x] Enable the text TLV-number checkbox by default.
+- [x] Apply on OK and preserve the previous state on Cancel.
+- [x] Keep source bytes and displayed source text unchanged when toggling.

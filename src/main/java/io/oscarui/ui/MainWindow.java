@@ -89,6 +89,8 @@ public final class MainWindow extends QMainWindow {
 
     private boolean modified;
 
+    private boolean showTextTlvNumbers = true;
+
     private Future<Runnable> pending;
 
     private boolean completed;
@@ -372,7 +374,7 @@ public final class MainWindow extends QMainWindow {
         showMicTlvs.setCheckable(true);
         showMicTlvs.toggled.connect(checked -> updateMicVisibility());
         global.triggered.connect(() -> {
-            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), appearance);
+            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance);
             try {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                     try {
@@ -382,6 +384,11 @@ public final class MainWindow extends QMainWindow {
                         appearance = dialog.appearance();
                         showMicTlvs.setChecked(dialog.showMicTlvs());
                         DesktopTheme.apply(appearance);
+                        showTextTlvNumbers = dialog.showTextTlvNumbers();
+                        if (document != null) {
+                            configurationTextPane.displaySource(document.text(), document.root(), showTextTlvNumbers);
+                            configurationTextPane.highlight(configurationTreePane.selectedTlv());
+                        }
                     } catch (IOException exception) {
                         showStatus("Could not save appearance settings. Previous settings were kept.");
                         if (interactive) {
@@ -471,7 +478,7 @@ public final class MainWindow extends QMainWindow {
     private void display(Document current, boolean changed) {
         document = current;
         modified = changed;
-        configurationTextPane.displaySource(current.text());
+        configurationTextPane.displaySource(current.text(), current.root(), showTextTlvNumbers);
         configurationTreePane.displayRoot(current.root());
         updateMicVisibility();
         updateDocumentLabels();
