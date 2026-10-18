@@ -214,8 +214,8 @@ class MainWindowTest {
             assertTrue(window.succeeded());
             var tree = window.findChild(QTreeWidget.class, "configurationTree");
             var root = tree.topLevelItem(0);
-            assertEquals(16, root.childCount());
-            for (int index = 1; index <= 12; index++) {
+            assertEquals(20, root.childCount());
+            for (int index = 1; index <= 16; index++) {
                 assertEquals("Snmp11", root.child(index).text(0));
                 assertEquals("11", root.child(index).text(1));
                 assertFalse(root.child(index).text(2).contains("/*"));

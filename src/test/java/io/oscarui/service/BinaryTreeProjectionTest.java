@@ -12,13 +12,13 @@ class BinaryTreeProjectionTest {
     private final OscarDocumentService documents = new OscarDocumentService();
     private final OscarBinaryService binary = new OscarBinaryService(documents);
 
-    @Test void communityExampleHasTwelveIndependentSnmpInstancesWithoutRemarks() throws Exception {
+    @Test void exampleHasSixteenIndependentSnmpInstancesWithoutRemarks() throws Exception {
         Path example = Path.of("cm-config/examples/docsis/1gbps-ds-100mbps-us.txt");
         String source = Files.readString(example);
         var document = binary.openAuto(example);
         assertEquals(source, document.text());
         var statements = document.root().childTlvs().stream().filter(node -> node.tlvPath().equals(List.of(11))).toList();
-        assertEquals(12, statements.size());
+        assertEquals(16, statements.size());
         for (var statement : statements) {
             assertFalse(statement.encodedValueText().contains("/*"));
             assertFalse(statement.encodedValueText().contains("Snmp11"));

@@ -17,6 +17,30 @@ class SnmpSecretMaskTest {
         return binary.openAuto(Files.writeString(temporary.resolve("source.txt"), source));
     }
 
+    @Test void docsisExampleMasksUsmAndVacmFixturesIncludingIdentityIndexes() throws Exception {
+        var example = Path.of("cm-config/examples/docsis/1gbps-ds-100mbps-us.txt");
+        String source = Files.readString(example);
+        var document = binary.openAuto(example);
+        var securityRows = document.root().childTlvs().stream()
+                .filter(node -> node.encodedValueText().replaceFirst("^\\.", "").startsWith("1.3.6.1.6.3.15.")
+                        || node.encodedValueText().replaceFirst("^\\.", "").startsWith("1.3.6.1.6.3.16."))
+                .toList();
+        assertEquals(4, securityRows.size());
+        for (var node : securityRows) {
+            assertTrue(masking.protects(node));
+            var hex = masking.hex(node, new SelectedTlvHexService().inspect(document, node));
+            assertEquals("FF FF FF FF", hex.hex());
+        }
+        var preview = new ConfigurationTextPreview(source, true, masking.replacements(document));
+        assertFalse(preview.text().contains("lab-user"));
+        assertFalse(preview.text().contains("lab-group"));
+        assertFalse(preview.text().contains("108.97.98.45.117.115.101.114"));
+        assertFalse(preview.text().contains("61:62:63:64:65:66"));
+        assertFalse(preview.text().contains("71:72:73:74:75:76"));
+        assertEquals(source, document.text());
+        assertEquals(source, Files.readString(example));
+    }
+
     @Test void masksCommunitiesAndAncestorHexWithoutRevealingLengthOrChangingSavedValues() throws Exception {
         String previousHex = null;
         for (String secret : List.of("xyz", "longer-lab-only-secret")) {
