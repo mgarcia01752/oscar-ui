@@ -35,4 +35,4 @@ the UI's editable-codec allowlist deliberately supports fewer codecs than Oscar.
 
 Follow [coding-style](../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
-[README](../README.md) after moving UI responsibilities.
+[development guide](development.md) after moving UI responsibilities.

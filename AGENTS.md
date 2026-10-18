@@ -5,7 +5,7 @@ These shared instructions apply to all agents working in this repository.
 ## Scope and implementation
 
 - Oscar UI is a Java 21 / Qt Jambi desktop application. Read `pom.xml`,
-  `README.md`, and `docs/packaging.md` for current dependencies and commands.
+  `docs/development.md`, and `docs/packaging.md` for dependencies and commands.
 - Keep DOCSIS parsing, encoding, and registry ownership in upstream Oscar.
   Do not silently repair upstream TLV identifiers in UI display code. Report
   upstream defects and modify upstream only within the requested scope.
