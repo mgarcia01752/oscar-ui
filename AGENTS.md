@@ -2,10 +2,18 @@
 
 These shared instructions apply to all agents working in this repository.
 
+## Deferred work
+
+Read [Development TODO](docs/development/TODO.md) before related work.
+Keep deferred items and their verified blockers current. When resuming an item,
+check its upstream dependencies and acceptance checks before implementing it;
+mark it complete only after validation. Do not resume deferred work merely
+because it appears in the list.
+
 ## Scope and implementation
 
 - Oscar UI is a Java 21 / Qt Jambi desktop application. Read `pom.xml`,
-  `docs/development.md`, and `docs/packaging.md` for dependencies and commands.
+  `docs/development/README.md`, and `docs/development/packaging.md` for dependencies and commands.
 - Keep DOCSIS parsing, encoding, and registry ownership in upstream Oscar.
   Do not silently repair upstream TLV identifiers in UI display code. Report
   upstream defects and modify upstream only within the requested scope.
@@ -30,7 +38,7 @@ Use descriptive domain names and typed identifiers for map keys. Replace magic
 protocol numbers with named definitions, checking upstream Oscar and the pinned
 API before adding constants, codec lists, or other potentially redundant code.
 Keep substantial panes and dialogs in focused classes, following
-[UI component ownership](docs/ui-architecture.md).
+[UI component ownership](docs/development/ui-architecture.md).
 
 Use [qa-sw-hygenie](skills/qa-sw-hygenie/SKILL.md) for software hygiene reviews
 and validation of code, TLV handling, build tooling, or release changes.
@@ -47,7 +55,7 @@ their contents. Validate the canonical path and both discovery paths after edits
   Keep corresponding dependency sources and checksums inside packages.
   GitHub's automatic source archives are separate from these uploaded assets.
 - Keep Ubuntu and Windows workflows compatible with the shared release draft.
-  Read `docs/packaging.md` before changing packaging or release helpers.
+  Read `docs/development/packaging.md` before changing packaging or release helpers.
 - Version bump options are `--push-major`, `--push-minor`, and
   `--push-patch` (default). Release helpers commit, tag, and push; do not execute
   them as a routine validation step. Use temporary repositories for their tests.

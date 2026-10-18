@@ -1,19 +1,20 @@
 # Development
 
-[Back to OSCAR-UI](../README.md)
+[Back to OSCAR-UI](../../README.md)
 
 This guide covers building from source, testing, and current implementation
 behavior. For ready-to-run downloads, use the installation instructions in the
-[README](../README.md).
+[README](../../README.md).
 
 Run development commands from the repository root. Use Java 21 and the
 project-local bootstrap tools; no machine-specific checkout location is required.
 Keep personal configuration files in the ignored `test-config/` directory.
 
+- [Deferred work and follow-up checks](TODO.md)
 - [UI component ownership](ui-architecture.md)
 - [Release packaging and version tags](packaging.md)
-- [Agent instructions](../AGENTS.md)
-- [Coding style](../skills/coding-style/SKILL.md)
+- [Agent instructions](../../AGENTS.md)
+- [Coding style](../../skills/coding-style/SKILL.md)
 
 ## Development setup
 

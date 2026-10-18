@@ -37,11 +37,11 @@ support.
 ## Select validation
 
 Run commands from the repository root. Use existing bootstraps documented in
-`docs/development.md` when dependencies are missing; do not silently install system tools.
+`docs/development/README.md` when dependencies are missing; do not silently install system tools.
 
 - Java/service changes: `./mvnw -B "-Dmaven.repo.local=$PWD/.m2" test`.
 - Native UI changes: follow the Qt environment setup and opt-in test command
-  in `docs/development.md`, then use `./scripts/desktop.sh smoke` where supported.
+  in `docs/development/README.md`, then use `./scripts/desktop.sh smoke` where supported.
   Ordinary Maven runs skip native UI tests; record that distinction.
 - Git tag tooling: `python3 -m unittest discover -s tools/git -p 'test_*.py'`.
 - Release push tooling: `python3 -m unittest discover -s tools/release -p 'test_*.py'`.
@@ -58,7 +58,7 @@ wording. Documentation-only changes need link/path and consistency checks.
 
 ## Release-specific checks
 
-Read `docs/packaging.md` and the affected workflow/helper. Confirm:
+Read `docs/development/packaging.md` and the affected workflow/helper. Confirm:
 
 - Windows MSI and Ubuntu DEB include a usable launcher and runtime; users do
   not need the repository or a separately installed Java development kit.

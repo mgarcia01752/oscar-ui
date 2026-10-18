@@ -59,9 +59,9 @@ application packages.
 
 ## Development
 
-See the [development guide](docs/development.md) for setup, build and test
+See the [development guide](docs/development/README.md) for setup, build and test
 commands, current functionality, and limitations. Maintainers can find release
-instructions in [Release packaging](docs/packaging.md).
+instructions in [Release packaging](docs/development/packaging.md).
 
 Licensed under [Apache License 2.0](LICENSE). See
 [Third-party notices](THIRD-PARTY-NOTICES.md) for bundled dependencies.

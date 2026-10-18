@@ -34,9 +34,9 @@ or semicolon. These editing instances remain separate from Oscar's registry
 definitions. Catalog lookup uses an extensible `RegistryFamily` key, while
 the UI's editable-codec allowlist deliberately supports fewer codecs than Oscar.
 
-Follow [coding-style](../skills/coding-style/SKILL.md) when adding or changing
+Follow [coding-style](../../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
-[development guide](development.md) after moving UI responsibilities.
+[development guide](README.md) after moving UI responsibilities.
 
 ## TLV editor terminology
 
@@ -339,3 +339,6 @@ Masked previews are not compilable/exportable replacement configurations.
 - [x] Preserve selection offsets and keep real values through edit/save.
 - [x] Mask the binary snapshot even after unsaved deletion of a secret.
 - [x] Keep rules session-only and preserve prior settings on Cancel.
+
+Deferred symbolic SNMPv3/VACM configuration and its acceptance checks are
+tracked in [Development TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
