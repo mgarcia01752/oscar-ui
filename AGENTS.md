@@ -84,6 +84,16 @@ their contents. Validate the canonical path and both discovery paths after edits
   Run the relocated helper's tests from outside the checkout where supported;
   never push a real release just to validate a move.
 
+## Push validation
+
+Use `python3 tools/development/pre-push-checks.py` for the local push gate.
+Enable its tracked hook with `python3 tools/git/install-hooks.py` in each clone;
+never overwrite existing unrelated hooks or change global Git configuration.
+Release helpers run preflight before version changes and the hook validates the
+final committed revision before upload. Do not bypass failed checks to push.
+Keep new check suites integrated with this gate and CI. Local success does not
+replace Windows/Ubuntu installer jobs or prove untested platform behavior.
+
 ## Releases
 
 - Preserve the two uploaded application assets: Windows MSI and Ubuntu DEB.

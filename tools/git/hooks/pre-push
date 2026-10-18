@@ -1,0 +1,8 @@
+#!/bin/sh
+# Validate every branch/tag push through the repository's shared local gate.
+set -eu
+root=$(git rev-parse --show-toplevel)
+if command -v python3 >/dev/null 2>&1; then
+    exec python3 "$root/tools/git/pre-push.py" "$@"
+fi
+exec python "$root/tools/git/pre-push.py" "$@"

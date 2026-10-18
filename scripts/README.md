@@ -51,3 +51,7 @@ bash scripts/tests/test-install.sh
 The Bash test uses mocked prerequisites and temporary files; it does not install
 system packages. Git/release helpers live in `tools/git/`, and the OSCAR version
 updater lives in `tools/development/`.
+
+Before pushing, use the shared [local validation gate](../docs/development/pre-push-checks.md).
+The developer installer enables its Git hook; other checkouts can enable it
+with `python3 tools/git/install-hooks.py`.

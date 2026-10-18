@@ -110,4 +110,5 @@ if [[ "$("$QT_DIRECTORY/bin/qmake" -query QT_VERSION)" != 6.8.3 ]]; then
   exit 1
 fi
 bash "$ROOT/scripts/unix/desktop.sh" build
+python3 "$ROOT/tools/git/install-hooks.py"
 printf '%s\n' 'Development setup and build passed.' 'Launch the UI with: ./scripts/unix/desktop.sh run'

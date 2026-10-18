@@ -13,8 +13,13 @@ class PushReleaseTest(unittest.TestCase):
         self.root = self.base / 'checkout'
         (self.root / 'tools/git').mkdir(parents=True)
         source = Path(__file__).resolve().parents[2]
-        for name in ('tools/git/push-release.sh', 'tools/git/push-release.py'):
+        for name in ('tools/git/push-release.sh', 'tools/git/push-release.py', 'tools/git/install-hooks.py', 'tools/git/pre-push.py'):
             shutil.copy2(source / name, self.root / name)
+        (self.root / 'tools/git/hooks').mkdir()
+        shutil.copy2(source / 'tools/git/hooks/pre-push', self.root / 'tools/git/hooks/pre-push')
+        (self.root / 'tools/development').mkdir()
+        (self.root / 'tools/development/pre-push-checks.py').write_text(
+            "print('Fixture checks passed')\n", encoding='utf-8')
         (self.root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><version>0.1.0</version><dependencies><dependency><version>0.1.0</version></dependency></dependencies></project>')
         self.git('init', '-b', 'main')
         self.git('config', 'user.name', 'Release tests')
@@ -63,6 +68,22 @@ class PushReleaseTest(unittest.TestCase):
         self.run_release('--push-major', '--push-minor', success=False)
         self.run_release('--push-patch', '--version', '1.0.0', success=False)
         self.assertEqual(self.git('tag'), '')
+
+    def test_failed_preflight_does_not_bump_commit_tag_or_push(self):
+        """
+        Release preparation stops before version mutation if local checks fail.
+        """
+        checker = self.root / 'tools/development/pre-push-checks.py'
+        checker.write_text('raise SystemExit(9)\n', encoding='utf-8')
+        self.git('add', '.')
+        self.git('commit', '-m', 'Failing fixture checker')
+        before = self.git('rev-parse', 'HEAD')
+        original_pom = (self.root / 'pom.xml').read_bytes()
+        self.run_release(success=False)
+        self.assertEqual(self.git('rev-parse', 'HEAD'), before)
+        self.assertEqual(self.git('tag'), '')
+        self.assertEqual((self.root / 'pom.xml').read_bytes(), original_pom)
+        self.assertEqual(self.git('status', '--porcelain'), '')
 
     def test_explicit_version(self):
         self.run_release('--version', '1.2.3')

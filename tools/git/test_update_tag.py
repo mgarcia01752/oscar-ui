@@ -13,12 +13,18 @@ class UpdateTagTest(unittest.TestCase):
         self.root = self.directory / "checkout"
         (self.root / "tools/git").mkdir(parents=True)
         source = Path(__file__).resolve().parents[2]
-        for relative in ("tools/git/update-tag.sh",):
+        for relative in ("tools/git/update-tag.sh", "tools/git/install-hooks.py", "tools/git/pre-push.py"):
             shutil.copy2(source / relative, self.root / relative)
+        (self.root / 'tools/git/hooks').mkdir()
+        shutil.copy2(source / 'tools/git/hooks/pre-push', self.root / 'tools/git/hooks/pre-push')
+        (self.root / 'tools/development').mkdir()
+        (self.root / 'tools/development/pre-push-checks.py').write_text(
+            "print('Fixture checks passed')\n", encoding='utf-8')
         self.git("init", "--quiet")
         self.git("config", "user.name", "Oscar UI tests")
         self.git("config", "user.email", "oscar@example.invalid")
-        self.git("commit", "--quiet", "--allow-empty", "-m", "Initial fixture")
+        self.git("add", ".")
+        self.git("commit", "--quiet", "-m", "Initial fixture")
 
     def git(self, *arguments):
         return subprocess.run(["git", "-C", str(self.root), *arguments],

@@ -13,6 +13,7 @@ Keep personal configuration files in the ignored `test-config/` directory.
 - [Deferred work and follow-up checks](TODO.md)
 - [UI architecture](ui-architecture.md)
 - [Verification checklist](checklist.md)
+- [Local pre-push checks](pre-push-checks.md)
 - [Release packaging and version tags](packaging.md)
 - [Build script layout and commands](../../scripts/README.md)
 - [Agent instructions](../../AGENTS.md)
@@ -112,6 +113,11 @@ The desktop build command (`scripts/unix/desktop.sh build` or
 release's original license and notice for inclusion in desktop packages.
 
 ## Saving Repository Changes
+
+Enable [local pre-push checks](pre-push-checks.md) once per checkout with
+`python3 tools/git/install-hooks.py`. The hook covers branch and tag pushes;
+`python3 tools/development/pre-push-checks.py` runs the same gate before committing.
+
 
 From the oscar-ui repository, use its local helper:
 

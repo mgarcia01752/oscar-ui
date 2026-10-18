@@ -43,3 +43,12 @@ Check that Linux/Windows pins, Maven version, attribution cache, and current
 release documentation agree. Preserve historical feature-version statements.
 Run `python3 -m unittest discover -s tools/development -p 'test_*.py'` when
 changing the updater. Its Maven verification is separate from native UI tests.
+
+## Local push gate
+
+Run `python3 tools/development/pre-push-checks.py` before uploading code, and
+ensure `python3 tools/git/install-hooks.py` has enabled the checkout's pre-push
+hook. Read `docs/development/pre-push-checks.md` for required validators, clean
+revision requirements, and platform limits. Add new release checks to the gate
+as well as CI; do not bypass a failure or treat native installer checks as local
+passes when they only ran in CI. Test hook changes with temporary repositories.

@@ -20,7 +20,8 @@ Options:
 
 With --push, a remote-only tag is fetched rather than recreated on HEAD.
 Conflicting local and remote tags cause an error; neither is overwritten.
-This script does not commit files, bump versions, or publish a GitHub release.
+This script does not commit files or bump versions. Pushing runs local checks
+and triggers release CI, which publishes after all required jobs pass.
 EOF
 }
 
@@ -55,6 +56,10 @@ GIT_ROOT="$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)" ||
   die "Project directory is not a Git working tree: $PROJECT_DIR"
 [[ "$(cd -- "$GIT_ROOT" && pwd -P)" == "$(cd -- "$PROJECT_DIR" && pwd -P)" ]] ||
   die "The script must belong to the root oscar-ui working tree"
+
+if "$PUSH"; then
+  python3 "$PROJECT_DIR/tools/git/install-hooks.py"
+fi
 
 REMOTE_TAG=""
 if "$PUSH"; then

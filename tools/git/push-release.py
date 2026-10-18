@@ -13,6 +13,9 @@ VERSION_PATTERN = r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
 
 
 def git(*args, check=True):
+    """
+    Run a checkout-scoped Git command and propagate checked failures.
+    """
     result = subprocess.run(['git', '-C', str(ROOT), *args], capture_output=True, text=True)
     if check and result.returncode:
         raise RuntimeError(result.stderr.strip() or f'git {args[0]} failed')
@@ -20,13 +23,17 @@ def git(*args, check=True):
 
 
 def release(bump, explicit, dry_run):
+    """
+    Validate, check locally, then bump and push a new immutable release tag.
+    """
     if Path(git('rev-parse', '--show-toplevel').stdout.strip()).resolve() != ROOT:
         raise RuntimeError('Run the helper from its oscar-ui repository.')
     if git('status', '--porcelain').stdout:
         raise RuntimeError('Commit or stash pending changes before releasing; nothing was changed.')
+    starting_head = git('rev-parse', 'HEAD').stdout.strip()
     branch = git('symbolic-ref', '--quiet', '--short', 'HEAD').stdout.strip()
     pom = ROOT / 'pom.xml'
-    text = pom.read_text()
+    text = pom.read_text(encoding='utf-8')
     current = ET.fromstring(text).find('{http://maven.apache.org/POM/4.0.0}version').text
     if not re.fullmatch(VERSION_PATTERN, current):
         raise RuntimeError('pom.xml must have a stable MAJOR.MINOR.PATCH version.')
@@ -55,6 +62,13 @@ def release(bump, explicit, dry_run):
     if dry_run:
         print('Dry run: no version edit, commit, tag, or push performed.')
         return
+    print('Running local checks before changing the release version...', flush=True)
+    for helper in ('tools/git/install-hooks.py', 'tools/development/pre-push-checks.py'):
+        subprocess.run([sys.executable, str(ROOT / helper)], cwd=ROOT, check=True)
+    if git('rev-parse', 'HEAD').stdout.strip() != starting_head:
+        raise RuntimeError('HEAD changed during local checks; restart the release.')
+    if git('status', '--porcelain').stdout:
+        raise RuntimeError('Local checks changed tracked files; review and commit before releasing.')
     git('var', 'GIT_AUTHOR_IDENT')
     git('var', 'GIT_COMMITTER_IDENT')
     # The root project version precedes dependencies; preserve the existing XML layout.
@@ -62,19 +76,22 @@ def release(bump, explicit, dry_run):
                             lambda match: match[1] + version + match[2], text, count=1)
     if count != 1:
         raise RuntimeError('Cannot locate the project version in pom.xml.')
-    pom.write_text(updated)
+    pom.write_text(updated, encoding='utf-8')
     git('add', '--', 'pom.xml')
     git('commit', '-m', f'Feature: Release OSCAR-UI {tag}')
     git('tag', '-a', tag, '-m', f'OSCAR-UI {version}')
     try:
-        git(*push)
-    except RuntimeError as error:
+        subprocess.run(['git', '-C', str(ROOT), *push], check=True)
+    except (RuntimeError, subprocess.CalledProcessError) as error:
         raise RuntimeError(f'{error}\nLocal release commit and tag are retained. Retry without bumping:\n'
                            + shlex.join(['git', *push])) from error
     print(f'Pushed {tag}. CI will build and test both installers, then automatically publish the release.')
 
 
 def main():
+    """
+    Parse release options and report failures without resetting local work.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group()
     parser.set_defaults(bump='patch')
@@ -89,7 +106,7 @@ def main():
     args = parser.parse_args()
     try:
         release(args.bump, args.version, args.dry_run)
-    except (RuntimeError, OSError, ET.ParseError) as error:
+    except (RuntimeError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'ERROR: {error}\n')
 
 

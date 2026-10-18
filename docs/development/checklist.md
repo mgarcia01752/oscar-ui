@@ -45,6 +45,9 @@ Use the commands in the [development guide](README.md#verification); use the
 
 ## Before publishing a release
 
+- [ ] Enable the [local pre-push gate](pre-push-checks.md) for this checkout and
+  resolve any local failure before uploading a branch or tag.
+
 - [ ] Verify the selected OSCAR version/commit/checksum and both bootstrap pins;
   use the [dependency updater](oscar-dependency-updates.md) for upgrades.
 - [ ] Review [configuration examples](../../cm-config/README.md) against tracked

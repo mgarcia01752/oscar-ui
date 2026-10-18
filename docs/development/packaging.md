@@ -26,7 +26,12 @@ Keep these summaries aligned with the actual bundled components.
 
 ## Push the next release
 
-Commit pending work first. From a clean checkout:
+Commit pending work first. From a clean checkout, the helper enables the
+[pre-push hook](pre-push-checks.md) and runs local checks before version changes.
+The hook checks the final release revision again before uploading. Missing
+validators or failed checks block the push; CI still verifies both installers.
+
+Run:
 
 ```bash
 # Preview the default patch bump (0.1.0 -> 0.1.1).
