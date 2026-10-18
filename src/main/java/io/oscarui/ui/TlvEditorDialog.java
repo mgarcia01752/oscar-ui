@@ -182,7 +182,7 @@ final class TlvEditorDialog extends QDialog {
 
     static String valueHelp(TlvDefinition definition, boolean container) {
         if (container) {
-            return "Container | Add values to its child TLVs";
+            return "Parent TLV | Add values to its child TLVs";
         }
         return switch (definition.codec()) {
             case "unsigned_integer" -> "Unsigned integer | Range: 0 to "
