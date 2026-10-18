@@ -2,7 +2,7 @@
 # Copyright 2026 OSCAR-UI contributors
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
-ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 MODE=""
 TAG=""
 BUMP=""
@@ -52,7 +52,11 @@ EOF
   esac
 done
 [[ -n "$MODE" ]] || { echo 'Choose a push mode (see --help).' >&2; exit 2; }
-[[ "$(git -C "$ROOT" rev-parse --show-toplevel)" == "$ROOT" ]] || exit 1
+GIT_ROOT="$(git -C "$ROOT" rev-parse --show-toplevel)"
+[[ "$(cd -- "$GIT_ROOT" && pwd -P)" == "$ROOT" ]] || {
+  echo 'The push helper must belong to the checkout root.' >&2
+  exit 1
+}
 [[ -z "$(git -C "$ROOT" status --porcelain)" ]] || { echo 'Commit or stash changes before pushing.' >&2; exit 1; }
 if [[ "$MODE" == release ]]; then
   echo "[git-push] Starting $BUMP release bump with local validation."

@@ -108,6 +108,23 @@ class GitPushTest(unittest.TestCase):
         self.assertNotIn('RELEASE_ARGS:', result.stdout)
         self.assertEqual('', self._git('ls-remote', 'origin'))
 
+    def test_push_from_symlinked_checkout_path(self):
+        """Resolve logical and physical checkout paths consistently before pushing.
+
+        macOS temporary directories may resolve through /var to /private/var.
+        """
+        alias = self.base / 'checkout-alias'
+        try:
+            alias.symlink_to(self.root, target_is_directory=True)
+        except OSError:
+            if os.name == 'nt':
+                self.skipTest('Windows host does not permit directory symlinks')
+            raise
+        result = subprocess.run(['bash', str(alias / 'tools/git/git-push.sh'), '--master'],
+                                cwd=self.base, capture_output=True, text=True, encoding='utf-8')
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn('FIXTURE_CHECKS_RAN', result.stdout)
+
     def _git(self, *arguments):
         return subprocess.run(['git', '-C', str(self.root), *arguments], check=True,
                               capture_output=True, text=True, encoding='utf-8').stdout.strip()
