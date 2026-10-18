@@ -91,6 +91,59 @@ class MainWindowTest {
         }
     }
 
+    @Test void structuredSnmpAddValidatesFieldsThroughOscar() throws Exception {
+        var service = new OscarDocumentService();
+        var configurationType = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+        var document = service.create(configurationType, false);
+        var definition = com.comcast.oscar.dictionary.TlvRegistry.forFamily(configurationType.family())
+                .find(java.util.List.of(11));
+        var dialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
+        try {
+            dialog.show();
+            var oid = dialog.findChild(QLineEdit.class, "snmpOid");
+            var type = dialog.findChild(QComboBox.class, "snmpType");
+            var value = dialog.findChild(QLineEdit.class, "snmpValue");
+            var apply = dialog.findChild(QPushButton.class, "confirmAddTlv");
+            assertFalse(dialog.findChild(QLineEdit.class, "tlvValue").isVisible());
+            assertEquals(com.comcast.oscar.ber.BERService.getDataTypeStringList(),
+                    java.util.stream.IntStream.range(0, type.count()).mapToObj(type::itemText).toList());
+            assertFalse(apply.isEnabled());
+            oid.setText("1.3.6.1.2.1.1.5.0");
+            type.setCurrentText("IpAddress");
+            value.setText("192.0.2.999");
+            assertFalse(apply.isEnabled());
+            value.setText("192.0.2.1");
+            assertTrue(apply.isEnabled());
+            type.setCurrentText("HexString");
+            value.setText("0:FF");
+            assertFalse(apply.isEnabled());
+            value.setText("00:01:FF");
+            assertTrue(apply.isEnabled());
+            type.setCurrentText("Integer32");
+            value.setText("2147483648");
+            assertFalse(apply.isEnabled());
+            value.setText("-2147483648");
+            assertTrue(apply.isEnabled());
+            type.setCurrentText("Counter32");
+            value.setText("-1");
+            assertFalse(apply.isEnabled());
+            value.setText("4294967295");
+            assertTrue(apply.isEnabled());
+            type.setCurrentText("Counter64");
+            value.setText("1");
+            assertFalse(apply.isEnabled(), "Pinned OSCAR grammar does not accept Counter64");
+            type.setCurrentText("OctetString");
+            value.setText("lab name");
+            assertTrue(apply.isEnabled());
+            assertEquals("1.3.6.1.2.1.1.5.0 OctetString \"lab name\"", dialog.selection().value());
+            value.setText("bad\"quote");
+            assertFalse(apply.isEnabled());
+        } finally {
+            dialog.close();
+            dialog.dispose();
+        }
+    }
+
     @Test void editsSnmp11AfterTextIsSavedAsBinaryWithMasking() throws Exception {
         var documents = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(documents);
@@ -103,6 +156,17 @@ class MainWindowTest {
         try {
             window.openFile(binaryPath);
             await(() -> window.completed() && window.succeeded());
+            var initialTree = window.findChild(QTreeWidget.class, "configurationTree");
+            initialTree.setCurrentItem(initialTree.topLevelItem(0).child(0));
+            respond(window, dialog -> {
+                assertEquals("1.3.6.1.2.1.69.1.2.1.4.1",
+                        dialog.findChild(QLineEdit.class, "snmpOid").text().replaceFirst("^\\.", ""));
+                assertEquals("OctetString", dialog.findChild(QComboBox.class, "snmpType").currentText());
+                assertEquals("lab-community", dialog.findChild(QLineEdit.class, "snmpValue").text());
+                dialog.reject();
+            });
+            action(window, "editTlv").trigger();
+            assertCallback();
             respond(window, dialog -> {
                 dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(true);
                 dialog.findChild(QPushButton.class, "applySecrets").click();
@@ -114,10 +178,16 @@ class MainWindowTest {
             tree.setCurrentItem(snmp);
             assertTrue(action(window, "editTlv").isEnabled());
             respond(window, dialog -> {
-                var value = dialog.findChild(QLineEdit.class, "tlvValue");
+                var oid = dialog.findChild(QLineEdit.class, "snmpOid");
+                var value = dialog.findChild(QLineEdit.class, "snmpValue");
+                assertEquals("", oid.text());
                 assertEquals("", value.text());
+                assertEquals(QLineEdit.EchoMode.Password, oid.echoMode());
                 assertEquals(QLineEdit.EchoMode.Password, value.echoMode());
-                value.setText("1.3.6.1.2.1.69.1.2.1.4.1 OctetString \"replacement-lab\"");
+                assertEquals(window.currentDocument().root().childTlvs().get(0).encodedValueText(),
+                        ((TlvEditorDialog) dialog).selection().value());
+                oid.setText("1.3.6.1.2.1.69.1.2.1.4.1");
+                value.setText("replacement-lab");
                 assertTrue(dialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
                 dialog.findChild(QPushButton.class, "confirmEditTlv").click();
             });

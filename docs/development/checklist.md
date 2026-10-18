@@ -82,3 +82,15 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Cancel shows no dump; Yes shows OSCAR's traditional hex/offset/ASCII listing.
 - [ ] With masking enabled, TLV breakdown stays masked after viewing HexDump.
 - [ ] Reopening HexDump asks again; the saved masking preference is unchanged.
+
+## Structured SNMP editing
+
+- [ ] Add Snmp11 with separate OID, Type, and Value; verify the dropdown matches
+  OSCAR's BER API and hints change with the selected type.
+- [ ] Reject malformed OIDs, IPv4 addresses, hex bytes, quoted input, and
+  out-of-range integers; confirm valid statements compile before Apply.
+- [ ] Edit an existing statement with all fields prepopulated; save/reopen binary
+  and preserve neighboring TLVs and order.
+- [ ] With masking enabled, retain a secret by leaving both fields blank and
+  Type unchanged; replace it without exposing its original value or OID.
+- [ ] Keep Counter64 rejected until the pinned upstream grammar supports it.

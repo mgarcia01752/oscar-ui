@@ -428,13 +428,22 @@ Editable PacketCable import with generated SNMP remains deferred in
 
 ## SNMP statement editing
 
-Snmp11/Snmp64 entries using OSCAR's `oid` codec accept one compound value:
-OID, SNMP type, and quoted value. OSCAR parses and compiles the proposed
-statement before acceptance. Replacing it updates the complete value span,
-not just the first token, and preserves neighboring TLVs and binary origin.
-Sensitive existing entries remain hidden in the editor while masking is on;
-leaving the field blank keeps the original statement. Enter the full compound
-value to replace it. Validation messages do not echo supplied credentials.
+`SnmpValuePane` provides separate OID, Type, and Value controls in both Add
+and Edit for Snmp11/Snmp64 (`oid` codec). The Type dropdown comes directly from
+OSCAR's `BERService.getDataTypeStringList()`. Type-specific hints explain decimal
+ranges, IPv4 addresses, colon-separated hex bytes, and unquoted text. The pane
+adds the required quotes and rejects malformed fields before OSCAR parses and
+compiles the complete statement. Apply remains disabled on validation failure.
+
+Editing prepopulates all three fields. Replacement updates the complete source
+span and preserves neighboring TLVs and binary origin. With masking enabled,
+sensitive existing OIDs and values are blank password inputs: leave both blank
+and the type unchanged to retain the original; otherwise supply a complete
+replacement. Validation messages do not echo credentials.
+
+OSCAR 3.2.0 advertises Counter64 in its BER type list but does not accept it in
+its text grammar. It remains listed; compile validation prevents acceptance.
+The upstream discrepancy is tracked in [TODO](TODO.md).
 
 ## Check Shared Secret
 

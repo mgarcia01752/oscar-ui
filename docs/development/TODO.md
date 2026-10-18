@@ -106,3 +106,14 @@ exists or an installer launches.
 - [ ] Expand edit/delete coverage for stale/protected selections, BOM/CRLF,
   quoted/numeric notation, selection retention, save/reopen, and instance slots.
   Existing focused tests do not establish exhaustive coverage.
+
+## OSCAR SNMP Counter64 text input
+
+OSCAR 3.2.0 `BERService.getDataTypeStringList()` includes Counter64, but its
+text grammar does not accept it. Structured editor compile validation rejects
+it; OSCAR-UI does not remove it from the upstream list or bypass compilation.
+
+- [ ] Agree an upstream fix with the OSCAR author; reconcile the advertised
+  types, grammar, and unsigned 64-bit encoding limits.
+- [ ] Update the pinned release and test Counter64 boundaries before enabling
+  acceptance; update the UI regression currently checking rejection.

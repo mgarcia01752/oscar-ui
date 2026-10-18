@@ -41,3 +41,22 @@ its descendants. Protected entries remain read-only.
 
 Changes remain in the document until you [save](files.md#save-and-save-as).
 Use [View TLV Hex](inspection.md#selected-tlv-hex) to inspect a selected entry.
+
+## SNMP fields
+
+For **Snmp11** (and Snmp64), Add and Edit show three fields:
+
+| Field | Input |
+| --- | --- |
+| OID | Numeric OID or an OSCAR-resolvable name, including instance/index; for example `1.3.6.1.2.1.1.5.0` |
+| Type | Choose from OSCAR's supported type list |
+| Value | Enter the value without surrounding quotes; spaces in text are preserved |
+
+The hint changes with Type: `IpAddress` expects an IPv4 address such as
+`192.0.2.1`; `HexString` expects byte pairs such as `00:01:FF`; integer types
+show their decimal range. Apply is enabled only after field checks and OSCAR
+compilation succeed. OSCAR 3.2.0 lists Counter64 but cannot compile that type.
+
+When an existing secret is masked, leave both OID and Value blank and keep
+Type unchanged to retain it. To replace it, fill both fields. Cancel discards
+changes.

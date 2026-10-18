@@ -18,6 +18,7 @@ final class TlvEditorDialog extends QDialog {
     record Selection(TlvDefinition definition, String value) {}
 
     private final QLineEdit value = new QLineEdit();
+    private SnmpValuePane snmp;
 
     private final QTreeWidget list = new QTreeWidget();
 
@@ -110,6 +111,9 @@ final class TlvEditorDialog extends QDialog {
         value.setObjectName("tlvValue");
         form.addRow(valueLabel, value);
         layout.addLayout(form);
+        snmp = new SnmpValuePane(() -> value.setText(snmp.statement()));
+        snmp.hide();
+        layout.addWidget(snmp);
         var validation = new QLabel();
         validation.setObjectName("tlvValidation");
         validation.setWordWrap(true);
@@ -137,13 +141,23 @@ final class TlvEditorDialog extends QDialog {
             boolean container = selected != null && service.isContainer(document.configurationType(), selected);
             boolean supported = selected != null && service.editingIssue(document.configurationType(), selected).isEmpty();
             value.setEnabled(supported && !container);
-            String issue = selected == null ? "" : service.valueIssue(document.configurationType(), selected, value.text());
+            String issue = isSnmp() ? snmp.issue() : "";
+            if (selected != null && issue.isEmpty()) {
+                issue = service.valueIssue(document.configurationType(), selected, value.text());
+            }
             validation.setText(!value.text().isEmpty() || !supported ? issue : "");
             add.setEnabled(supported && issue.isEmpty() && (editing == null || !container));
         };
         list.currentItemChanged.connect((current, previous) -> {
             selected = current instanceof TlvItem item ? item.definition : null;
             value.clear();
+            value.setVisible(!isSnmp());
+            valueLabel.setVisible(!isSnmp());
+            snmp.setVisible(isSnmp());
+            if (isSnmp()) {
+                snmp.setStatement("");
+                snmp.applyMask(masking.enabled(), false);
+            }
             boolean numeric = selected != null && java.util.Set.of("integer", "unsigned_integer", "byte").contains(selected.codec());
             var oldValidator = value.validator();
             value.setValidator(numeric ? new QRegularExpressionValidator(new QRegularExpression("[+-]?[0-9]*"), value) : null);
@@ -184,9 +198,17 @@ final class TlvEditorDialog extends QDialog {
             list.setEnabled(false);
             list.setMaximumHeight(75);
             resize(620, 340);
-            value.setText(editing.encodedValueText());
-            value.setFocus();
-            value.selectAll();
+            if (isSnmp()) {
+                snmp.setStatement(editing.encodedValueText());
+            } else {
+                value.setText(editing.encodedValueText());
+            }
+            if (isSnmp()) {
+                snmp.findChild(QLineEdit.class, "snmpOid").setFocus();
+            } else {
+                value.setFocus();
+                value.selectAll();
+            }
         }
     }
 
@@ -194,6 +216,9 @@ final class TlvEditorDialog extends QDialog {
         this.masking = masking;
         boolean protectedValue = masking.protects(selected) || (editingNode != null && masking.protects(editingNode));
         value.setEchoMode(protectedValue ? QLineEdit.EchoMode.Password : QLineEdit.EchoMode.Normal);
+        if (isSnmp()) {
+            snmp.applyMask(masking.enabled(), editingNode != null && protectedValue);
+        }
         if (editingNode != null && protectedValue) {
             maskedOriginal = true;
             value.clear();
@@ -213,7 +238,7 @@ final class TlvEditorDialog extends QDialog {
             return "Parent TLV | Add values to its child TLVs";
         }
         return switch (definition.codec()) {
-            case "oid" -> "SNMP OID, type, and quoted value | Example: 1.3.6.1.2.1.1.5.0 OctetString \"lab-name\"";
+            case "oid" -> "SNMP varbind | Enter OID, type, and value separately";
             case "unsigned_integer" -> "Unsigned integer | Range: 0 to "
                     + java.math.BigInteger.ONE.shiftLeft(definition.lengthMax() * 8)
                         .subtract(java.math.BigInteger.ONE);
@@ -248,6 +273,11 @@ final class TlvEditorDialog extends QDialog {
     Selection selection() {
         return new Selection(selected, maskedOriginal && value.text().isEmpty()
                 ? editingNode.encodedValueText() : value.text());
+    }
+
+    private boolean isSnmp() {
+        return selected != null && selected.codec().equals("oid")
+                && java.util.Set.of("Snmp11", "Snmp64").contains(selected.name());
     }
 
     private void sortChoices() {
