@@ -54,6 +54,10 @@ public final class MainWindow extends QMainWindow {
 
     private final QAction saveAsShortcut = action("Save As", "saveAsShortcut", QKeySequence.StandardKey.SaveAs);
 
+    private final QAction inspectHexDump = action("&HexDump", "inspectHexDump", null);
+
+    private final QAction inspectTlvBreakdown = action("&TLV breakdown", "inspectTlvBreakdown", null);
+
     private final QAction configChecks = action("Check Config...", "configChecks", null);
 
     private final QAction secretsAction = action("&Secrets...", "settingsSecrets", null);
@@ -319,6 +323,12 @@ public final class MainWindow extends QMainWindow {
         });
         settings.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
+        var inspectMenu = menuBar().addMenu("&Inspect");
+        inspectMenu.setObjectName("inspectMenu");
+        inspectMenu.addAction(inspectHexDump);
+        inspectMenu.addAction(inspectTlvBreakdown);
+        inspectHexDump.triggered.connect(() -> showBinaryInspection(BinaryInspectionDialog.View.HEX_DUMP));
+        inspectTlvBreakdown.triggered.connect(() -> showBinaryInspection(BinaryInspectionDialog.View.TLV_BREAKDOWN));
         var aboutMenu = menuBar().addMenu("&About");
         var about = action("About &OSCAR-UI", "aboutOscar", null);
         about.triggered.connect(() -> QMessageBox.about(this, "About OSCAR-UI",
@@ -327,6 +337,24 @@ public final class MainWindow extends QMainWindow {
         var aboutQt = action("About &Qt", "aboutQt", null);
         aboutQt.triggered.connect(() -> QMessageBox.aboutQt(this));
         aboutMenu.addAction(aboutQt);
+    }
+
+    private void showBinaryInspection(BinaryInspectionDialog.View view) {
+        if (pending != null || document == null || document.path() != null || document.origin() == null) {
+            return;
+        }
+        Document snapshot = document;
+        submit(() -> switch (view) {
+            case HEX_DUMP -> binaryService.hexDump(snapshot);
+            case TLV_BREAKDOWN -> binaryService.tlvBreakdown(snapshot);
+        }, listing -> {
+            var dialog = new BinaryInspectionDialog(this, view, listing);
+            try {
+                dialog.exec();
+            } finally {
+                dialog.dispose();
+            }
+        });
     }
 
     private void chooseFile() {
@@ -695,6 +723,9 @@ public final class MainWindow extends QMainWindow {
         saveShortcut.setEnabled(idle && document != null && modified);
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
+        boolean binaryActive = idle && document != null && document.path() == null && document.origin() != null;
+        inspectHexDump.setEnabled(binaryActive);
+        inspectTlvBreakdown.setEnabled(binaryActive);
         configChecks.setEnabled(idle && document != null);
         Node selected = configurationTreePane.selectedTlv();
         duplicateTlv.setEnabled(idle && documentService.canDuplicate(document, selected));

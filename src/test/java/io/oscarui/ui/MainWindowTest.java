@@ -23,6 +23,49 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void inspectMenuFollowsActiveFileAndDisplaysOscarListings() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&About"),
+                    window.menuBar().actions().stream().map(QAction::text).toList());
+            assertFalse(action(window, "inspectHexDump").isEnabled());
+            assertFalse(action(window, "inspectTlvBreakdown").isEnabled());
+            byte[] bytes = java.util.HexFormat.of().parseHex("030101ff00");
+            window.openFile(Files.write(temporary.resolve("inspect.bin"), bytes));
+            await(() -> window.completed());
+            assertTrue(action(window, "inspectHexDump").isEnabled());
+            assertTrue(action(window, "inspectTlvBreakdown").isEnabled());
+            for (String actionName : java.util.List.of("inspectHexDump", "inspectTlvBreakdown")) {
+                var closed = new java.util.concurrent.atomic.AtomicBoolean();
+                respond(window, dialog -> {
+                    try {
+                        assertEquals("binaryInspectionDialog", dialog.objectName());
+                        var output = dialog.findChild(QPlainTextEdit.class, "binaryInspectionText");
+                        assertTrue(output.isReadOnly());
+                        dialog.grab().save("target/ui-" + actionName + ".png");
+                        assertEquals(actionName.equals("inspectHexDump")
+                                ? com.comcast.oscar.utilities.HexDump.dumpHexString(bytes)
+                                : "[Type:3] 03:01:01\n", output.toPlainText());
+                    } finally {
+                        dialog.reject();
+                        closed.set(true);
+                    }
+                });
+                action(window, actionName).trigger();
+                assertFalse(action(window, actionName).isEnabled());
+                await(closed::get);
+            }
+            window.openFile(Files.writeString(temporary.resolve("inspect.txt"), "Docsis { NetworkAccess 1; }"));
+            await(() -> window.completed());
+            assertFalse(action(window, "inspectHexDump").isEnabled());
+            assertFalse(action(window, "inspectTlvBreakdown").isEnabled());
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void duplicatesServiceFlowAndSelectsCopy() throws Exception {
         var window = new MainWindow(false);
         window.show();

@@ -57,11 +57,12 @@ public final class DesktopApplication {
 
     private static boolean verifyStarterMenus(MainWindow window) {
         var menus = window.menuBar().actions();
-        if (menus.size() != 4
+        if (menus.size() != 5
             || !menus.get(0).text().equals("&File")
             || !menus.get(1).text().equals("&Edit")
             || !menus.get(2).text().equals("&Settings")
-            || !menus.get(3).text().equals("&About")) {
+            || !menus.get(3).text().equals("&Inspect")
+            || !menus.get(4).text().equals("&About")) {
             return false;
         }
         for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt"}) {

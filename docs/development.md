@@ -290,3 +290,11 @@ Oscar owns the SNMP symbol mapping bundled in its dependency JAR. OSCAR-UI
 does not maintain a separate mapping. Oscar 3.1.1 may initialize
 `res/DottedTextualNetSNMPMap.json` relative to the working directory at runtime;
 this generated cache is ignored by Git.
+
+### Inspect binary files
+
+After opening a binary, choose **Inspect → HexDump** for Oscar's hex/ASCII view,
+or **Inspect → TLV breakdown** for top-level TLV bytes in file order. Both views
+are read-only and show the last opened or saved binary snapshot, not unsaved
+edits. Text documents disable these actions. Nested TLVs remain in their parent
+hex rows; the Configuration tree provides the decoded hierarchy.

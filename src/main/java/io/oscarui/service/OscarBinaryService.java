@@ -8,6 +8,8 @@ import com.comcast.oscar.configurationfile.ConfigurationFileExport;
 import com.comcast.oscar.dictionary.TlvDictionary;
 import com.comcast.oscar.tlv.TlvBuilder;
 import com.comcast.oscar.tlv.TlvVariableBinding;
+import com.comcast.oscar.utilities.HexDump;
+import com.comcast.oscar.utilities.HexString;
 import io.oscarui.service.OscarDocumentService.BinaryOrigin;
 import io.oscarui.service.OscarDocumentService.FileType;
 import io.oscarui.service.OscarDocumentService.Document;
@@ -188,6 +190,62 @@ public final class OscarBinaryService {
         return saved;
     }
 
+    /**
+     * Formats the active binary snapshot using Oscar's hex/ASCII formatter.
+     *
+     * <p>Does not read the file again or encode unsaved edits.
+     *
+     * @param document active binary document, with no active text path
+     * @return Oscar's offset, hexadecimal, and ASCII listing
+     * @throws InspectionException if the document is not an active binary
+     */
+    public String hexDump(Document document) throws InspectionException {
+        return HexDump.dumpHexString(inspectionBytes(document));
+    }
+
+    /**
+     * Lists top-level TLVs from the active binary snapshot in source order.
+     *
+     * <p>Uses Oscar's dictionary length widths, TLV boundaries, and hex formatter.
+     * Padding and the end marker are omitted; nested TLVs remain in parent bytes.
+     * Unsaved edits are not encoded and the source file is not read again.
+     *
+     * @param document active binary document, with no active text path
+     * @return one type-labelled hexadecimal row per top-level TLV instance
+     * @throws InspectionException if no binary is active or its TLVs cannot be listed
+     */
+    public String tlvBreakdown(Document document) throws InspectionException {
+        byte[] bytes = inspectionBytes(document);
+        try {
+            var listing = new StringBuilder();
+            for (String payload : payloads(bytes, dictionary(document.configurationType()).getTopLevelByteLength())) {
+                int tlvTypeCode = Integer.parseInt(payload.substring(0, 2), 16);
+                listing.append("[Type:").append(tlvTypeCode).append("] ")
+                        .append(new HexString(HexFormat.of().parseHex(payload)).toString(":")).append('\n');
+            }
+            return listing.toString();
+        } catch (com.comcast.oscar.tlv.TlvException | RuntimeException error) {
+            throw new InspectionException("Oscar could not produce the binary TLV breakdown.");
+        }
+    }
+
+    private byte[] inspectionBytes(Document document) throws InspectionException {
+        if (document == null || document.path() != null || document.origin() == null) {
+            throw new InspectionException("Open a binary configuration to inspect its bytes.");
+        }
+        return document.origin().bytes();
+    }
+
+    private TlvDictionary dictionary(FileType configurationType) {
+        String table = switch (configurationType.family()) {
+            case "docsis40" -> TlvDictionary.DOCSIS_40_DICTIONARY_TABLE_NAME;
+            case "packetcable" -> TlvDictionary.PACKET_CABLE_DICTIONARY_TABLE_NAME;
+            case "dpoe" -> TlvDictionary.DPOE_DICTIONARY_TABLE_NAME;
+            default -> TlvDictionary.DOCSIS_DICTIONARY_TABLE_NAME;
+        };
+        return new TlvDictionary(table);
+    }
+
     private byte[] read(Path path) throws InspectionException {
         try (var input = Files.newInputStream(path)) {
             byte[] bytes = input.readNBytes(OscarInspectionService.MAX_BYTES + 1);
@@ -203,13 +261,7 @@ public final class OscarBinaryService {
     private Document decode(Path path, byte[] bytes, FileType configurationType) throws InspectionException {
         try {
             Configurator.setLevel("com.comcast.oscar", Level.OFF);
-            String table = switch (configurationType.family()) {
-                case "docsis40" -> TlvDictionary.DOCSIS_40_DICTIONARY_TABLE_NAME;
-                case "packetcable" -> TlvDictionary.PACKET_CABLE_DICTIONARY_TABLE_NAME;
-                case "dpoe" -> TlvDictionary.DPOE_DICTIONARY_TABLE_NAME;
-                default -> TlvDictionary.DOCSIS_DICTIONARY_TABLE_NAME;
-            };
-            var dictionary = new TlvDictionary(table);
+            var dictionary = dictionary(configurationType);
             var lengthFieldBytesByTlvType = dictionary.getTopLevelByteLength();
             List<String> original = payloads(bytes, lengthFieldBytesByTlvType);
             for (String entry : original) {

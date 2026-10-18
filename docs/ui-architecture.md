@@ -13,6 +13,7 @@ thread. Oscar parsing, validation, and serialization remain in the service layer
 | `GlobalSettingsDialog` | Session appearance and MIC visibility preferences |
 | `SecretsDialog` | Masked session secret and hashing preference |
 | `SaveFormatDialog` | Text/Binary choice; the main window performs the save |
+| `BinaryInspectionDialog` | Read-only, monospace HexDump and top-level TLV listings |
 | `BinaryCheckDialog` | Configuration-check results |
 | `TlvDescriptionFormatter` | Presentation-only description reflow |
 
@@ -36,3 +37,28 @@ the UI's editable-codec allowlist deliberately supports fewer codecs than Oscar.
 Follow [coding-style](../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
 [development guide](development.md) after moving UI responsibilities.
+
+## Binary inspection
+
+Inspect follows Settings in the menu bar. HexDump and TLV breakdown are enabled
+only when idle with an active binary document (`path == null`, `origin != null`).
+Opening text or saving as text disables both even if the document retains a
+binary origin for overwrite protection. New text drafts also disable inspection.
+
+`OscarBinaryService` renders the immutable bytes from the last open/binary save
+on the existing worker. It does not reread disk, encode edits, sign data, or log
+contents. The dialog labels this snapshot and excludes unsaved edits.
+HexDump uses Oscar `HexDump.dumpHexString`. TLV breakdown matches Oscar's
+`--hex toplevel` type-labelled rows, but reuses the existing length-aware payload
+walker (`TlvDictionary.getTopLevelByteLength`, `TlvBuilder.nextTLVIndex`) and
+`HexString` formatting: Oscar 3.1.1 `TlvBuilder.tlvDump` assumes one-byte lengths.
+Rows preserve top-level instance order and nested bytes; padding/end markers
+appear only in HexDump. This is not a recursive decoded TLV tree.
+
+Inspection checklist:
+
+- [x] Menu order and binary-only enablement, including busy states.
+- [x] Read-only, selectable, monospace listings with no line wrapping.
+- [x] Original snapshot retained after edits or external file deletion.
+- [x] Repeated TLV order, padding/end-marker handling, and text-save gating.
+- [ ] Verify native dialogs on Windows.

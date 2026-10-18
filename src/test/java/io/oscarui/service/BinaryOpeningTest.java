@@ -15,6 +15,29 @@ class BinaryOpeningTest {
         return documents.types().stream().filter(entry -> entry.header().equals(header)).findFirst().orElseThrow();
     }
 
+    @Test void breakdownKeepsNestedBytesWithinTheirParent() throws Exception {
+        Path source = Files.write(temporary.resolve("service-flow.bin"),
+                HexFormat.of().parseHex("190701020001060107ff00"));
+        var opened = binary.open(source, type("Docsis"));
+        assertEquals("[Type:25] 19:07:01:02:00:01:06:01:07\n", binary.tlvBreakdown(opened));
+    }
+
+    @Test void inspectionUsesOriginalBytesAndPreservesRepeatedTlvOrder() throws Exception {
+        byte[] bytes = HexFormat.of().parseHex("00120103030101120104ff00");
+        Path source = Files.write(temporary.resolve("inspection.bin"), bytes);
+        var opened = binary.open(source, type("Docsis"));
+        var edited = documents.replaceValue(opened, opened.root().childTlvs().get(1), "0");
+        Files.delete(source);
+        assertEquals(com.comcast.oscar.utilities.HexDump.dumpHexString(bytes), binary.hexDump(edited));
+        assertEquals("[Type:18] 12:01:03\n[Type:3] 03:01:01\n[Type:18] 12:01:04\n",
+                binary.tlvBreakdown(edited));
+        assertArrayEquals(bytes, edited.origin().bytes());
+        var textDocument = documents.save(edited, temporary.resolve("inspection.txt"), null);
+        assertThrows(InspectionException.class, () -> binary.hexDump(textDocument));
+        assertThrows(InspectionException.class, () -> binary.tlvBreakdown(textDocument));
+        assertThrows(InspectionException.class, () -> binary.hexDump(null));
+    }
+
     @Test void detectsContentAndSelectsCompatibleDocsisCatalogIncludingNestedExtensions() throws Exception {
         Path text = Files.writeString(temporary.resolve("text.bin"),
                 "\uFEFF/* source */ Docsis-4.0 { NetworkAccess 1; }");
