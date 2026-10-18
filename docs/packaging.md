@@ -113,3 +113,14 @@ Other Linux distributions, macOS desktop packaging, and ARM are not verified.
 The source archives include upstream build instructions and notices. App-local
 Microsoft DLLs remain subject to Visual Studio redistribution terms and need a
 new application release when their runtime is updated.
+
+## Application icons
+
+The window and About dialog use the supplied light/dark square PNG icons from
+`docs/images/`, bundled in the application JAR. Changing Appearance updates the
+application icon. The supplied square light/dark files currently contain identical
+artwork, so switching themes does not visibly change the icon. Desktop launchers use the fixed light variant: PNG for Ubuntu
+and `oscar-ui.ico` for Windows. The ICO contains 16, 24, 32, 48, 64, 128, and
+256 pixel sizes converted from `oscar-ui-light-icon.png`; regenerate it when
+that source artwork changes. These assets are included in the normal packages,
+not uploaded as additional release assets.

@@ -713,6 +713,38 @@ class MainWindowTest {
         action(window, "fileSaveAsBinary").trigger();
     }
 
+    @Test void applicationIconsFollowThemeAndReachDialogs() {
+        var originalPalette = QApplication.palette();
+        var window = new MainWindow(false);
+        try {
+            DesktopTheme.apply(false);
+            assertFalse(window.windowIcon().isNull());
+            long lightIconCacheKey = window.windowIcon().cacheKey();
+            var lightImage = window.windowIcon().pixmap(32, 32).toImage();
+            DesktopTheme.apply(true);
+            assertFalse(window.windowIcon().isNull());
+            var darkImage = window.windowIcon().pixmap(32, 32).toImage();
+            assertFalse(darkImage.isNull());
+            assertNotEquals(lightIconCacheKey, window.windowIcon().cacheKey());
+            var dialog = new QDialog(window);
+            try {
+                assertEquals(window.windowIcon().cacheKey(), dialog.windowIcon().cacheKey());
+            } finally {
+                dialog.dispose();
+            }
+            DesktopTheme.apply(false);
+            assertEquals(lightImage, window.windowIcon().pixmap(32, 32).toImage());
+            lightImage.dispose();
+            darkImage.dispose();
+        } finally {
+            window.close();
+            window.dispose();
+            QApplication.setPalette(originalPalette);
+            DesktopTheme.updateIcon();
+            originalPalette.dispose();
+        }
+    }
+
     @Test void globalSettingsRetainHashCheckboxAndSwitchThemes() throws Exception {
         var originalPalette = QApplication.palette();
         var window = new MainWindow(false);

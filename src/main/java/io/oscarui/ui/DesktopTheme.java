@@ -1,6 +1,9 @@
 package io.oscarui.ui;
 
 import io.qt.gui.QPalette;
+import io.qt.gui.QIcon;
+import io.qt.gui.QPixmap;
+import java.io.IOException;
 import io.qt.widgets.QApplication;
 import static io.qt.gui.QPalette.ColorRole.*;
 
@@ -30,5 +33,31 @@ final class DesktopTheme {
         }
         QApplication.setPalette(palette);
         palette.dispose();
+        updateIcon();
+    }
+    static void updateIcon() {
+        boolean darkMode = QApplication.palette().color(Window).lightness() < 128;
+        String resourcePath = darkMode ? "/icons/oscar-ui-dark-icon.png" : "/icons/oscar-ui-light-icon.png";
+        try (var stream = DesktopTheme.class.getResourceAsStream(resourcePath)) {
+            if (stream == null) {
+                throw new IllegalStateException("Missing application icon: " + resourcePath);
+            }
+            var pixmap = new QPixmap();
+            try {
+                if (!pixmap.loadFromData(stream.readAllBytes())) {
+                    throw new IllegalStateException("Invalid application icon: " + resourcePath);
+                }
+                var icon = new QIcon(pixmap);
+                try {
+                    QApplication.setWindowIcon(icon);
+                } finally {
+                    icon.dispose();
+                }
+            } finally {
+                pixmap.dispose();
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Cannot read application icon: " + resourcePath, exception);
+        }
     }
 }

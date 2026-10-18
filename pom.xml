@@ -20,7 +20,15 @@
       <dependency><groupId>io.qtjambi</groupId><artifactId>qtjambi-native-windows-x64</artifactId><version>${qtjambi.version}</version><scope>runtime</scope></dependency>
     </dependencies></profile>
   </profiles>
-  <build><plugins>
+  <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <resource>
+        <directory>docs/images</directory><targetPath>icons</targetPath>
+        <includes><include>oscar-ui-light-icon.png</include><include>oscar-ui-dark-icon.png</include></includes>
+      </resource>
+    </resources>
+    <plugins>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.13.0</version></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.2</version></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version><configuration><archive><manifest><mainClass>io.oscarui.DesktopApplication</mainClass><addClasspath>true</addClasspath><classpathPrefix>lib/</classpathPrefix></manifest></archive></configuration></plugin>

@@ -99,6 +99,7 @@ public final class MainWindow extends QMainWindow {
     public MainWindow(boolean interactive) {
         this.interactive = interactive;
         setWindowTitle("OSCAR-UI");
+        DesktopTheme.updateIcon();
         resize(1200, 780);
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
