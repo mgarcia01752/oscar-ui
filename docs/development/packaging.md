@@ -52,7 +52,7 @@ For the original `v0.1.0` or an already prepared version, the Oscar-compatible
 `tools/update-tag.sh --tag v0.1.0 --push` helper remains available. It does not
 bump or commit; existing tags are never moved. Use a new version for new code.
 
-## Independent platform workflows
+## CI-gated platform workflows
 
 - **Windows release** (`windows-release.yml`) builds the MSI from the complete application image, then verifies
   silent install, Start menu/desktop shortcuts, uninstaller registration, native
@@ -62,11 +62,19 @@ bump or commit; existing tags are never moved. Use a new version for new code.
   Both platforms verify that a user configuration outside the installation
   directory survives removal. Installer logs are retained as CI artifacts.
 
-Both run on version-tag pushes and support manual dispatch. They upload only
+`release.yml` handles version-tag pushes and manual runs selected on a tag.
+It first calls `java-ci.yml` for the exact tagged commit, running the full
+Ubuntu 22.04, Ubuntu 24.04 and macOS 15 matrix. Both platform jobs declare
+`needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
+A passing branch build or an older tag does not satisfy this gate. The two
+platform workflows are callable only through the coordinator, so direct tag
+triggers or manual platform runs cannot bypass CI. Manual runs on branches
+skip release jobs; choose the release tag when rerunning through Actions.
+
+They upload only
 their own application asset to the same draft release. Publishing steps serialize
 per tag to avoid concurrent draft creation. Rerunning a platform job replaces
-only that platform's asset. A manual branch run produces an Actions artifact
-without creating a release. No local build is needed to release from CI.
+only that platform's asset. No local build is needed to release from CI.
 
 After both workflows pass and both application assets appear, verify the downloads
 and publish the draft. One platform may finish first; check both before publishing.

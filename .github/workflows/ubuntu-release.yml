@@ -1,8 +1,6 @@
 name: Ubuntu release
 on:
-  workflow_dispatch:
-  push:
-    tags: ['v*']
+  workflow_call:
 permissions:
   contents: read
 jobs:

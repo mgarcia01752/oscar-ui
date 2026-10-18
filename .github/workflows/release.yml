@@ -1,0 +1,27 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  ci:
+    name: Validate tagged commit
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/java-ci.yml
+  windows:
+    name: Windows package
+    needs: ci
+    permissions:
+      contents: write
+    uses: ./.github/workflows/windows-release.yml
+  ubuntu:
+    name: Ubuntu package
+    needs: ci
+    permissions:
+      contents: write
+    uses: ./.github/workflows/ubuntu-release.yml
