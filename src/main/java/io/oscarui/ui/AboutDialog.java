@@ -64,7 +64,7 @@ final class AboutDialog extends QDialog {
         addProgramRow(programGrid, 3, "Qt Jambi", build.getProperty("qt.version", "unknown"),
                 "https://github.com/OmixVisualization/qtjambi");
         layout.addWidget(programs);
-        var license = link("OSCAR-UI license: Apache License 2.0", "https://www.apache.org/licenses/LICENSE-2.0");
+        var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
         layout.addWidget(license);
         var updates = new QGroupBox("Release updates");

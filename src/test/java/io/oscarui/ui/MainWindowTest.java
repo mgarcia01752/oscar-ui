@@ -36,7 +36,7 @@ class MainWindowTest {
                     .anyMatch(label -> label.text().contains("https://github.com/mgarcia01752/oscar-ui")));
             var licenseLink = dialog.findChild(QLabel.class, "applicationLicenseLink");
             assertTrue(licenseLink.openExternalLinks());
-            assertTrue(licenseLink.text().contains("https://www.apache.org/licenses/LICENSE-2.0"));
+            assertTrue(licenseLink.text().contains("https://github.com/mgarcia01752/oscar-ui/blob/main/LICENSE"));
             button.click();
             assertFalse(button.isEnabled());
             assertEquals("Checking GitHub…", status.text());
