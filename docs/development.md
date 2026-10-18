@@ -242,9 +242,20 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
 	Clear empties the field and takes effect on Apply. Cancel keeps prior values.
 	No secrets are encrypted or persisted. Binary export uses the session shared
 	secret where required; the community string is not automatically injected.
-	The **Hash community strings** checkbox keeps a session-only preference;
-	it does not hash or transform values yet. Its algorithm and export behavior
-	remain requirements to define.
+  **Obfuscate SNMP secrets** masks recognized community strings, SNMPv3
+  credentials and security identities in the text/tree, clipboard copies,
+  editors, and hex previews. Text uses `********`; protected hex records and
+  their containing parents use `FF FF FF FF`, regardless of secret length.
+  Source text and saved files retain real values. This is display masking,
+  not encryption or hashing. Leave a masked editor field blank to keep its value.
+  **Custom SNMP secrets** accepts a name resolvable by OSCAR or a numeric OID;
+  click **Add**, then **Apply for Session**. Indexed instances match too.
+  **Remove** deletes a custom rule; Cancel discards pending settings changes.
+  Rules and the checkbox are forgotten on exit. Inspection while masked omits
+  offsets, original sensitive lengths, and ASCII columns; it uses the saved
+  binary snapshot even when unsaved edits have removed a secret.
+  [Masking architecture and coverage](ui-architecture.md#snmp-display-obfuscation)
+  describes the supported objects and tests.
 - **Settings > Global** opens a dialog with **Appearance: System / Light / Dark**.
   System is the default and follows the desktop theme reported by Qt.
   Select **OK** to apply the theme and MIC visibility; **Cancel** keeps the

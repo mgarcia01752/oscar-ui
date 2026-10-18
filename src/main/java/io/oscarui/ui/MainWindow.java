@@ -389,7 +389,7 @@ public final class MainWindow extends QMainWindow {
                         DesktopTheme.apply(appearance);
                         showTextTlvNumbers = dialog.showTextTlvNumbers();
                         if (document != null) {
-                            configurationTextPane.displaySource(document.text(), showTextTlvNumbers);
+                            configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
                             configurationTextPane.highlight(configurationTreePane.selectedTlv());
                         }
                     } catch (IOException exception) {
@@ -443,7 +443,7 @@ public final class MainWindow extends QMainWindow {
         }
         Document snapshot = document;
         submit(() -> new SelectedTlvHexService().inspect(snapshot, selected), result -> {
-            var dialog = new TlvHexDialog(this, result);
+            var dialog = new TlvHexDialog(this, secrets.masking().hex(selected, result), secrets.masking().enabled());
             try {
                 dialog.exec();
             } finally {
@@ -457,11 +457,11 @@ public final class MainWindow extends QMainWindow {
             return;
         }
         Document snapshot = document;
-        submit(() -> switch (view) {
+        submit(() -> secrets.masking().enabled() ? binaryService.maskedInspection(snapshot, secrets.masking()) : switch (view) {
             case HEX_DUMP -> binaryService.hexDump(snapshot);
             case TLV_BREAKDOWN -> binaryService.tlvBreakdown(snapshot);
         }, listing -> {
-            var dialog = new BinaryInspectionDialog(this, view, listing);
+            var dialog = new BinaryInspectionDialog(this, view, listing, secrets.masking().enabled());
             try {
                 dialog.exec();
             } finally {
@@ -497,8 +497,9 @@ public final class MainWindow extends QMainWindow {
     private void display(Document current, boolean changed) {
         document = current;
         modified = changed;
-        configurationTextPane.displaySource(current.text(), showTextTlvNumbers);
+        configurationTextPane.displayDocument(current, showTextTlvNumbers, secrets.masking());
         configurationTreePane.displayRoot(current.root(), documentService.hasBinaryTree(current));
+        configurationTreePane.applyMask(secrets.masking());
         updateMicVisibility();
         updateDocumentLabels();
         updateActions();
@@ -540,6 +541,7 @@ public final class MainWindow extends QMainWindow {
         }
         submit(() -> documentService.choices(original, parent), choices -> {
             var dialog = new TlvEditorDialog(this, documentService, original, parent, choices);
+            dialog.applyMask(secrets.masking());
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                 var selection = dialog.selection();
                 submit(() -> documentService.insert(original, parent, selection.definition(), selection.value()),
@@ -577,6 +579,7 @@ public final class MainWindow extends QMainWindow {
         Document original = document;
         var dialog = new TlvEditorDialog(this, documentService, original, configurationTreePane.parentOf(selected),
                 List.of(documentService.definition(original, selected)), selected);
+        dialog.applyMask(secrets.masking());
         try {
             if (dialog.exec() != QDialog.DialogCode.Accepted.value()) {
                 return;
@@ -634,7 +637,18 @@ public final class MainWindow extends QMainWindow {
             return;
         }
         var dialog = new SecretsDialog(this, secrets);
-        try { dialog.exec(); } finally { dialog.dispose(); }
+        try {
+            if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
+                if (document != null) {
+                    configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
+                    configurationTreePane.applyMask(secrets.masking());
+                    configurationTextPane.highlight(configurationTreePane.selectedTlv());
+                }
+                showStatus("");
+            }
+        } finally {
+            dialog.dispose();
+        }
     }
 
     private void checkBinary() {
@@ -807,6 +821,9 @@ public final class MainWindow extends QMainWindow {
             Throwable cause = error instanceof ExecutionException ? error.getCause() : error;
             String message = cause instanceof InspectionException ? cause.getMessage()
                     : "The document operation failed. Check the file and Oscar dependencies.";
+            if (secrets.masking().enabled()) {
+                message = "The document operation failed. Details are hidden while SNMP obfuscation is enabled.";
+            }
             showStatus(message);
             if (interactive) {
                 QMessageBox.warning(this, "Document operation failed", message);

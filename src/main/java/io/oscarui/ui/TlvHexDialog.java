@@ -9,13 +9,13 @@ import java.util.List;
 final class TlvHexDialog extends QDialog {
     private final java.util.Map<QTreeWidgetItem, HexNode> nodesByItem = new java.util.HashMap<>();
 
-    TlvHexDialog(QWidget parent, HexNode selected) {
+    TlvHexDialog(QWidget parent, HexNode selected, boolean masked) {
         super(parent);
         setObjectName("tlvHexDialog");
         setWindowTitle("TLV Hex - " + selected.name());
         resize(850, 420);
         var layout = new QVBoxLayout(this);
-        var note = new QLabel("Current values encoded by OSCAR. Hex includes type, length, and value."
+        var note = new QLabel(masked ? "Masked preview: FF FF FF FF replaces sensitive rows and their parent bytes. Original lengths are hidden." : "Current values encoded by OSCAR. Hex includes type, length, and value."
                 + " Parent rows include their child bytes; integrity fields are not recalculated.");
         note.setWordWrap(true);
         layout.addWidget(note);

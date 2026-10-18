@@ -100,6 +100,14 @@ final class ConfigurationTreePane extends QTreeWidget {
         });
     }
 
+    void applyMask(io.oscarui.service.SnmpSecretMask masking) {
+        tlvsByItem.forEach((item, node) -> {
+            if (!node.tlvPath().isEmpty()) {
+                item.setText(2, masking.value(node));
+            }
+        });
+    }
+
     void selectLastChild(Node previousParent) {
         Node updatedParent = tlvsByItem.values().stream()
                 .filter(tlvNode -> tlvNode.sourceStartOffset() == previousParent.sourceStartOffset()

@@ -15,8 +15,9 @@ final class ConfigurationTextPane extends QPlainTextEdit {
         setLineWrapMode(LineWrapMode.NoWrap);
     }
 
-    void displaySource(String configurationText, boolean showTlvComments) {
-        preview = new ConfigurationTextPreview(configurationText, showTlvComments);
+    void displayDocument(io.oscarui.service.OscarDocumentService.Document document, boolean showTlvComments,
+                         io.oscarui.service.SnmpSecretMask masking) {
+        preview = new ConfigurationTextPreview(document.text(), showTlvComments, masking.replacements(document));
         setPlainText(preview.text());
     }
 

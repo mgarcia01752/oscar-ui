@@ -17,13 +17,16 @@ final class SecretsDialog extends QDialog {
         var shared = field("sharedSecret", secrets.sharedValue());
         form.addRow("Shared secret", shared);
         layout.addLayout(form);
-        var hashCommunity = new QCheckBox("Hash community strings");
-        hashCommunity.setObjectName("hashCommunityStrings");
-        hashCommunity.setChecked(secrets.hashCommunityStrings());
-        layout.addWidget(hashCommunity);
-        var hashingNote = new QLabel("Hashing preference only for now; the algorithm and export behavior are not implemented.");
-        hashingNote.setWordWrap(true);
-        layout.addWidget(hashingNote);
+        var obfuscateSnmp = new QCheckBox("Obfuscate SNMP secrets");
+        obfuscateSnmp.setObjectName("hashCommunityStrings");
+        obfuscateSnmp.setChecked(secrets.obfuscateSnmpSecrets());
+        layout.addWidget(obfuscateSnmp);
+        var maskingNote = new QLabel("Mask SNMP communities, security identities, and credentials in text and hex displays. "
+                + "Saved values remain unchanged. This does not hash or encrypt the configuration.");
+        maskingNote.setWordWrap(true);
+        layout.addWidget(maskingNote);
+        var customRules = new CustomSnmpRulesPane(secrets.customRules());
+        layout.addWidget(customRules);
         var clear = new QPushButton("Clear shared secret");
         clear.setObjectName("clearSecrets");
         clear.clicked.connect(shared::clear);
@@ -33,7 +36,7 @@ final class SecretsDialog extends QDialog {
         apply.setObjectName("applySecrets");
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(() -> {
-            secrets.replace(shared.text(), hashCommunity.isChecked());
+            secrets.replace(shared.text(), obfuscateSnmp.isChecked(), customRules.rules());
             accept();
         });
         buttons.rejected.connect(this::reject);

@@ -11,7 +11,7 @@ thread. Oscar parsing, validation, and serialization remain in the service layer
 | `TlvEditorDialog` | Shared Add/Edit controls, value help, validation, and delete confirmation |
 | `NewDocumentDialog` | New configuration and reference-template choices |
 | `GlobalSettingsDialog` | Persisted appearance choice and session MIC visibility |
-| `SecretsDialog` | Masked session secret and hashing preference |
+| `SecretsDialog` / `CustomSnmpRulesPane` | Session shared secret, SNMP masking, and custom object rules |
 | `SaveFormatDialog` | Text/Binary choice; the main window performs the save |
 | `BinaryInspectionDialog` | Read-only, monospace HexDump and top-level TLV listings |
 | `BinaryCheckDialog` | Configuration-check results |
@@ -280,3 +280,62 @@ OSCAR cannot encode them; creating/editing new drafts remains available.
 - [x] Keep all twelve example SNMP statements separate from remarks.
 - [x] Verify binary child order and source targeting after edits.
 - [x] Label incomplete editing scaffolds as uncompiled drafts.
+
+
+## SNMP display obfuscation
+
+**Settings → Secrets → Obfuscate SNMP secrets** replaces the previous inert
+hashing checkbox. It changes presentation only: source, document nodes, binary
+bytes, compilation, and saved files keep their real values. The shared secret
+retains its existing independent password field. No encryption or hashing is
+performed, and neither rules nor secrets are persisted in settings JSON.
+
+`SnmpSecretMask` owns immutable session rules and fixed replacements:
+`********` in text and `FF FF FF FF` in hex. Built-in arrays match OSCAR TLV
+names, a scoped embedded `SecurityName` path, and standard object OID prefixes.
+Coverage includes direct community/security-name TLVs, `docsDevNmAccessCommunity`,
+SNMP-COMMUNITY-MIB, USM authentication/privacy key changes (including DH), and
+USM/VACM security identities. Whole varbinds in identity-indexed tables are
+masked conservatively, including non-secret columns whose OIDs expose identities.
+These are UI sensitivity rules, not replacement codec or registry definitions.
+Definitions: [USM](https://www.rfc-editor.org/rfc/rfc3414.html),
+[DH USM](https://www.rfc-editor.org/rfc/rfc2786.html),
+[VACM](https://www.rfc-editor.org/rfc/rfc3415.html), and
+[community coexistence](https://www.rfc-editor.org/rfc/rfc3584.html).
+
+Custom entries accept an SNMP name or numeric OID, resolve known standard names
+or use OSCAR's `NetSNMP.toDottedOID`, and retain a canonical numeric OID.
+Malformed/unresolved input is rejected with an inline message. Names cannot
+contain command arguments. Leading dots and numeric component spelling are
+normalized for duplicate checks; matching uses component boundaries, so `.2`
+also covers `.2.1` but not `.20`. Unknown vendor password objects require a
+custom rule; arbitrary passwords cannot be inferred from generic Snmp11/Snmp64.
+Add/Remove operate on a dialog-local copy, committed only by Apply for Session.
+
+The source preview replaces protected statements, including OID indexes and
+internal comments, while maintaining original-to-display offsets for selection.
+Standard object labels remain visible; custom statements use `CustomSnmpSecret`
+in the masked preview. Comments repeating known protected source literals are
+also masked. This does not classify arbitrary secrets written only in comments.
+Copy reads the displayed text. Applying the setting immediately refreshes text
+and tree without marking the file modified. Existing sensitive editor values
+are never placed in the visible input; the fixed placeholder means “keep value”
+when left blank. New replacements use password entry. Diagnostic details are
+hidden while obfuscation is active because upstream errors may echo input.
+
+Selected-TLV hex masks the entire protected record and every ancestor that
+contains its bytes, while preserving unaffected sibling rows. Binary Inspect
+uses the original binary snapshot, not the current edited tree, to classify
+records. Both inspection modes show a labeled top-level masked preview without
+original offsets or ASCII columns. If safe snapshot mapping fails, the entire
+listing becomes the fixed hex mask; raw bytes are never used as a fallback.
+Masked previews are not compilable/exportable replacement configurations.
+
+- [x] Mask direct SNMP communities and security identities by registry name/path.
+- [x] Mask USM/DH credentials and identity-bearing SNMP/VACM indexes.
+- [x] Add/remove custom names and OIDs with validation and duplicate checks.
+- [x] Use fixed text/hex masks independent of original secret length.
+- [x] Refresh text, TLV values, clipboard, and parent hex consistently.
+- [x] Preserve selection offsets and keep real values through edit/save.
+- [x] Mask the binary snapshot even after unsaved deletion of a secret.
+- [x] Keep rules session-only and preserve prior settings on Cancel.

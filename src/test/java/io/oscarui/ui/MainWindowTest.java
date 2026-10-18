@@ -23,6 +23,174 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void snmpMaskingRefreshesTextTreeClipboardHexAndEditorWithoutChangingSource() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            String source = "Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-private; } "
+                    + "Snmp11 1.3.6.1.4.1.55555.2.1 OctetString \"vendor-password\"; NetworkAccess 1; }";
+            Path file = Files.writeString(temporary.resolve("masked.txt"), source);
+            window.openFile(file);
+            await(window::completed);
+            assertTrue(window.succeeded());
+            var original = window.currentDocument();
+            respond(window, dialog -> {
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(true);
+                var input = dialog.findChild(QLineEdit.class, "customSnmpObject");
+                input.setText("1.3.6.1.4.1.55555.2");
+                dialog.findChild(QPushButton.class, "addCustomSnmp").click();
+                input.setText(".1.3.6.1.4.1.55555.2");
+                dialog.findChild(QPushButton.class, "addCustomSnmp").click();
+                assertEquals(1, dialog.findChild(QListWidget.class, "customSnmpRules").count());
+                assertTrue(dialog.findChild(QLabel.class, "customSnmpValidation").text().contains("already"));
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            var text = window.findChild(QPlainTextEdit.class, "configurationText");
+            assertFalse(text.toPlainText().contains("lab-private"));
+            assertFalse(text.toPlainText().contains("vendor-password"));
+            text.selectAll();
+            text.copy();
+            assertFalse(QApplication.clipboard().text().contains("lab-private"));
+            assertFalse(QApplication.clipboard().text().contains("vendor-password"));
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            var parent = tree.topLevelItem(0).child(0);
+            assertEquals("********", parent.child(0).text(2));
+            assertEquals("CustomSnmpSecret ********", tree.topLevelItem(0).child(1).text(2));
+            tree.setCurrentItem(parent.child(0));
+            assertEquals("SNMPv1v2cCommunityName ********;", text.textCursor().selectedText());
+            respond(window, dialog -> {
+                var value = dialog.findChild(QLineEdit.class, "tlvValue");
+                assertEquals("", value.text());
+                assertTrue(value.placeholderText().startsWith("********"));
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            tree.itemDoubleClicked.emit(parent.child(0), 0);
+            await(window::completed);
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            tree.setCurrentItem(parent);
+            var closed = new java.util.concurrent.atomic.AtomicBoolean();
+            respond(window, dialog -> {
+                var hex = dialog.findChild(QTreeWidget.class, "tlvHexTree").topLevelItem(0);
+                assertEquals("FF FF FF FF", hex.text(1));
+                assertEquals("FF FF FF FF", hex.child(0).text(1));
+                dialog.reject();
+                closed.set(true);
+            });
+            action(window, "viewTlvHex").trigger();
+            await(closed::get);
+            assertCallback();
+            window.grab().save("target/snmp-masked-preview.png");
+            respond(window, dialog -> {
+                var list = dialog.findChild(QListWidget.class, "customSnmpRules");
+                list.setCurrentRow(0);
+                dialog.findChild(QPushButton.class, "removeCustomSnmp").click();
+                assertEquals(0, list.count());
+                dialog.reject();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            respond(window, dialog -> {
+                assertEquals(1, dialog.findChild(QListWidget.class, "customSnmpRules").count());
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(false);
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            assertEquals(source, text.toPlainText());
+            assertSame(original, window.currentDocument());
+            assertEquals(source, Files.readString(file));
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
+    @Test void maskedEditorAcceptsReplacementWithoutSavingThePlaceholder() throws Exception {
+        var service = new OscarDocumentService();
+        var document = service.open(Files.writeString(temporary.resolve("editor-secret.txt"),
+                "Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-old; } }"));
+        var parent = document.root().childTlvs().getFirst();
+        var selected = parent.childTlvs().getFirst();
+        var dialog = new TlvEditorDialog(null, service, document, parent,
+                java.util.List.of(service.definition(document, selected)), selected);
+        try {
+            dialog.applyMask(new io.oscarui.service.SnmpSecretMask(true, java.util.List.of()));
+            var field = dialog.findChild(QLineEdit.class, "tlvValue");
+            assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+            assertEquals("", field.text());
+            assertEquals(selected.encodedValueText(), dialog.selection().value());
+            field.setText("lab-new");
+            assertEquals("lab-new", dialog.selection().value());
+            var changed = service.replaceValue(document, selected, dialog.selection().value());
+            assertTrue(changed.text().contains("lab-new"));
+            assertFalse(changed.text().contains("********"));
+        } finally {
+            dialog.dispose();
+        }
+    }
+
+    @Test void binaryInspectUsesMaskedListingForBothViews() throws Exception {
+        var service = new OscarDocumentService();
+        var binary = new io.oscarui.service.OscarBinaryService(service);
+        var source = service.open(Files.writeString(temporary.resolve("inspect-secret.txt"),
+                "Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-private; } NetworkAccess 1; }"));
+        Path file = Files.write(temporary.resolve("inspect-secret.bin"), binary.encode(source, "lab-test-key"));
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            window.openFile(file);
+            await(window::completed);
+            assertTrue(window.succeeded());
+            respond(window, dialog -> {
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(true);
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            for (String actionName : java.util.List.of("inspectHexDump", "inspectTlvBreakdown")) {
+                var closed = new java.util.concurrent.atomic.AtomicBoolean();
+                respond(window, dialog -> {
+                    String listing = dialog.findChild(QPlainTextEdit.class, "binaryInspectionText").toPlainText();
+                    assertTrue(listing.contains("SNMPv1v2cCoexistenceConfig | FF FF FF FF"));
+                    assertFalse(listing.contains("6C:61:62"));
+                    assertFalse(listing.contains("lab-private"));
+                    dialog.reject();
+                    closed.set(true);
+                });
+                action(window, actionName).trigger();
+                await(closed::get);
+                assertCallback();
+            }
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
+    @Test void customSnmpRulesValidateNamesAndRemainSessionOnly() {
+        var secrets = new SessionSecrets();
+        var dialog = new SecretsDialog(null, secrets);
+        try {
+            var input = dialog.findChild(QLineEdit.class, "customSnmpObject");
+            var add = dialog.findChild(QPushButton.class, "addCustomSnmp");
+            input.setText("bad;command");
+            add.click();
+            assertFalse(dialog.findChild(QLabel.class, "customSnmpValidation").text().isEmpty());
+            input.setText("docsDevNmAccessIp");
+            add.click();
+            assertEquals(1, dialog.findChild(QListWidget.class, "customSnmpRules").count());
+            dialog.findChild(QPushButton.class, "applySecrets").click();
+            assertEquals(1, secrets.customRules().size());
+            secrets.close();
+            assertTrue(secrets.customRules().isEmpty());
+        } finally {
+            dialog.dispose();
+        }
+    }
+
     @Test void selectsAppendedSourceChildWhenBinaryOrderDiffers() throws Exception {
         var documents = new OscarDocumentService();
         var document = documents.open(Files.writeString(temporary.resolve("child-order.txt"),

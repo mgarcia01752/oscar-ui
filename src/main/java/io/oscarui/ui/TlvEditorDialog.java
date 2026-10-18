@@ -2,6 +2,7 @@ package io.oscarui.ui;
 
 import com.comcast.oscar.dictionary.TlvDefinition;
 import io.oscarui.service.OscarDocumentService;
+import io.oscarui.service.SnmpSecretMask;
 import io.qt.core.QRegularExpression;
 import io.qt.core.Qt;
 import io.qt.gui.QRegularExpressionValidator;
@@ -19,6 +20,9 @@ final class TlvEditorDialog extends QDialog {
     private TlvDefinition selected;
 
     private boolean deletionRequested;
+    private SnmpSecretMask masking = new SnmpSecretMask(false, List.of());
+    private final OscarDocumentService.Node editingNode;
+    private boolean maskedOriginal;
 
     private static final class TlvItem extends QTreeWidgetItem {
         private final TlvDefinition definition;
@@ -69,6 +73,7 @@ final class TlvEditorDialog extends QDialog {
                  OscarDocumentService.Node insertionParent, List<TlvDefinition> choices,
                  OscarDocumentService.Node editing) {
         super(parent);
+        editingNode = editing;
         setObjectName(editing == null ? "addTlvDialog" : "editTlvDialog");
         setWindowTitle((editing == null ? "Add TLV - " : "Edit TLV - ") + document.configurationType().header());
         resize(620, 540);
@@ -141,6 +146,7 @@ final class TlvEditorDialog extends QDialog {
             if (oldValidator != null) {
                 oldValidator.dispose();
             }
+            value.setEchoMode(masking.protects(selected) ? QLineEdit.EchoMode.Password : QLineEdit.EchoMode.Normal);
             valueLabel.setText(numeric ? "Decimal value" : "Value");
             description.setPlainText(selected == null ? "" : TlvDescriptionFormatter.format(selected.description()));
             metadata.setText(selected == null ? "No available TLVs"
@@ -180,6 +186,24 @@ final class TlvEditorDialog extends QDialog {
         }
     }
 
+    void applyMask(SnmpSecretMask masking) {
+        this.masking = masking;
+        boolean protectedValue = masking.protects(selected) || (editingNode != null && masking.protects(editingNode));
+        value.setEchoMode(protectedValue ? QLineEdit.EchoMode.Password : QLineEdit.EchoMode.Normal);
+        if (editingNode != null && protectedValue) {
+            maskedOriginal = true;
+            value.clear();
+            value.setPlaceholderText(SnmpSecretMask.TEXT_MASK + " (leave blank to keep)");
+            var apply = findChild(QPushButton.class, "confirmEditTlv");
+            apply.setEnabled(true);
+            value.textChanged.connect(text -> {
+                if (text.isEmpty()) {
+                    apply.setEnabled(true);
+                }
+            });
+        }
+    }
+
     static String valueHelp(TlvDefinition definition, boolean container) {
         if (container) {
             return "Parent TLV | Add values to its child TLVs";
@@ -216,7 +240,10 @@ final class TlvEditorDialog extends QDialog {
 
     boolean deletionRequested() { return deletionRequested; }
 
-    Selection selection() { return new Selection(selected, value.text()); }
+    Selection selection() {
+        return new Selection(selected, maskedOriginal && value.text().isEmpty()
+                ? editingNode.encodedValueText() : value.text());
+    }
 
     private void sortChoices() {
         var items = new java.util.ArrayList<TlvItem>();

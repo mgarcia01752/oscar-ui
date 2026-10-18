@@ -229,6 +229,38 @@ public final class OscarBinaryService {
         }
     }
 
+    /**
+     * Formats the last binary snapshot with fixed-size sensitive record masks.
+     * Uses the snapshot rather than unsaved edits to classify its actual bytes.
+     * Omits original offsets and ASCII columns, including on unaffected records.
+     *
+     * @param document active binary document
+     * @param masking session display policy
+     * @return top-level preview, or a whole-snapshot mask if safe mapping fails
+     * @throws InspectionException if no binary snapshot is active
+     */
+    public String maskedInspection(Document document, SnmpSecretMask masking) throws InspectionException {
+        byte[] bytes = inspectionBytes(document);
+        try {
+            Document original = decode(document.origin().path(), bytes, document.configurationType());
+            var entries = payloads(bytes, dictionary(document.configurationType()).getTopLevelByteLength());
+            if (entries.size() != original.root().childTlvs().size()) {
+                return SnmpSecretMask.HEX_MASK;
+            }
+            var listing = new StringBuilder();
+            for (int index = 0; index < entries.size(); index++) {
+                Node node = original.root().childTlvs().get(index);
+                String hex = masking.protectsSubtree(node) ? SnmpSecretMask.HEX_MASK
+                        : new HexString(HexFormat.of().parseHex(entries.get(index))).toString(":");
+                listing.append(node.tlvName()).append(" | ").append(hex).append('\n');
+            }
+            return listing.toString();
+        } catch (InspectionException | com.comcast.oscar.tlv.TlvException | RuntimeException exception) {
+            // Never fall back to the raw dump when its secret classification fails.
+            return SnmpSecretMask.HEX_MASK;
+        }
+    }
+
     private byte[] inspectionBytes(Document document) throws InspectionException {
         if (document == null || document.path() != null || document.origin() == null) {
             throw new InspectionException("Open a binary configuration to inspect its bytes.");

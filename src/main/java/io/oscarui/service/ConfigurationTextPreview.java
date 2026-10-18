@@ -17,13 +17,34 @@ public final class ConfigurationTextPreview {
      * @param showTlvComments true to retain all original comments
      */
     public ConfigurationTextPreview(String source, boolean showTlvComments) {
+        this(source, showTlvComments, java.util.List.of());
+    }
+
+    /**
+     * Builds a preview with fixed-length sensitive statement replacements.
+     * Source coordinates remain valid for highlighting after masking and CRLF conversion.
+     *
+     * @param source original unmodified source
+     * @param showTlvComments whether to retain Oscar TLV comments
+     * @param replacements ordered non-overlapping replacements in source coordinates
+     */
+    public ConfigurationTextPreview(String source, boolean showTlvComments,
+                                    java.util.List<SnmpSecretMask.Replacement> replacements) {
         var hidden = new boolean[source.length()];
         if (!showTlvComments) {
             hideComments(source, hidden);
         }
         displayOffsets = new int[source.length() + 1];
         var preview = new StringBuilder();
+        int replacementIndex = 0;
         for (int offset = 0; offset < source.length(); offset++) {
+            if (replacementIndex < replacements.size() && replacements.get(replacementIndex).sourceStartOffset() == offset) {
+                var replacement = replacements.get(replacementIndex++);
+                java.util.Arrays.fill(displayOffsets, offset, replacement.sourceEndExclusive(), preview.length());
+                preview.append(replacement.replacementText());
+                offset = replacement.sourceEndExclusive() - 1;
+                continue;
+            }
             displayOffsets[offset] = preview.length();
             boolean crlfStart = source.charAt(offset) == '\r' && offset + 1 < source.length()
                     && source.charAt(offset + 1) == '\n';
