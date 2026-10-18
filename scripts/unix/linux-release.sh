@@ -27,6 +27,10 @@ for maintainer in postinst prerm; do
   cmp "$ROOT/packaging/linux/$maintainer" "$PROBE/control/$maintainer"
 done
 dpkg-deb -x "$PACKAGE" "$PROBE"
+BUILD_JDK="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
+python3 "$ROOT/scripts/shared/verify-java-distribution.py" \
+  --runtime "$PROBE/opt/oscar-ui/lib/runtime" \
+  --sources "$PROBE/opt/oscar-ui/lib/app/sources" --jdk-home "$BUILD_JDK"
 env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen \
   timeout 40s "$PROBE/opt/oscar-ui/bin/OSCAR-UI" \
   --smoke-test "$ROOT/src/test/resources/simple-docsis.txt" | tee "$PROBE/smoke.log"

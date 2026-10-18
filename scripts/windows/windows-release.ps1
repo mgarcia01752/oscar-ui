@@ -15,6 +15,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Source collection failed' }
 & "$Root/scripts/windows/desktop.ps1" package -Type app-image
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
 $Image = "$Root/dist/windows/app-image/OSCAR-UI"
+& python "$Root/scripts/shared/verify-java-distribution.py" `
+    --runtime "$Image/runtime" --sources "$Image/app/sources" --jdk-home $env:JAVA_HOME
+if ($LASTEXITCODE -ne 0) { throw 'Java distribution verification failed' }
 # Put transitive native dependencies beside the launcher for Windows DLL lookup.
 Copy-Item "$Image/app/qt/lib/*.dll" $Image
 $VsWhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"

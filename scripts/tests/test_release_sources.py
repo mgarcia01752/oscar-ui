@@ -28,7 +28,7 @@ class ReleaseSourcesTest(unittest.TestCase):
                 (root / 'jdk').mkdir()
                 (root / 'jdk/release').write_text('IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n')
                 content = b'example source archive'
-                with patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
+                with patch.object(sources, 'JAVA_SOURCE_SHA256', hashlib.sha256(content).hexdigest()), patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
                     self.assertEqual(host_platform, sys.platform)
                     sources.collect()
                 manifest = (root / 'target/app/sources/SHA256SUMS.txt').read_text().splitlines()
@@ -38,6 +38,23 @@ class ReleaseSourcesTest(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(content).hexdigest(), digest)
                     self.assertEqual(content, (root / 'target/app/sources' / name).read_bytes())
                 self.assertFalse(list(root.rglob('*.download')))
+
+    def test_rejects_corrupted_java_source(self):
+        """Block packaging when downloaded JDK sources fail the vendor pin.
+
+        Ensure invalid archive content is removed and no manifest is emitted.
+        """
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'target/app').mkdir(parents=True)
+            (root / 'jdk').mkdir()
+            (root / 'jdk/release').write_text(
+                'IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n', encoding='utf-8')
+            with patch.object(sources, 'ROOT', root), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(b'corrupted')):
+                with self.assertRaisesRegex(RuntimeError, 'vendor checksum'):
+                    sources.collect()
+            self.assertFalse(list((root / 'target/app/sources').glob('OpenJDK*')))
+            self.assertFalse((root / 'target/app/sources/SHA256SUMS.txt').exists())
 
     def test_rejects_unmatched_jdk_before_downloading(self):
         with tempfile.TemporaryDirectory() as temp:

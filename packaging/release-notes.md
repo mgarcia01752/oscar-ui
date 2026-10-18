@@ -8,6 +8,15 @@ no repository checkout or separate Java/Qt installation is needed.
 | Windows x64 `.msi` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, app-local Visual C++ runtime DLLs, Start menu entry, and optional desktop shortcut |
 | Ubuntu 22.04 / 24.04 x64 `.deb` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, ICU, and application-menu launcher; APT installs required system display libraries |
 
+## Included OSCAR engine
+
+| Component | Bundled JAR size (approx.) | Included in |
+| --- | ---: | --- |
+| OSCAR engine | 0.54 MB | Windows and Ubuntu |
+
+This is the OSCAR engine JAR only; its supporting libraries are also bundled.
+No separate OSCAR installation is needed.
+
 ## Included dependency source archives
 
 | Dependency | Compressed source size (approx.) | Included in |
@@ -24,14 +33,33 @@ Both packages include license notices and source checksums.
 
 ## Installation instructions
 
-[Windows installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/windows.md)
-· [Ubuntu installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/ubuntu.md)
+### Windows
 
-- **Windows:** run the MSI and launch OSCAR-UI from the Start menu.
-  Uninstall through Settings → Apps → Installed apps → OSCAR-UI.
-- **Ubuntu:** install the downloaded DEB with `sudo apt install ./oscar-ui_<version>_amd64.deb`
-  (use the actual filename), then launch OSCAR-UI from the application menu.
-  Uninstall with `sudo apt remove oscar-ui`.
+1. Download and run the **Windows x64 MSI** from this release.
+2. Launch **OSCAR-UI** from the Start menu.
+
+**Uninstall:** Settings → Apps → Installed apps → OSCAR-UI → Uninstall.
+
+[Windows installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/windows.md)
+
+### Ubuntu
+
+1. Download the **Ubuntu x64 DEB** from this release.
+2. Open a terminal in the download folder and install it using its actual filename:
+
+   ```bash
+   sudo apt install ./oscar-ui_<version>_amd64.deb
+   ```
+
+3. Launch **OSCAR-UI** from the application menu.
+
+**Uninstall:**
+
+```bash
+sudo apt remove oscar-ui
+```
+
+[Ubuntu installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/ubuntu.md)
 
 Keep configurations outside the installation directory. Bundled runtimes are
 private to OSCAR-UI. GitHub's **Source code** archives contain project source,

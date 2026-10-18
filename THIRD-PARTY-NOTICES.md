@@ -38,8 +38,10 @@ The release checklist in docs/development/packaging.md includes source collectio
 
 Qt sources contain additional third-party license material under LICENSES/ and
 src/3rdparty/. Preserve these when distributing corresponding source. The bundled
-Java runtime's `legal/` directory must remain intact. Windows portable bundles
-include app-local x64 Visual C++ runtime DLLs from the build host's Visual Studio
+Java runtime's `legal/` directory must remain intact. The complete corresponding
+Temurin source archive (including its build scripts and license files) accompanies
+the runtime in `app/sources/` (Linux: `lib/app/sources/`). Release checks validate
+the source checksum and retained Java notice content against the build JDK. Windows bundles include app-local x64 Visual C++ runtime DLLs from the build host's Visual Studio
 redistributable directory. Redistribution is subject to Microsoft's terms;
 these DLLs are not relicensed by this project. Qt DLLs also appear beside the
 Windows executable for native dependency lookup; replace both copies when

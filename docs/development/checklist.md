@@ -68,3 +68,10 @@ Use the commands in the [development guide](README.md#verification); use the
 Release commands, CI dependencies, source bundling, and platform limitations
 have one owner: [Release packaging](packaging.md). Outstanding clean-machine
 and broader interoperability work is tracked in [TODO](TODO.md#verification-backlog).
+
+### Java redistribution materials
+
+- [ ] Verify the Java source digest against the pinned Adoptium checksum.
+- [ ] Pass `verify-java-distribution.py` on extracted DEB and installed MSI.
+- [ ] Retain GPLv2/Classpath text and all build-JDK module notice content.
+- [ ] Recheck source, version, and checksum pins together on Java upgrades.

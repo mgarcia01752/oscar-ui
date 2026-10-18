@@ -13,9 +13,15 @@ SOURCES = {
     'qtjambi-6.8.3.tar.gz': 'https://github.com/OmixVisualization/qtjambi/archive/refs/tags/v6.8.3.tar.gz',
     'OpenJDK21U-jdk-sources_21.0.10_7.tar.gz': 'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.10%2B7/OpenJDK21U-jdk-sources_21.0.10_7.tar.gz',
 }
+# Adoptium's matching source asset .sha256.txt; update with the JDK pin.
+JAVA_SOURCE_SHA256 = 'a286b69953cdb56ab2dc74287e6ebaca8fad7d397a4b5f975b73d23eedeec252'
 
 
 def collect():
+    """Bundle matching dependency sources for distribution with the application.
+
+    Reject a mismatched JDK or Java source digest before packaging a release.
+    """
     java = shutil.which('java')
     home = Path(os.environ['JAVA_HOME']) if os.environ.get('JAVA_HOME') else Path(java or '').resolve().parent.parent
     release = (home / 'release').read_text()
@@ -39,6 +45,9 @@ def collect():
         finally:
             temporary.unlink(missing_ok=True)
         digest = hashlib.sha256((destination / name).read_bytes()).hexdigest()
+        if name.startswith('OpenJDK') and digest != JAVA_SOURCE_SHA256:
+            (destination / name).unlink()
+            raise RuntimeError('Java source archive differs from the pinned vendor checksum')
         hashes.append(f'{digest}  {name}\n')
     (destination / 'SHA256SUMS.txt').write_text(''.join(hashes))
 

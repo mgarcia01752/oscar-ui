@@ -18,6 +18,45 @@ application under `app/sources/` on Windows and
 keeps extra source archives and checksum files out of the release asset list.
 Keep bundled license files and the Java runtime's `legal/` directory intact.
 
+### OpenJDK redistribution checks
+
+Temurin is distributed under GPLv2 with the Classpath Exception. Preserve the
+runtime's license, exception, copyright, and third-party notices, and distribute
+its complete corresponding source, including build scripts. This project bundles
+that source with the installer instead of relying on a written source offer.
+There is no additional signed license form in this distribution approach.
+See the [OpenJDK license](https://github.com/openjdk/jdk21u/blob/master/LICENSE).
+
+`collect-release-sources.py` requires the pinned Temurin runtime version and
+checks the JDK source archive against Adoptium's pinned SHA-256. Update that
+checksum with the source URL and JDK pin when upgrading Java.
+`verify-java-distribution.py` checks the extracted DEB, Windows application image,
+and installed MSI payload before release upload. It verifies runtime/source
+versions, GPL/Classpath text, module notices against the build JDK, source
+checksum, and source/build-script presence. Identical shared notices are accepted
+where DEB packaging omits duplicate per-module links. The check is distribution
+QA, not a legal certification or a proof of reproducible JDK builds.
+
+For an existing extracted package, run (paths shown for Ubuntu):
+
+```bash
+python3 scripts/shared/verify-java-distribution.py \
+  --runtime /path/to/extracted/opt/oscar-ui/lib/runtime \
+  --sources /path/to/extracted/opt/oscar-ui/lib/app/sources \
+  --jdk-home /path/to/matching-temurin-jdk
+```
+
+On Windows, use the installation's `runtime` and `app/sources` directories.
+Omit `--jdk-home` only for a basic payload check; it skips comparison against the
+original JDK notices and exact vendor/build identification.
+
+The published v0.2.5 MSI and DEB were extracted and checked on Linux. Both contain
+the GPL/Classpath text, corresponding JDK source/build files, and the source
+archive matching Adoptium's SHA-256. Every distinct notice for the DEB's retained
+modules also matches the original Temurin Linux JDK. Native Windows installation
+and comparison with the Windows build JDK remain release-CI checks.
+
+
 The MSI license dialog begins with the component summary from
 `packaging/windows/install-information.txt`, followed by the unchanged project
 license. Both release workflows use `packaging/release-notes.md` when creating

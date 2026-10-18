@@ -42,6 +42,9 @@ for disposable Windows CI runners, not routine checks on a developer machine.
 `shared/desktop.py` implements build, run, smoke, and packaging commands.
 `shared/collect-release-sources.py` bundles dependency source archives and
 checksums; release entry points invoke it after building the application.
+`shared/verify-java-distribution.py` checks Java licenses, module notices,
+matching source archives, and build files in extracted/installed packages.
+The Ubuntu release and Windows image/install checks invoke it automatically.
 
 ```bash
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
