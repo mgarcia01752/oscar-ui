@@ -1,0 +1,13 @@
+#!/bin/sh
+# OSCAR-UI registers its launcher without requiring a running desktop menu service.
+set -eu
+case "$1" in
+    configure|abort-upgrade|abort-remove|abort-deconfigure)
+        install -D -m 644 /opt/oscar-ui/lib/oscar-ui-OSCAR-UI.desktop \
+            /usr/share/applications/oscar-ui-OSCAR-UI.desktop
+        ;;
+    *)
+        echo "Unsupported postinst operation: $1" >&2
+        exit 1
+        ;;
+esac

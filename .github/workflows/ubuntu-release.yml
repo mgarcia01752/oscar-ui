@@ -69,12 +69,14 @@ jobs:
           desktop_entry=/opt/oscar-ui/lib/oscar-ui-OSCAR-UI.desktop
           grep -qx 'Name=OSCAR-UI' "$desktop_entry"
           grep -qx 'StartupWMClass=OSCAR-UI' "$desktop_entry"
+          cmp "$desktop_entry" /usr/share/applications/oscar-ui-OSCAR-UI.desktop
       - name: Remove package and verify cleanup
         if: always()
         run: |
           sudo apt-get remove -y oscar-ui
           test "$(dpkg-query -W -f='${Status}' oscar-ui 2>/dev/null || true)" != 'install ok installed'
           test ! -e /opt/oscar-ui/bin/OSCAR-UI
+          test ! -e /usr/share/applications/oscar-ui-OSCAR-UI.desktop
           if [ -f installed-files.txt ]; then
             while IFS= read -r entry; do
               test ! -e "$entry" && test ! -L "$entry"

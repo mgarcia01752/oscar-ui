@@ -172,3 +172,24 @@ launcher filename. `packaging/linux/OSCAR-UI.desktop` adds
 `StartupWMClass=OSCAR-UI` for X11 matching while retaining jpackage's substituted
 launcher and icon paths. Ubuntu CI checks the installed entry's name and class;
 the native smoke test checks the application's startup identity.
+
+## DEB launcher registration
+
+The DEB uses `packaging/linux/postinst` and `prerm` to copy
+and remove its launcher at `/usr/share/applications/oscar-ui-OSCAR-UI.desktop`.
+It does not invoke `xdg-desktop-menu`: minimal/headless Ubuntu systems may lack
+its writable menu directories, which previously caused removal to fail with
+exit status 3. The desktop entry retains its absolute installed icon path.
+Removal errors are not suppressed; only the package's own launcher is removed.
+CI checks that the registered launcher matches the bundled entry and disappears
+after uninstall on Ubuntu 22.04 and 24.04, while user configurations survive.
+
+Already-built v0.2.0 packages retain the old removal script. Publish the fix
+under a new patch tag after validation; rerunning v0.2.0 builds the old code.
+For an affected headless machine, creating the directory expected by xdg-utils
+allows the old package to be removed:
+
+```bash
+sudo install -d -m 755 /usr/share/desktop-directories
+sudo apt-get remove oscar-ui
+```
