@@ -28,7 +28,7 @@ final class SharedSecretCheckDialog extends QDialog {
         var form = new QFormLayout();
         secret.setObjectName("checkSharedSecret");
         secret.setEchoMode(QLineEdit.EchoMode.Password);
-        form.addRow("Shared secret", secret);
+        form.addRow("Shared secret", new SharedSecretField(this, secret));
         file.setObjectName("checkBinaryPath");
         form.addRow("Binary file", file);
         layout.addLayout(form);

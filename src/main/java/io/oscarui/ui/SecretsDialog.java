@@ -15,7 +15,7 @@ final class SecretsDialog extends QDialog {
         layout.addWidget(note);
         var form = new QFormLayout();
         var shared = field("sharedSecret", secrets.sharedValue());
-        form.addRow("Shared secret", shared);
+        form.addRow("Shared secret", new SharedSecretField(this, shared));
         layout.addLayout(form);
         var obfuscateSnmp = new QCheckBox("Obfuscate SNMP secrets");
         obfuscateSnmp.setObjectName("hashCommunityStrings");

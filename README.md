@@ -63,6 +63,8 @@ Choose **Tools → Check Shared Secret**, enter the masked secret, select a
 DOCSIS binary, and click **Check**. The result is **Correct Shared Secret** or
 **Incorrect Shared Secret**. Text, damaged files, and unsupported MICs show
 **Unable to Check**. The file is unchanged and the secret is not saved.
+In both this dialog and Settings → Secrets, hold the eye button to reveal the
+shared secret; release it to mask the value again.
 
 ## Configuration file security concerns
 

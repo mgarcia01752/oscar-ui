@@ -411,3 +411,11 @@ GUI thread; neither secret values nor binary content appear in diagnostics.
 - [x] Check standard, implicit and explicit MICs with HMAC-MD5/MMH.
 - [x] Preserve input bytes and keep checker state outside editor/settings.
 - [x] Test correct/wrong keys, rejected input, and native dialog behavior.
+
+Shared-secret entry in Settings → Secrets and Tools → Check Shared Secret uses
+one `SharedSecretField` control. Its eye icon reveals the value only while held;
+release, pointer exit, focus loss, dialog deactivation or hiding masks it again.
+Disabled fields remain masked. The icon follows the active palette.
+
+- [x] Add momentary eye-button reveal to both shared-secret dialogs.
+- [x] Test release and interrupted-hold masking in both dialogs.

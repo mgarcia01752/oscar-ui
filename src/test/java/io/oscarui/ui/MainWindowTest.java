@@ -23,6 +23,37 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void revealsSharedSecretsOnlyWhileHeldInBothDialogs() {
+        var secrets = new SessionSecrets();
+        for (QDialog dialog : new QDialog[]{new SecretsDialog(null, secrets), new SharedSecretCheckDialog(null)}) {
+            dialog.show();
+            try {
+                String fieldName = dialog instanceof SecretsDialog ? "sharedSecret" : "checkSharedSecret";
+                var field = dialog.findChild(QLineEdit.class, fieldName);
+                var reveal = dialog.findChild(QToolButton.class, fieldName + "Reveal");
+                field.setText("synthetic-secret");
+                assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+                assertFalse(reveal.icon().isNull());
+                reveal.pressed.emit();
+                assertEquals(QLineEdit.EchoMode.Normal, field.echoMode());
+                reveal.released.emit();
+                assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+                reveal.pressed.emit();
+                QCoreApplication.sendEvent(dialog, new QEvent(QEvent.Type.WindowDeactivate));
+                assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+                reveal.pressed.emit();
+                QCoreApplication.sendEvent(reveal, new QEvent(QEvent.Type.Leave));
+                assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+                field.setEnabled(false);
+                reveal.pressed.emit();
+                assertEquals(QLineEdit.EchoMode.Password, field.echoMode());
+            } finally {
+                dialog.close();
+                dialog.dispose();
+            }
+        }
+    }
+
     @Test void checksSharedSecretInMaskedIndependentDialog() throws Exception {
         var documents = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(documents);
