@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           # Use Adoptium's full SemVer, including its LTS build suffix.
@@ -28,28 +28,18 @@ jobs:
       - name: Build and test portable application
         shell: pwsh
         run: ./scripts/windows-release.ps1
-      - name: Collect corresponding sources and checksums
-        shell: pwsh
-        run: |
-          $Output = 'dist/windows/release'
-          Invoke-WebRequest 'https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz' -OutFile "$Output/qtbase-everywhere-src-6.8.3.tar.xz"
-          Invoke-WebRequest 'https://github.com/OmixVisualization/qtjambi/archive/refs/tags/v6.8.3.tar.gz' -OutFile "$Output/qtjambi-6.8.3.tar.gz"
-          $Release = Invoke-RestMethod 'https://api.github.com/repos/adoptium/temurin21-binaries/releases/tags/jdk-21.0.10%2B7'
-          $Source = @($Release.assets | Where-Object { $_.name -eq 'OpenJDK21U-jdk-sources_21.0.10_7.tar.gz' })
-          if ($Source.Count -ne 1) { throw 'Exact bundled JDK source archive not found' }
-          Invoke-WebRequest $Source[0].browser_download_url -OutFile "$Output/$($Source[0].name)"
-          Get-ChildItem $Output -File | Sort-Object Name | ForEach-Object {
-            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
-          } | Set-Content "$Output/SHA256SUMS.txt"
       - uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: dist/windows/release/*
+          path: dist/windows/release/*.zip
           if-no-files-found: error
   publish:
     if: startsWith(github.ref, 'refs/tags/')
     needs: windows
     runs-on: ubuntu-latest
+    concurrency:
+      group: publish-desktop-${{ github.ref_name }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -57,12 +47,18 @@ jobs:
         with:
           name: windows-release
           path: release
-      - name: Attach downloads to a draft release
+      - name: Attach application to the shared draft release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$RELEASE_TAG" release/* --verify-tag --draft \
-            --title "Oscar Desktop $RELEASE_TAG" \
-            --notes 'Windows x64: download Oscar-Desktop-*-windows-x64.zip, extract the entire ZIP, and run Oscar Desktop.exe. No Java, Qt, Python, or repository checkout required. Other archives contain dependency source code.'
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "Oscar Desktop $RELEASE_TAG" \
+              --notes 'Windows: download the Windows ZIP, extract it, and run Oscar Desktop.exe. Ubuntu: download the DEB and install with sudo apt install ./oscar-desktop_*.deb. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
+          fi
+          assets=(release/*.zip)
+          test "${#assets[@]}" -eq 1
+          test -f "${assets[0]}"
+          gh release upload "$RELEASE_TAG" "${assets[0]}" --clobber

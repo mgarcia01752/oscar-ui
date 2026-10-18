@@ -30,8 +30,10 @@ For each redistributed binary release, distribute the exact corresponding
 Qt/Qt Jambi/ICU source archives (including patches, if any) alongside the binary,
 with required build instructions and license texts. Upstream source links alone
 are not a permanent source-delivery guarantee: mirror the corresponding source
-with each release. The Windows release workflow attaches corresponding Qt, Qt Jambi, and JDK
-source archives alongside the application ZIP. Our binaries use unmodified Qt/Qt Jambi.
+with each release. Release packages include corresponding Qt, Qt Jambi, and JDK
+source archives inside app/sources/ (Linux: lib/app/sources/), along with a
+SHA-256 manifest. Linux also includes ICU sources. Our binaries use unmodified
+Qt/Qt Jambi.
 The release checklist in docs/packaging.md includes source collection.
 
 Qt sources contain additional third-party license material under LICENSES/ and

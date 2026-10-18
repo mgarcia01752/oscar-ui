@@ -10,6 +10,8 @@ if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$Version") {
 }
 & "$Root/scripts/desktop.ps1" build
 if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+& python "$Root/scripts/collect-release-sources.py"
+if ($LASTEXITCODE -ne 0) { throw 'Source collection failed' }
 & "$Root/scripts/desktop.ps1" package -Type app-image
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed' }
 $Image = "$Root/dist/windows/app-image/Oscar Desktop"

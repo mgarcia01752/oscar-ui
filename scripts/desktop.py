@@ -141,7 +141,15 @@ def package(kind):
         if WINDOWS:
             args += ['--win-menu', '--win-shortcut', '--win-dir-chooser', '--win-upgrade-uuid', '80186748-531f-4a39-a6da-f5c81a1f0730']
         else:
-            args += ['--linux-package-name', 'oscar-desktop', '--linux-shortcut']
+            args += ['--linux-package-name', 'oscar-desktop', '--linux-shortcut',
+                     '--install-dir', '/opt']
+            if kind == 'deb':
+                args += ['--linux-package-deps',
+                         'libgl1, libegl1, libdbus-1-3, libfontconfig1, libfreetype6, '
+                         'libx11-xcb1, libxkbcommon0, libxkbcommon-x11-0, libxcb1, '
+                         'libxcb-cursor0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, '
+                         'libxcb-render-util0, libxcb-shape0, libxcb-randr0, '
+                         'libxcb-xfixes0, libxcb-sync1, libxcb-render0']
     run(args)
 
 

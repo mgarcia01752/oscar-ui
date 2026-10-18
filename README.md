@@ -12,6 +12,20 @@
 
 A cross-platform desktop interface for Comcast Oscar, built with Qt Jambi for Linux and Windows.
 
+## Ubuntu download
+
+For Ubuntu 22.04 or 24.04 x64, download `oscar-desktop_<version>_amd64.deb`
+from the release **Assets**, then install it:
+
+```bash
+sudo apt install ./oscar-desktop_0.1.0_amd64.deb
+```
+
+Launch **Oscar Desktop** from the application menu. Java, Qt, and ICU are bundled;
+APT installs the required system display libraries. No repository checkout or
+separate Java installation is needed. Debian package release CI checks installation
+and launch on both Ubuntu versions; other Debian-based distributions are unverified.
+
 ## Windows download
 
 The Windows release workflow produces `Oscar-Desktop-<version>-windows-x64.zip`
@@ -27,7 +41,13 @@ is needed. Keep the executable, DLLs, `app`, and `runtime` folders together.
 The bundle is currently unsigned. Windows release validation is pending the
 first successful Windows workflow run and a clean-PC check.
 
-Maintainers: see [Windows release packaging](docs/packaging.md).
+Each release uploads two application assets: the Windows ZIP and Ubuntu DEB.
+Dependency sources and checksums are inside the packages. GitHub also displays
+its automatic source-code ZIP/TAR links, which are not runnable applications.
+
+Maintainers: commit changes, then run `tools/push-release.sh` to bump the patch
+version and push its release tag. Separate Ubuntu and Windows workflows build
+both packages automatically. See [Release packaging](docs/packaging.md).
 
 ## Current workspace
 
