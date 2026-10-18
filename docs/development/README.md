@@ -83,6 +83,9 @@ build.
 
 ### Run on the VM desktop from a remote terminal
 
+`run` and `--build-then-run` stop before starting work if the interactive Linux
+display variable is missing. Building does not configure a remote GUI session.
+
 An SSH or remote-editor terminal may have no `DISPLAY` or `XAUTHORITY`, even
 while you are logged into the VM's graphical desktop. Qt then reports
 `could not connect to display`. The accompanying xcb plugin message does not

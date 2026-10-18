@@ -173,6 +173,8 @@ def main():
         parser.error('Use --build-then-run without a separate command.')
     if not args.build_then_run and args.command is None:
         parser.error('Choose a command or --build-then-run.')
+    if args.build_then_run or args.command == 'run':
+        _require_display()
     verify_platform()
     if args.build_then_run:
         print('[desktop] Building and testing the application...', flush=True)
@@ -185,6 +187,16 @@ def main():
         package(args.type)
     else:
         launch(args.command == 'smoke')
+
+
+def _require_display():
+    if (sys.platform == 'linux' and not os.environ.get('DISPLAY')
+            and os.environ.get('QT_QPA_PLATFORM') not in ('offscreen', 'minimal')):
+        raise RuntimeError(
+            'DISPLAY is not set. Open a terminal in the VM graphical desktop, or set '
+            'DISPLAY and XAUTHORITY for its active session before running this command. '
+            'See docs/development/README.md#run-on-the-vm-desktop-from-a-remote-terminal. '
+            'No build or UI launch was started.')
 
 
 if __name__ == '__main__':
