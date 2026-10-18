@@ -51,8 +51,8 @@ public final class OscarBinaryService {
                     .decode(java.nio.ByteBuffer.wrap(bytes)).toString();
             if (text.codePoints().noneMatch(c -> Character.isISOControl(c)
                     && c != '\n' && c != '\r' && c != '\t')) {
-                try { return documents.openText(path, bytes); }
-                catch (InspectionException ignored) { /* Printable binary can also be valid UTF-8. */ }
+                OscarTextCompileCheck.validate(text);
+                return documents.openText(path, bytes);
             }
         } catch (java.nio.charset.CharacterCodingException ignored) {
             // Binary payloads need not be UTF-8.

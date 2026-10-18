@@ -23,6 +23,27 @@ class MainWindowTest {
     }
     @AfterAll static void shutdownQt() { QApplication.shutdown(); }
 
+    @Test void failedTextCompilationKeepsTheDisplayedDocument() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            window.openFile(Files.writeString(temporary.resolve("good.txt"), "Docsis { NetworkAccess 1; }"));
+            await(window::completed);
+            var original = window.currentDocument();
+            String displayed = window.findChild(QPlainTextEdit.class, "configurationText").toPlainText();
+            window.openFile(Files.writeString(temporary.resolve("bad.txt"),
+                    "Docsis { UpstreamServiceFlow { ServiceFlowReference 1; QualityOfServiceParameterSetType 7; } }"));
+            await(window::completed);
+            assertFalse(window.succeeded());
+            assertSame(original, window.currentDocument());
+            assertEquals(displayed, window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
+            assertTrue(window.findChild(QLabel.class, "operationStatus").text().startsWith("OSCAR text compilation failed:"));
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void selectedTlvHexShowsOnlyTheChosenSubtree() throws Exception {
         var window = new MainWindow(false);
         window.show();
@@ -282,7 +303,7 @@ class MainWindowTest {
         window.show();
         try {
             Path file = Files.writeString(temporary.resolve("duplicate.txt"),
-                    "Docsis { DownstreamServiceFlow { ServiceFlowReference 1; QualityOfServiceParameterSetType 7; } }");
+                    "Docsis { DownstreamServiceFlow { ServiceFlowReference 1; QualityOfServiceParameterSetType 07; } }");
             window.openFile(file);
             await(() -> window.completed() && window.succeeded());
             var tree = window.findChild(QTreeWidget.class, "configurationTree");
@@ -383,7 +404,7 @@ class MainWindowTest {
         window.show();
         try {
             Path source = Files.writeString(temporary.resolve("error-message.txt"),
-                    "Docsis { UpstreamPacketClassification { ClassifierError { ErrorMessage; } } }");
+                    "Docsis { UpstreamPacketClassification { ClassifierError { ErrorMessage initial; } } }");
             window.openFile(source);
             await(() -> window.completed() && window.succeeded());
             var tree = window.findChild(QTreeWidget.class, "configurationTree");

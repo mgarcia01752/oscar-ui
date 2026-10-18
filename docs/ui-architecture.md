@@ -233,3 +233,27 @@ Missing descriptions show an explicit fallback. Double-clicking Hex does not
 open a description; expansion remains available through the tree arrows.
 
 - [x] Open the selected hex row's OSCAR description on name double-click.
+
+## Compile text before opening
+
+Opening UTF-8 configuration text first runs OSCAR's
+`ConfigurationFileImport.toByteArray()` on the existing worker. This checks
+syntax and unsigned TLV encoding without a shared secret, MIC generation, file
+writes, or export/reordering. Only after success does the UI display the original
+source and parse its tree. Comments, whitespace, repeated instances, and nested
+TLV order are preserved exactly. This is an encoder check, not modem/CMTS
+admission validation or a signed deployment binary.
+
+`OscarTextCompileCheck` captures OSCAR exceptions and printed encoder failures,
+including failures swallowed upstream. Diagnostics are bounded and shown to the
+user without printing input to the console; stack frames are omitted. Scoped
+console routing captures only the compiling thread and restores the original
+streams in a finally block. Other threads retain their console destinations.
+A failed text check does not fall back to binary decoding or replace the current
+document. Empty files and incomplete reference templates are rejected when
+OSCAR cannot encode them; creating/editing new drafts remains available.
+
+- [x] Compile text through OSCAR before display, without signing credentials.
+- [x] Preserve original source and repeated/nested TLV ordering.
+- [x] Display OSCAR diagnostics and retain the prior document on failure.
+- [x] Validate the example containing SNMP read/write communities.
