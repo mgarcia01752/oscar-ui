@@ -64,7 +64,7 @@ contents. The dialog labels this snapshot and excludes unsaved edits.
 HexDump uses Oscar `HexDump.dumpHexString`. TLV breakdown matches Oscar's
 `--hex toplevel` type-labelled rows, but reuses the existing length-aware payload
 walker (`TlvDictionary.getTopLevelByteLength`, `TlvBuilder.nextTLVIndex`) and
-`HexString` formatting: Oscar 3.1.1 `TlvBuilder.tlvDump` assumes one-byte lengths.
+`HexString` formatting: Oscar 3.1.2 `TlvBuilder.tlvDump` assumes one-byte lengths.
 Rows preserve top-level instance order and nested bytes; padding/end markers
 appear only in HexDump. This is not a recursive decoded TLV tree.
 

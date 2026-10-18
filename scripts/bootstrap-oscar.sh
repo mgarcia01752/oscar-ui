@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION=3.1.1
-COMMIT=cd57cb91e3e550a7706251477c55e9747505d9e7
-SHA256=a180245a430573682f3cc578e2ea004c31a0fd5755429c9ff9c5ab717434aba0
+VERSION=3.1.2
+COMMIT=a0337652e005a7c526a33bf57f74b08d0dde316a
+SHA256=22d7ff91567d9cf5fa449a8783f20714c3bbede9fb3de256e42bc1f80fefddde
 RELEASE="${ROOT}/.tools/oscar-${VERSION}"
 mkdir -p "$RELEASE"
 curl --fail --location --retry 2 "https://github.com/Comcast/Oscar/releases/download/v${VERSION}/oscar-thin.jar" -o "$RELEASE/oscar-thin.jar.download"

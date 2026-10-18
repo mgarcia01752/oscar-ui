@@ -71,12 +71,15 @@ build. Remote GUI sessions require their own display setup.
 ## Oscar dependency
 
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
-[Oscar v3.1.1](https://github.com/Comcast/Oscar/releases/tag/v3.1.1).
+[Oscar v3.1.2](https://github.com/Comcast/Oscar/releases/tag/v3.1.2).
 Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded
 Maven POM into this project's `.m2` cache. Dependencies still come from Maven
 Central; no Oscar source checkout or source build is required.
-Oscar 3.1.1 fixes the classifier-error names to ErroredParameter, ErrorCode,
-and ErrorMessage so those sub-TLVs can be edited. Older text templates with
+Oscar 3.1.2 adds 123 SNMP security/community OID mappings for USM, VACM,
+DH key-change, and community objects. Indexed names still need Net-SNMP
+unless cached; this update does not change the numeric-OID display policy.
+It retains the corrected classifier-error names from 3.1.1:
+ErroredParameter, ErrorCode, and ErrorMessage, so those sub-TLVs can be edited. Older text templates with
 spaced spellings must update those names or be regenerated.
 
 Use Java 21. On Linux/macOS, bootstrap also requires `curl` and either `sha256sum`
@@ -305,7 +308,7 @@ merged with its separate legacy DOCSIS catalog.
 ### Oscar SNMP mapping cache
 
 Oscar owns the SNMP symbol mapping bundled in its dependency JAR. OSCAR-UI
-does not maintain a separate mapping. Oscar 3.1.1 may initialize
+does not maintain a separate mapping. Oscar 3.1.2 may initialize
 `res/DottedTextualNetSNMPMap.json` relative to the working directory at runtime;
 this generated cache is ignored by Git.
 
