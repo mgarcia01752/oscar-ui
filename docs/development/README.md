@@ -244,6 +244,9 @@ For native DEB/MSI builds, see [Build local installers](build-images.md).
 
 ## Push checked changes
 
+See the [Git helper guide](../../tools/git/README.md) for the full command map,
+release options, hooks, and failure recovery.
+
 Use `tools/git/git-push.sh --master` to push only the current `main` or `master`
 branch, or `tools/git/git-push.sh --tag vX.Y.Z` for an existing tag at HEAD.
 Both run the local validation gate through the pre-push hook. See

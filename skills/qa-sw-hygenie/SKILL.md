@@ -51,6 +51,13 @@ project-owned source locations or languages are introduced.
 - Keep secrets out of logs, exception messages, screenshots, and fixtures.
   Masking is not encryption. Check synthetic fixtures into tests only.
 
+## Git helper documentation
+
+When changing `tools/git/`, update `tools/git/README.md` in the same change if
+helper inventory, CLI options, validation, side effects, or recovery behavior
+changes. Check examples against `--help` and keep linked development docs in
+sync. Test-only changes need a README edit only if documented coverage changes.
+
 ## Select validation
 
 Run commands from the repository root. Use existing bootstraps documented in

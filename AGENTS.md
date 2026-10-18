@@ -68,6 +68,10 @@ their contents. Validate the canonical path and both discovery paths after edits
 
 ## Tools organization
 
+Keep [Git helper guide](tools/git/README.md) current in the same change whenever
+`tools/git/` gains, loses, or renames helpers, or changes options, checks, side
+effects, or recovery behavior. Update its inventory and executable examples.
+
 - Keep Git, tag, commit, and release-push helpers and their tests under
   `tools/git/`. Entry points include `push-release.sh` and `update-tag.sh`;
   the cross-platform release implementation is `push-release.py` there.

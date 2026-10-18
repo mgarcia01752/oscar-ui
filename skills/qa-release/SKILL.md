@@ -65,3 +65,6 @@ Skip identical branch/tag uploads; reject conflicting tags and behind/diverged
 branches. For release bumps, compare HEAD with the current version tag rather
 than origin/main: already-pushed feature commits can still need a release.
 Test that no-op paths do not run the checker or change versions/tags.
+
+Keep `tools/git/README.md` synchronized with release/push helper changes in the
+same change: inventory, CLI examples, checks, side effects, and retry behavior.
