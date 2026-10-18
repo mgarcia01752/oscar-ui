@@ -16,6 +16,48 @@ under **Assets**, not a Source code archive.
    **More info → Run anyway**.
 3. Open the Start menu, search for **OSCAR-UI**, and launch it.
 
+## If the downloaded MSI does not open
+
+On some Windows systems, double-clicking the MSI in Downloads may not start
+installation, even after **More info → Run anyway**. Try **right-click → Install**.
+If nothing happens, use the PowerShell command below to start Windows Installer
+explicitly and record a diagnostic log. It does not bypass Windows security
+checks; complete any approval and installer prompts that appear.
+
+### PowerShell
+
+Open **PowerShell** and paste this entire block. It selects the most recently
+downloaded OSCAR-UI MSI in your Downloads folder and prints the selected filename
+before starting installation:
+
+```powershell
+$msi = Get-ChildItem "$env:USERPROFILE\Downloads\OSCAR-UI-*.msi" |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if ($msi) {
+    $log = "$env:TEMP\oscar-ui-install.log"
+    Write-Host "Installing: $($msi.FullName)"
+    $result = Start-Process msiexec.exe -ArgumentList "/i `"$($msi.FullName)`" /L*V `"$log`"" -Wait -PassThru
+    Write-Host "Installer exit code: $($result.ExitCode)"
+    Write-Host "Log: $log"
+} else {
+    Write-Host "No OSCAR-UI MSI found in Downloads. Download the Windows installer first."
+}
+```
+
+After installation completes, launch **OSCAR-UI from the Start menu**. You do
+not need to repeat this command each time you use the application. If installation
+fails, include the exit code and error message when reporting it. Open the log
+from PowerShell with:
+
+```powershell
+notepad "$env:TEMP\oscar-ui-install.log"
+```
+
+Use these commands in PowerShell, not Command Prompt. PowerShell uses
+`$env:USERPROFILE`; Command Prompt uses `%USERPROFILE%`.
+
 ## Install from Command Prompt
 
 If double-clicking does not start installation, open **Command Prompt** (`cmd`)
