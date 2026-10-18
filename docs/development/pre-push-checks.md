@@ -7,6 +7,28 @@ including normal branches, tags, and release-helper pushes. A failure stops
 uploading; fix the failure and retry. GitHub CI remains required because one
 host cannot verify all operating systems or safely run installer removal tests.
 
+## Push a branch or an existing tag
+
+```bash
+# Push only the current main/master branch (this repository uses main).
+tools/git/git-push.sh --master
+
+# Push only an existing tag at the checked-out commit.
+tools/git/git-push.sh --tag v0.2.5
+```
+
+`--branch` is an alias for `--master`. Choose exactly one mode. The helper
+requires a clean checkout, enables the local pre-push hook, and lets that hook
+run all checks before uploading. Failures stop the push. It does not create
+commits or tags, bump versions, force-push, or push other refs. Tag mode also
+requires the tag to match `pom.xml`; replace the example with your actual tag.
+Run from Git Bash on Windows with Python 3 available as `python3`.
+
+A tag push can trigger release CI and publication. To bump a version and create
+a new tag instead, use `tools/git/push-release.sh --push-patch` as described in
+[Release packaging](packaging.md). Conflicting existing hooks are preserved;
+resolve the reported conflict rather than bypassing checks.
+
 ## Enable once per checkout
 
 ```bash
@@ -18,7 +40,7 @@ On Windows use `python` if that is your Python command. This sets repository-loc
 The installer refuses conflicting hook paths or existing active hooks rather
 than overwriting or hiding them. Integrate existing hooks explicitly if needed.
 Git does not install hooks when cloning: enable them in each new checkout.
-`install.sh --development`, the release helper, and `update-tag.sh --push` also
+`install.sh --development`, the release helper, `git-push.sh`, and `update-tag.sh --push` also
 install this hook automatically. CI uses its own workflows rather than local hooks.
 
 ## Run checks directly

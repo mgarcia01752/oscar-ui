@@ -195,3 +195,10 @@ and excludes Maven Wrapper, generated files, and dependencies. Local pre-push
 validation and Java CI run the read-only check automatically.
 
 For native DEB/MSI builds, see [Build local installers](build-images.md).
+
+## Push checked changes
+
+Use `tools/git/git-push.sh --master` to push only the current `main` or `master`
+branch, or `tools/git/git-push.sh --tag vX.Y.Z` for an existing tag at HEAD.
+Both run the local validation gate through the pre-push hook. See
+[push instructions](pre-push-checks.md#push-a-branch-or-an-existing-tag).

@@ -89,7 +89,9 @@ their contents. Validate the canonical path and both discovery paths after edits
 Use `python3 tools/development/pre-push-checks.py` for the local push gate.
 Enable its tracked hook with `python3 tools/git/install-hooks.py` in each clone;
 never overwrite existing unrelated hooks or change global Git configuration.
-Release helpers run preflight before version changes and the hook validates the
+Use `tools/git/git-push.sh --master` for a main/master-only push or `--tag TAG`
+for an existing release tag at HEAD. Both enable and run the same hook; neither
+creates tags or bumps versions. Release helpers run preflight before version changes and the hook validates the
 final committed revision before upload. Do not bypass failed checks to push.
 Keep new check suites integrated with this gate and CI. Local success does not
 replace Windows/Ubuntu installer jobs or prove untested platform behavior.
