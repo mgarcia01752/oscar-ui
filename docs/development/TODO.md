@@ -89,6 +89,26 @@ it is not a pending implementation of a selected hashing algorithm.
   and verified support are available. Catalog presence is not sufficient.
 - [ ] Keep certificate signing outside the current editor capability.
 
+## Future Windows MSI size reduction
+
+Status: deferred at the user's request. The current self-contained installer
+works; keep its bundled Java runtime until a replacement is implemented and
+validated. The user measured 282.7 MiB installed after DLL deduplication,
+including a 76.4 MiB Java runtime.
+
+- [ ] Evaluate an optional existing-Java installation mode. Detect and validate
+  compatible 64-bit Java 21, and configure the launcher before omitting the
+  private runtime; do not simply delete it after installation.
+- [ ] Distinguish installed-size savings from MSI download savings. Keeping a
+  fallback runtime inside the MSI does not reduce that download; evaluate the
+  packaging approach separately before promising a smaller MSI.
+- [ ] Define fallback behavior when compatible Java is absent, and recovery if
+  external Java is later removed or changed. Keep the working bundled option.
+- [ ] Never remove or modify shared Java when uninstalling OSCAR-UI. Explain
+  external-runtime ownership and the dependency in the installer and user guide.
+- [ ] Validate install, launch, upgrade, repair, and uninstall with and without
+  compatible Java in Windows CI; measure actual MSI and installed sizes.
+
 ## Verification backlog
 
 These items consolidate earlier unchecked prototype notes. Some have partial
