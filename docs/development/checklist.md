@@ -94,3 +94,9 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] With masking enabled, retain a secret by leaving both fields blank and
   Type unchanged; replace it without exposing its original value or OID.
 - [ ] Keep Counter64 rejected until the pinned upstream grammar supports it.
+
+- [ ] Open a binary containing known SNMP OIDs: both text and tree show OSCAR
+  names with instance indexes. Verify editing and save/reopen preserve bytes.
+- [ ] Open an unknown numeric OID: preserve its unresolved suffix and encoded bytes.
+- [ ] Open numeric source text: preserve the source while showing known names
+  in the binary-derived tree.

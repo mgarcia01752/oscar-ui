@@ -44,7 +44,7 @@ final class BinaryTreeProjection {
                 builder.add(new TlvVariableBinding(Arrays.copyOfRange(encoded, byteOffset, endOffset),
                         Map.of(tlvTypeCode, definition.lengthBytes())));
                 var exporter = new ConfigurationFileExport(builder, source.configurationType().id());
-                exporter.setDotTextOIDOutputFormat(false);
+                exporter.setDotTextOIDOutputFormat(ConfigurationFileExport.TEXTUAL_OID_FORMAT);
                 String decodedText = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_FOUND_TLV, false);
                 decoded.addAll(documents.parseDecodedTree(decodedText, source.configurationType()).root().childTlvs());
                 byteOffset = endOffset;

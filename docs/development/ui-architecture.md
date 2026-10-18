@@ -426,6 +426,13 @@ retain OSCAR-generated TLV comments. Unknown or lossy imports remain rejected.
 Editable PacketCable import with generated SNMP remains deferred in
 [Development TODO](TODO.md). Raw upstream diagnostics remain hidden while masked.
 
+Binary import and binary tree projection request OSCAR's
+`ConfigurationFileExport.TEXTUAL_OID_FORMAT`. Known SNMP OIDs display symbolic
+names with instance indexes; unresolved portions remain numeric. OSCAR may
+return a partially named OID such as `iso.3.6...` through Net-SNMP.
+Opening a text file preserves its original text while the tree uses decoded
+names. Binary import still checks byte-preserving recompilation.
+
 ## SNMP statement editing
 
 `SnmpValuePane` provides separate OID, Type, and Value controls in both Add

@@ -26,8 +26,11 @@ class SnmpSecretMaskTest {
         String source = Files.readString(example);
         var document = binary.openAuto(example);
         var securityRows = document.root().childTlvs().stream()
-                .filter(node -> node.encodedValueText().replaceFirst("^\\.", "").startsWith("1.3.6.1.6.3.15.")
-                        || node.encodedValueText().replaceFirst("^\\.", "").startsWith("1.3.6.1.6.3.16."))
+                .filter(node -> {
+                    String originalStatement = source.substring(node.sourceStartOffset(), node.sourceEndExclusive());
+                    return originalStatement.contains("1.3.6.1.6.3.15.")
+                            || originalStatement.contains("1.3.6.1.6.3.16.");
+                })
                 .toList();
         assertEquals(4, securityRows.size());
         for (var node : securityRows) {

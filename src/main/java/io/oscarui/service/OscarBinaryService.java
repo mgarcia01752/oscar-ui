@@ -314,7 +314,7 @@ public final class OscarBinaryService {
                 var snapshot = new TlvBuilder();
                 snapshot.add(new TlvVariableBinding(HexFormat.of().parseHex(entry), lengthFieldBytesByTlvType));
                 var exporter = new ConfigurationFileExport(snapshot, configurationType.id());
-                exporter.setDotTextOIDOutputFormat(false);
+                exporter.setDotTextOIDOutputFormat(ConfigurationFileExport.TEXTUAL_OID_FORMAT);
                 String exported = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_FOUND_TLV, false);
                 var decodedEntry = documents.parseDecodedTree(exported, configurationType);
                 String normalized = decodedEntry.text();

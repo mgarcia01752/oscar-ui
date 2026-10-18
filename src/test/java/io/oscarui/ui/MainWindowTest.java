@@ -159,8 +159,8 @@ class MainWindowTest {
             var initialTree = window.findChild(QTreeWidget.class, "configurationTree");
             initialTree.setCurrentItem(initialTree.topLevelItem(0).child(0));
             respond(window, dialog -> {
-                assertEquals("1.3.6.1.2.1.69.1.2.1.4.1",
-                        dialog.findChild(QLineEdit.class, "snmpOid").text().replaceFirst("^\\.", ""));
+                assertEquals("docsDevNmAccessCommunity.1",
+                        dialog.findChild(QLineEdit.class, "snmpOid").text());
                 assertEquals("OctetString", dialog.findChild(QComboBox.class, "snmpType").currentText());
                 assertEquals("lab-community", dialog.findChild(QLineEdit.class, "snmpValue").text());
                 dialog.reject();

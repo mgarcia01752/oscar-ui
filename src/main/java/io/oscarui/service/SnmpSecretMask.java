@@ -270,8 +270,8 @@ public final class SnmpSecretMask {
                 return "CustomSnmpSecret";
             }
         }
-        // Decoded documents use numeric OIDs. An unresolved source-only SNMP
-        // draft cannot safely be classified, so hide its entire varbind.
+        // Resolve symbolic or partially named OIDs through OSCAR as well.
+        // If classification fails, hide the entire varbind.
         if (numeric == null) {
             try {
                 numeric = resolveRule(object).oid();

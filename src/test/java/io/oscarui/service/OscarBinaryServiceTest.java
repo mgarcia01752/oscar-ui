@@ -58,6 +58,15 @@ class OscarBinaryServiceTest {
         assertFalse(Arrays.equals(encoded, changedKey));
     }
 
+    @Test void retainsUnresolvedNumericOidsAcrossBinaryReopen() throws Exception {
+        var source = open("Docsis { Snmp11 1.3.6.1.4.1.55555.999.0 OctetString \"synthetic\"; }");
+        byte[] expected = binary.encode(source, LAB_KEY);
+        var destination = temporary.resolve("unknown-oid.bin");
+        var saved = binary.saveDocument(source, destination, null, LAB_KEY);
+        assertTrue(saved.text().contains(".55555.999.0 OctetString"));
+        assertArrayEquals(expected, binary.encode(binary.openAuto(destination), LAB_KEY));
+    }
+
     @Test void exportsOriginalSnmpValuesWhileMaskedAndReopensBinary() throws Exception {
         var sourcePath = Path.of("cm-config/examples/docsis/1gbps-ds-100mbps-us.txt");
         var source = binary.openAuto(sourcePath);
@@ -73,6 +82,8 @@ class OscarBinaryServiceTest {
         var reopened = binary.openAuto(destination);
         assertEquals(16, reopened.root().childTlvs().stream()
                 .filter(node -> node.tlvName().equals("Snmp11")).count());
+        assertTrue(reopened.text().contains("docsDevNmAccessIp.1 IpAddress"));
+        assertTrue(reopened.text().contains("docsDevNmAccessCommunity.2 OctetString"));
         assertTrue(reopened.text().contains("lab-user"));
         assertFalse(reopened.text().lines().anyMatch(String::isBlank));
         assertTrue(reopened.text().contains("lab-group"));

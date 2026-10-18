@@ -32,6 +32,8 @@ class BinaryTreeProjectionTest {
             assertEquals(1, original.chars().filter(character -> character == ';').count());
             assertTrue(new SelectedTlvHexService().inspect(document, statement).hex().startsWith("0B:"));
         }
+        assertTrue(statements.get(0).encodedValueText().startsWith("docsDevNmAccessIp.1 "));
+        assertTrue(statements.get(2).encodedValueText().startsWith("docsDevNmAccessCommunity.1 "));
         assertTrue(statements.get(2).encodedValueText().contains("public"));
         assertTrue(statements.get(8).encodedValueText().contains("private"));
     }

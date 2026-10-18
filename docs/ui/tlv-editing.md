@@ -60,3 +60,8 @@ compilation succeed. OSCAR 3.2.0 lists Counter64 but cannot compile that type.
 When an existing secret is masked, leave both OID and Value blank and keep
 Type unchanged to retain it. To replace it, fill both fields. Cancel discards
 changes.
+
+Binary files display OSCAR-resolved SNMP names with their instance indexes in
+both the tree and decoded text. Unresolved portions remain numeric; OSCAR may
+return a partial name such as `iso.3.6...`. For text files, the source is
+preserved and the tree shows OSCAR-resolved names.
