@@ -91,6 +91,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: linux-release
@@ -104,7 +105,7 @@ jobs:
           if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --verify-tag --draft \
               --title "OSCAR-UI $RELEASE_TAG" \
-              --notes 'Windows: download and run the MSI installer, then launch OSCAR-UI from the Start menu. Uninstall through Windows Installed apps. Ubuntu: download the DEB and install with sudo apt install ./oscar-ui_*.deb. Remove on Ubuntu with sudo apt remove oscar-ui. Java and Qt are included. Dependency sources and their checksums are inside each package. GitHub Source code downloads are for developers.'
+              --notes-file packaging/release-notes.md
           fi
           assets=(release/*.deb)
           test "${#assets[@]}" -eq 1

@@ -1,0 +1,19 @@
+OSCAR-UI - What this installer installs
+
+This standalone package includes:
+- OSCAR-UI and the OSCAR configuration engine.
+- A private Java runtime, Qt, and Qt Jambi libraries.
+- App-local Microsoft Visual C++ runtime DLLs.
+- License notices, dependency source archives, and source checksums.
+
+Java and Qt do not need to be installed separately. The bundled runtimes
+are for OSCAR-UI; they do not replace your system Java or Qt installation.
+The source archives are included for source availability, not for running
+OSCAR-UI. They contribute substantially to the download and installed size.
+
+Setup adds a Start menu entry and offers a desktop shortcut. Remove the
+application through Windows Settings > Apps > Installed apps > OSCAR-UI.
+Keep your configuration files outside the application installation folder.
+
+OSCAR-UI license follows. Bundled dependencies have their own license notices
+in the installed app and runtime directories.

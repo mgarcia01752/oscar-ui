@@ -18,6 +18,12 @@ application under `app/sources/` on Windows and
 keeps extra source archives and checksum files out of the release asset list.
 Keep bundled license files and the Java runtime's `legal/` directory intact.
 
+The MSI license dialog begins with the component summary from
+`packaging/windows/install-information.txt`, followed by the unchanged project
+license. Both release workflows use `packaging/release-notes.md` when creating
+a new draft. Editing this template does not modify existing GitHub releases.
+Keep these summaries aligned with the actual bundled components.
+
 ## Push the next release
 
 Commit pending work first. From a clean checkout:

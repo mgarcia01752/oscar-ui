@@ -69,10 +69,15 @@ New-Item -ItemType Directory -Force $Output | Out-Null
 # Package the prepared image so Qt and Visual C++ DLLs stay in the installer.
 $InstallerOutput = "$Root/dist/windows/msi"
 if (Test-Path $InstallerOutput) { throw "Output already exists: $InstallerOutput" }
+# Show package contents before the unchanged license in the MSI license dialog.
+$InstallerInformation = "$Root/target/windows-installer-information.txt"
+$PackageInformation = Get-Content "$Root/packaging/windows/install-information.txt" -Raw
+$ApplicationLicense = Get-Content "$Root/LICENSE" -Raw
+[IO.File]::WriteAllText($InstallerInformation, "$PackageInformation`r`n$ApplicationLicense")
 $JPackage = if ($env:JAVA_HOME) { "$env:JAVA_HOME/bin/jpackage.exe" } else { 'jpackage.exe' }
 & $JPackage --type msi --name OSCAR-UI --app-version $Version `
     --vendor 'OSCAR-UI contributors' --app-image $Image --dest $InstallerOutput `
-    --install-dir OSCAR-UI --license-file "$Root/LICENSE" `
+    --install-dir OSCAR-UI --license-file $InstallerInformation `
     --win-menu --win-menu-group OSCAR-UI --win-shortcut --win-shortcut-prompt `
     --win-dir-chooser --win-upgrade-uuid '80186748-531f-4a39-a6da-f5c81a1f0730'
 if ($LASTEXITCODE -ne 0) { throw 'MSI packaging failed' }
