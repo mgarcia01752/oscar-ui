@@ -70,7 +70,53 @@ Run commands from the repository root in a terminal on your graphical desktop:
 For a VM, open the terminal inside the VM's graphical desktop so the application
 uses that session's display. Keep the terminal open while using the application;
 Ctrl+C stops it. Rebuild after Java source changes because `run` uses the existing
-build. Remote GUI sessions require their own display setup.
+build.
+
+### Run on the VM desktop from a remote terminal
+
+An SSH or remote-editor terminal may have no `DISPLAY` or `XAUTHORITY`, even
+while you are logged into the VM's graphical desktop. Qt then reports
+`could not connect to display`. The accompanying xcb plugin message does not
+by itself prove a library is missing.
+
+Log into the VM desktop first and use the same Linux account in the remote
+terminal. For an Ubuntu GNOME Wayland session, inspect its Xwayland command:
+
+```bash
+ps -u "$(id -un)" -o args= | rg '(^|/)Xwayland '
+```
+
+Find the display number (for example, `:0`) and the path after `-auth`.
+Use those exact values below. **Replace the example authorization path before
+running**; do not copy a filename from an earlier session.
+
+```bash
+export DISPLAY=:0
+export XAUTHORITY="/run/user/1000/.mutter-Xwaylandauth.EXAMPLE"
+xdpyinfo >/dev/null
+./scripts/unix/desktop.sh run
+```
+
+Run the UI only if `xdpyinfo` succeeds. The window appears on the **VM desktop**,
+which you view through the VM console or remote desktop—not inside the SSH
+terminal. The display and authorization filename may change after logout or
+reboot. Never print the contents of the authorization file or use `xhost +`.
+
+If Xwayland is absent, or several sessions are listed, open a terminal in the
+intended VM graphical session and run `printenv DISPLAY XAUTHORITY`; use those
+values remotely. For an X11 session where `XAUTHORITY` is unset, leave it unset
+rather than guessing a path. SSH X11 forwarding is a different setup and uses
+the forwarded display assigned by SSH.
+
+If the display connection succeeds but Qt still fails, check dependencies:
+
+```bash
+./install.sh --development --check
+ldd target/app/qt/plugins/platforms/libqxcb.so | rg 'not found'
+```
+
+Normal interactive use should not set `QT_QPA_PLATFORM=offscreen`; that mode is
+for automated tests and does not show a window.
 
 ## Oscar dependency
 
