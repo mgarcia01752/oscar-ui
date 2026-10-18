@@ -60,6 +60,9 @@ checksums; release entry points invoke it after building the application.
 `build/verify-java-distribution.py` checks Java licenses, module notices,
 matching source archives, and build files in extracted/installed packages.
 The Ubuntu release and Windows image/install checks invoke it automatically.
+`build/windows-dll-layout.py --image PATH` prepares a fresh Windows image with
+one copy of the Qt DLLs beside the launcher; `--verify-only` checks an installed
+image. The Windows release and MSI lifecycle scripts call it automatically.
 
 ```bash
 python3 -m unittest discover -s scripts/tests -p 'test_*.py'

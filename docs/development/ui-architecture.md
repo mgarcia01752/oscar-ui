@@ -480,3 +480,11 @@ Shared-secret entry in Settings → Secrets and Tools → Check Shared Secret us
 one `SharedSecretField` control. Its eye icon reveals the value only while held;
 release, pointer exit, focus loss, dialog deactivation or hiding masks it again.
 Disabled fields remain masked. The icon follows the active palette.
+
+## Windows packaged native libraries
+
+The release preparation helper moves Qt DLLs beside the executable and sets
+`java.library.path=$APPDIR/..` in the packaged launcher configuration. Plugins
+remain under `app/qt/plugins`. Java stays private to the application. The MSI
+includes a single copy of the staged Qt libraries; development launches retain
+their separate staging layout. See [packaging](packaging.md#windows-native-dll-layout).

@@ -20,8 +20,9 @@ $Image = "$Root/dist/windows/app-image/OSCAR-UI"
 & python "$Root/scripts/build/verify-java-distribution.py" `
     --runtime "$Image/runtime" --sources "$Image/app/sources" --jdk-home $env:JAVA_HOME
 if ($LASTEXITCODE -ne 0) { throw 'Java distribution verification failed' }
-# Put transitive native dependencies beside the launcher for Windows DLL lookup.
-Copy-Item "$Image/app/qt/lib/*.dll" $Image
+# Keep one copy beside the launcher for Windows DLL dependency lookup.
+& python "$Root/scripts/build/windows-dll-layout.py" --image $Image
+if ($LASTEXITCODE -ne 0) { throw 'Windows DLL layout preparation failed' }
 $VsWhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
 $Vs = & $VsWhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 if ($LASTEXITCODE -ne 0 -or !$Vs) { throw 'Visual Studio C++ redistributable files not found' }

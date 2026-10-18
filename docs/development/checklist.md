@@ -105,3 +105,11 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
   OSCAR Type dropdown, and Value; check hints, invalid input, prefilled values,
   and application of the edited statement. Covered by
   `MainWindowTest.packetCableSnmp64UsesStructuredAddAndEdit`.
+
+## Windows DLL packaging
+
+- [ ] Run portable DLL-layout tests, including relocation, collision rejection,
+  unchanged plugins, and duplicate detection.
+- [ ] On Windows CI, launch the prepared image and installed MSI without Java/Qt
+  developer paths; verify root Qt DLLs exist and app/qt/lib has no DLL copies.
+- [ ] Uninstall and verify that the launcher-side Qt DLLs are removed.

@@ -48,6 +48,8 @@ $OriginalQt = $env:QT_PLUGIN_PATH
 $OriginalPlatform = $env:QT_QPA_PLATFORM
 try {
     Invoke-MsiOperation '/i' 'install'
+    & python "$Root/scripts/build/windows-dll-layout.py" --image $InstallDirectory --verify-only
+    if ($LASTEXITCODE -ne 0) { throw 'Installed Windows DLL layout verification failed' }
     & python "$Root/scripts/build/verify-java-distribution.py" `
         --runtime "$InstallDirectory/runtime" --sources "$InstallDirectory/app/sources" --jdk-home $env:JAVA_HOME
     if ($LASTEXITCODE -ne 0) { throw 'Installed Java distribution verification failed' }
@@ -87,6 +89,11 @@ foreach ($Removed in @("$InstallDirectory/OSCAR-UI.exe", "$InstallDirectory/runt
                        "$MenuDirectory/OSCAR-UI.lnk", $DesktopShortcut)) {
     if (Test-Path $Removed) {
         throw "Uninstall left packaged content: $Removed"
+    }
+}
+foreach ($NativeLibrary in @('Qt6Core.dll', 'Qt6Gui.dll', 'Qt6Widgets.dll')) {
+    if (Test-Path (Join-Path $InstallDirectory $NativeLibrary)) {
+        throw "Uninstall left native library: $NativeLibrary"
     }
 }
 $Remaining = @(Get-ItemProperty "$RegistryRoot/*" |

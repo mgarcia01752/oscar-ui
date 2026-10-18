@@ -265,3 +265,24 @@ for the current POM version. This check runs before local build/test validation.
 A matching local-only tag blocks another bump; push that existing release first.
 Changes already pushed to main can still be released if they follow the current
 version tag. See [push checks](pre-push-checks.md).
+
+## Windows native DLL layout
+
+The release image keeps one copy of each staged Qt library beside `OSCAR-UI.exe`.
+`windows-dll-layout.py` moves DLLs from `app/qt/lib` and changes the launcher's
+`java.library.path` to `$APPDIR/..`. Qt plugins stay in `app/qt/plugins`; Java,
+Visual C++ runtime DLLs, source archives, and notices remain bundled.
+This keeps dependencies in the executable directory used by the
+[Windows DLL search order](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order).
+Developer runs still use their staged `target/app/qt/lib` directory.
+
+The release script rejects unexpected launcher settings or destination
+collisions before relocating files, then smoke-tests a relocated image without
+developer tools on PATH. The MSI lifecycle check verifies the single-copy
+layout after installation, launches from a separate working directory, and
+checks removal of the root Qt DLLs during uninstall. These Windows CI checks
+must pass before publishing; portable layout tests do not prove DLL loading.
+
+The v0.3.0 MSI contained about 21 MiB of duplicate Qt Core/Gui/Widgets DLLs.
+Future savings depend on the exact Qt build; Windows Installed apps size is
+an estimate and need not equal the installed file payload.
