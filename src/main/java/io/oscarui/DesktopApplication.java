@@ -29,7 +29,8 @@ public final class DesktopApplication {
         }
         try {
             QApplication.initialize(APPLICATION_NAME, new String[0]);
-            QApplication.setApplicationDisplayName(APPLICATION_NAME);
+            // An explicit display name makes Qt append it to every native window title.
+            // Keep the default name and let each window own its caption.
             QApplication.setDesktopFileName(LINUX_DESKTOP_FILE_NAME);
             var window = new MainWindow(!smoke);
             window.show();

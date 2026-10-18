@@ -33,7 +33,7 @@ final class AboutDialog extends QDialog {
         this.releaseCheck = releaseCheck == null
                 ? () -> new ReleaseUpdateService().check(installedVersion) : releaseCheck;
         setObjectName("aboutDialog");
-        setWindowTitle("About OSCAR-UI");
+        setWindowTitle("About");
         setMinimumWidth(480);
         var layout = new QVBoxLayout(this);
         layout.setContentsMargins(24, 24, 24, 24);

@@ -167,3 +167,9 @@ About checklist:
 - [x] Keep the UI responsive while checking; report offline failures.
 - [x] Exercise successful and failed checks using deterministic native tests.
 - [ ] Verify external browser launching on installed Ubuntu and Windows builds.
+
+Window captions use OSCAR-UI only for the main window. Dialogs use task titles
+such as Add TLV, Settings - Global, or About without an application suffix.
+Startup leaves Qt's application display name unset, preventing its native
+platform title formatter from appending OSCAR-UI to dialog captions. The
+application name and desktop-file identity remain OSCAR-UI identifiers.
