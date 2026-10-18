@@ -48,11 +48,13 @@ final class AboutDialog extends QDialog {
         var description = new QLabel("View, edit, and inspect cable modem configurations with OSCAR.");
         description.setWordWrap(true);
         layout.addWidget(description);
-        var programs = new QGroupBox("Programs");
+        var programs = new QGroupBox();
         var programGrid = new QGridLayout(programs);
         programGrid.setHorizontalSpacing(24);
         programGrid.setVerticalSpacing(12);
-        programGrid.setColumnStretch(0, 1);
+        programGrid.setColumnStretch(0, 2);
+        programGrid.setColumnStretch(1, 1);
+        programGrid.setColumnStretch(2, 1);
         programGrid.addWidget(new QLabel("<b>Program</b>"), 0, 0);
         programGrid.addWidget(new QLabel("<b>Version</b>"), 0, 1);
         programGrid.addWidget(new QLabel("<b>Link</b>"), 0, 2);
