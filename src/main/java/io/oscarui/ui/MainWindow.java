@@ -31,6 +31,8 @@ public final class MainWindow extends QMainWindow {
         return thread;
     });
 
+    private final QLabel maskingLabel = new QLabel("Masked");
+    private final QFrame maskingDivider = new QFrame();
     private final QLabel typeLabel = new QLabel();
 
     private final ConfigurationTextPane configurationTextPane = new ConfigurationTextPane();
@@ -132,6 +134,13 @@ public final class MainWindow extends QMainWindow {
         var central = new QWidget();
         var layout = new QVBoxLayout(central);
         typeLabel.setObjectName("documentType");
+        maskingLabel.setObjectName("maskingStatus");
+        maskingLabel.setToolTip("SNMP secrets are masked in text and hex displays. Saved values are unchanged.");
+        maskingDivider.setObjectName("maskingDivider");
+        maskingDivider.setFrameShape(QFrame.Shape.VLine);
+        maskingDivider.setFrameShadow(QFrame.Shadow.Sunken);
+        statusBar().addPermanentWidget(maskingLabel);
+        statusBar().addPermanentWidget(maskingDivider);
         statusBar().addPermanentWidget(typeLabel);
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
@@ -168,10 +177,12 @@ public final class MainWindow extends QMainWindow {
         if (appearanceSettings != null) {
             try {
                 appearance = appearanceSettings.load();
+                secrets.replace("", appearanceSettings.loadObfuscateSnmpSecrets());
             } catch (IOException exception) {
                 showStatus("Could not read appearance settings; using System. Save a preference in Settings > Global to replace them.");
             }
         }
+        updateMaskingStatus();
         DesktopTheme.apply(appearance);
         systemAppearanceConnection = QApplication.styleHints().colorSchemeChanged.connect(
                 scheme -> DesktopTheme.apply(appearance, scheme), Qt.ConnectionType.QueuedConnection);
@@ -382,7 +393,7 @@ public final class MainWindow extends QMainWindow {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                     try {
                         if (appearanceSettings != null) {
-                            appearanceSettings.save(dialog.appearance());
+                            appearanceSettings.save(dialog.appearance(), secrets.obfuscateSnmpSecrets());
                         }
                         appearance = dialog.appearance();
                         showMicTlvs.setChecked(dialog.showMicTlvs());
@@ -632,6 +643,11 @@ public final class MainWindow extends QMainWindow {
         });
     }
 
+    private void updateMaskingStatus() {
+        maskingLabel.setVisible(secrets.obfuscateSnmpSecrets());
+        maskingDivider.setVisible(secrets.obfuscateSnmpSecrets());
+    }
+
     private void showSecrets() {
         if (pending != null) {
             return;
@@ -644,7 +660,15 @@ public final class MainWindow extends QMainWindow {
                     configurationTreePane.applyMask(secrets.masking());
                     configurationTextPane.highlight(configurationTreePane.selectedTlv());
                 }
+                updateMaskingStatus();
                 showStatus("");
+                if (appearanceSettings != null) {
+                    try {
+                        appearanceSettings.save(appearance, secrets.obfuscateSnmpSecrets());
+                    } catch (IOException exception) {
+                        showStatus("Masking applied for this session, but the preference could not be saved.");
+                    }
+                }
             }
         } finally {
             dialog.dispose();

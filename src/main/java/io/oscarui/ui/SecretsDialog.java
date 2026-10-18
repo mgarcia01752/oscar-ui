@@ -9,7 +9,7 @@ final class SecretsDialog extends QDialog {
         setWindowTitle("Settings - Secrets");
         setMinimumWidth(500);
         var layout = new QVBoxLayout(this);
-        var note = new QLabel("Session only: values are forgotten when you close OSCAR-UI. "
+        var note = new QLabel("Shared secret and custom rules are session only. The masking checkbox is saved between runs. "
                 + "The shared secret is used for binary export. Encrypted storage is not implemented.");
         note.setWordWrap(true);
         layout.addWidget(note);
@@ -32,7 +32,7 @@ final class SecretsDialog extends QDialog {
         clear.clicked.connect(shared::clear);
         layout.addWidget(clear);
         var buttons = new QDialogButtonBox();
-        var apply = buttons.addButton("Apply for Session", QDialogButtonBox.ButtonRole.AcceptRole);
+        var apply = buttons.addButton("Apply", QDialogButtonBox.ButtonRole.AcceptRole);
         apply.setObjectName("applySecrets");
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);
         buttons.accepted.connect(() -> {

@@ -6,7 +6,7 @@ import java.nio.file.*;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Per-user JSON appearance preferences; never stores document data or secrets. */
+/** Per-user JSON display preferences; never stores document data or secrets. */
 public final class AppearanceSettingsStore {
     private static final int SCHEMA_VERSION = 1;
     private final Path settingsPath;
@@ -47,18 +47,51 @@ public final class AppearanceSettingsStore {
     }
 
     /**
+     * Loads the display-masking preference; older files default to disabled.
+     *
+     * @return whether SNMP secret displays should be masked
+     * @throws IOException if the settings file or preference is invalid
+     */
+    public boolean loadObfuscateSnmpSecrets() throws IOException {
+        load();
+        if (Files.notExists(settingsPath)) {
+            return false;
+        }
+        var value = mapper.readTree(settingsPath.toFile()).get("obfuscateSnmpSecrets");
+        if (value == null) {
+            return false;
+        }
+        if (!value.isBoolean()) {
+            throw new IOException("Invalid SNMP masking preference.");
+        }
+        return value.booleanValue();
+    }
+
+    /**
      * Saves the preference using a temporary file and atomic replacement where supported.
      *
-     * <p>Creates the parent directory as needed; serializes only schema and appearance.
+     * <p>Creates the parent directory as needed; preserves the saved SNMP display-masking preference.
      *
      * @param appearance non-null preference selected by the user
      * @throws IOException if the preference cannot be written or replaced
      */
     public void save(Appearance appearance) throws IOException {
+        save(appearance, loadObfuscateSnmpSecrets());
+    }
+
+    /**
+     * Saves display preferences without storing secret values or custom rules.
+     *
+     * @param appearance non-null appearance preference
+     * @param obfuscateSnmpSecrets whether SNMP displays should be masked
+     * @throws IOException if settings cannot be written or replaced
+     */
+    public void save(Appearance appearance, boolean obfuscateSnmpSecrets) throws IOException {
         Objects.requireNonNull(appearance);
         var settings = mapper.createObjectNode();
         settings.put("version", SCHEMA_VERSION);
         settings.put("appearance", appearance.name().toLowerCase(Locale.ROOT));
+        settings.put("obfuscateSnmpSecrets", obfuscateSnmpSecrets);
         Files.createDirectories(settingsPath.getParent());
         Path temporaryPath = Files.createTempFile(settingsPath.getParent(), ".settings-", ".json");
         try {

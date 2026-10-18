@@ -253,9 +253,11 @@ deferred DOCSIS 4.0 scope is excluded. Placeholders are not deployment defaults.
   Source text and saved files retain real values. This is display masking,
   not encryption or hashing. Leave a masked editor field blank to keep its value.
   **Custom SNMP secrets** accepts a name resolvable by OSCAR or a numeric OID;
-  click **Add**, then **Apply for Session**. Indexed instances match too.
+  click **Add**, then **Apply**. Indexed instances match too.
   **Remove** deletes a custom rule; Cancel discards pending settings changes.
-  Rules and the checkbox are forgotten on exit. Inspection while masked omits
+  Custom rules are forgotten on exit; the checkbox is saved in settings.json.
+  When enabled, **Masked** appears left of the file type with a vertical divider.
+  Inspection while masked omits
   offsets, original sensitive lengths, and ASCII columns; it uses the saved
   binary snapshot even when unsaved edits have removed a secret.
   [Masking architecture and coverage](ui-architecture.md#snmp-display-obfuscation)

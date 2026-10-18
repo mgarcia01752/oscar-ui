@@ -1027,6 +1027,49 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
+    @Test void maskingPreferenceSurvivesRestartAndUpdatesStatus() throws Exception {
+        var store = new io.oscarui.service.AppearanceSettingsStore(temporary.resolve("settings.json"));
+        var window = new MainWindow(false, store);
+        window.show();
+        try {
+            assertFalse(window.findChild(QLabel.class, "maskingStatus").isVisible());
+            respond(window, dialog -> {
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(true);
+                dialog.findChild(QLineEdit.class, "sharedSecret").setText("synthetic-session-key");
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(window, "settingsSecrets").trigger();
+            assertCallback();
+            assertTrue(store.loadObfuscateSnmpSecrets());
+            assertTrue(window.findChild(QLabel.class, "maskingStatus").isVisible());
+            assertTrue(window.findChild(QFrame.class, "maskingDivider").isVisible());
+            assertFalse(Files.readString(temporary.resolve("settings.json")).contains("synthetic-session-key"));
+        } finally { window.close(); window.dispose(); }
+        var next = new MainWindow(false, store);
+        next.show();
+        try {
+            assertTrue(next.findChild(QLabel.class, "maskingStatus").isVisible());
+            respond(next, dialog -> {
+                assertTrue(dialog.findChild(QCheckBox.class, "hashCommunityStrings").isChecked());
+                assertEquals("", dialog.findChild(QLineEdit.class, "sharedSecret").text());
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(false);
+                dialog.reject();
+            });
+            action(next, "settingsSecrets").trigger();
+            assertCallback();
+            assertTrue(store.loadObfuscateSnmpSecrets());
+            respond(next, dialog -> {
+                dialog.findChild(QCheckBox.class, "hashCommunityStrings").setChecked(false);
+                dialog.findChild(QPushButton.class, "applySecrets").click();
+            });
+            action(next, "settingsSecrets").trigger();
+            assertCallback();
+            assertFalse(store.loadObfuscateSnmpSecrets());
+            assertFalse(next.findChild(QLabel.class, "maskingStatus").isVisible());
+            assertFalse(next.findChild(QFrame.class, "maskingDivider").isVisible());
+        } finally { next.close(); next.dispose(); }
+    }
+
     @Test void secretsAreMaskedAndOptionalChecksPreserveDocument() throws Exception {
         var window = new MainWindow(false);
         window.show();

@@ -128,11 +128,12 @@ where available, with replacement fallback on filesystems without atomic moves.
 ```json
 {
   "version": 1,
-  "appearance": "system"
+  "appearance": "system",
+  "obfuscateSnmpSecrets": false
 }
 ```
 
-Only appearance is persisted: no shared secret, community values, configuration
+Appearance and the masking checkbox are persisted: no shared secret, community values, configuration
 contents, or MIC visibility. Settings are outside the installation directory and
 survive uninstall. Noninteractive smoke/tests skip user settings unless a test
 injects a temporary settings store.
@@ -342,3 +343,21 @@ Masked previews are not compilable/exportable replacement configurations.
 
 Deferred symbolic SNMPv3/VACM configuration and its acceptance checks are
 tracked in [Development TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
+
+## Saved masking preference and status
+
+Settings > Secrets > Apply persists `obfuscateSnmpSecrets` alongside appearance
+in the per-user settings JSON. Older files without this field default to false.
+Shared-secret values and custom SNMP rules remain session-only. Cancel does
+not update the preference. Save failures leave masking active for the session
+and display an error explaining that persistence failed.
+
+The bottom-right status bar shows **Masked** followed by a native vertical
+separator immediately left of Text/Binary when masking is enabled. Both the
+label and separator are hidden when disabled. The tooltip explains that saved
+configuration values remain unchanged.
+
+- [x] Restore the checkbox on startup and preserve it across appearance changes.
+- [x] Keep secrets and custom rules out of the settings JSON.
+- [x] Refresh the status indicator on Apply and preserve the setting on Cancel.
+- [x] Test restart, legacy settings, disable, and appearance/masking coexistence.

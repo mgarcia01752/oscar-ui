@@ -18,12 +18,29 @@ class AppearanceSettingsStoreTest {
             store.save(appearance);
             assertEquals(appearance, new AppearanceSettingsStore(settingsPath).load());
             var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(settingsPath.toFile());
-            assertEquals(2, json.size());
+            assertEquals(3, json.size());
             assertEquals(1, json.get("version").intValue());
         }
         try (var files = Files.list(settingsPath.getParent())) {
             assertEquals(1, files.count());
         }
+    }
+
+    @Test void maskingSurvivesReloadAndAppearanceChanges() throws Exception {
+        Path settingsPath = temporary.resolve("settings.json");
+        Files.writeString(settingsPath, "{\"version\":1,\"appearance\":\"system\"}");
+        var store = new AppearanceSettingsStore(settingsPath);
+        assertFalse(store.loadObfuscateSnmpSecrets());
+        store.save(Appearance.DARK, true);
+        var reloaded = new AppearanceSettingsStore(settingsPath);
+        assertTrue(reloaded.loadObfuscateSnmpSecrets());
+        reloaded.save(Appearance.LIGHT);
+        assertTrue(store.loadObfuscateSnmpSecrets());
+        store.save(Appearance.SYSTEM, false);
+        assertFalse(reloaded.loadObfuscateSnmpSecrets());
+        Files.writeString(settingsPath,
+                "{\"version\":1,\"appearance\":\"system\",\"obfuscateSnmpSecrets\":\"yes\"}");
+        assertThrows(IOException.class, store::loadObfuscateSnmpSecrets);
     }
 
     @Test void invalidSettingsAreReportedWithoutRewritingThem() throws Exception {
