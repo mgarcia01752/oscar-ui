@@ -1,0 +1,44 @@
+/*
+ * Synthetic DOCSIS example: 1 Gbps downstream / 100 Mbps upstream.
+ * Downstream Maximum Traffic Burst: 6 MB = 6,000,000 bytes.
+ * SNMP example communities: public (read-only), private (read-write).
+ * These are sample strings, not production credentials. The access rows below
+ * allow any IPv4 manager through the cable interface; scope them for deployment.
+ * BPI is enabled with PrivacyEnable; no custom BPI timers are provisioned.
+ * MaxSubstainedTrafficRate is the identifier used by OSCAR's registry.
+ */
+Docsis {
+    NetworkAccess 1;
+
+    /* Read-only SNMP community, access-table row 1. */
+    Snmp11 docsDevNmAccessIp.1 IpAddress "0.0.0.0";
+    Snmp11 docsDevNmAccessIpMask.1 IpAddress "0.0.0.0";
+    Snmp11 docsDevNmAccessCommunity.1 OctetString "public";
+    Snmp11 docsDevNmAccessControl.1 Integer32 "2";
+    Snmp11 docsDevNmAccessInterfaces.1 HexString "40:00";
+    Snmp11 docsDevNmAccessStatus.1 Integer32 "4";
+
+    /* Read-write SNMP community, access-table row 2. */
+    Snmp11 docsDevNmAccessIp.2 IpAddress "0.0.0.0";
+    Snmp11 docsDevNmAccessIpMask.2 IpAddress "0.0.0.0";
+    Snmp11 docsDevNmAccessCommunity.2 OctetString "private";
+    Snmp11 docsDevNmAccessControl.2 Integer32 "3";
+    Snmp11 docsDevNmAccessInterfaces.2 HexString "40:00";
+    Snmp11 docsDevNmAccessStatus.2 Integer32 "4";
+
+    UpstreamServiceFlow {
+        ServiceFlowReference 1;
+        QualityOfServiceParameterSetType 07;
+        MaxSubstainedTrafficRate 100000000;
+        SchedulingType 2;
+    }
+
+    DownstreamServiceFlow {
+        ServiceFlowReference 2;
+        QualityOfServiceParameterSetType 07;
+        MaxSubstainedTrafficRate 1000000000;
+        MaxTrafficBurst 6000000;
+    }
+
+    PrivacyEnable 1;
+}
