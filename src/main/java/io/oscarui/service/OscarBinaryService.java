@@ -315,7 +315,11 @@ public final class OscarBinaryService {
                 var decodedEntry = documents.parseDecodedTree(exported, configurationType);
                 String normalized = decodedEntry.text();
                 int bodyStart = normalized.indexOf('{', decodedEntry.root().sourceStartOffset()) + 1;
-                decodedSource.append(normalized, bodyStart, decodedEntry.root().terminatorOffset()).append('\n');
+                String body = normalized.substring(bodyStart, decodedEntry.root().terminatorOffset());
+                // Each independently exported wrapper adds boundary blank lines.
+                // Remove those boundaries without changing nested indentation or comments.
+                body = body.replaceFirst("^(?:[\\t ]*\\R)+", "").stripTrailing();
+                decodedSource.append(body).append('\n');
             }
             String text = decodedSource.append("}\n").toString();
             if (text.length() > OscarInspectionService.MAX_BYTES) {

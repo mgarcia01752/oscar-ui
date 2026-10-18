@@ -17,6 +17,13 @@ because it appears in the list.
 - Keep DOCSIS parsing, encoding, and registry ownership in upstream Oscar.
   Do not silently repair upstream TLV identifiers in UI display code. Report
   upstream defects and modify upstream only within the requested scope.
+- The user also authors OSCAR. When investigating a suspected upstream defect,
+  first distinguish OSCAR behavior from an OSCAR-UI integration defect. Report
+  the evidence, affected upstream API/version, and user impact before adding
+  a UI workaround or changing OSCAR. Let the user decide whether to fix OSCAR
+  or accept a UI workaround; wait for that decision unless the session already
+  explicitly authorizes the relevant fix. Continue independent investigation
+  and tests while waiting. Fix confirmed UI-owned defects in OSCAR-UI.
 - Preserve nested TLV structure, instance limits, and text/binary round trips.
   Never log shared secrets or real provisioning credentials; use synthetic
   fixtures. Do not describe hidden or masked settings as encrypted storage.

@@ -26,6 +26,9 @@ class OscarBinaryServiceTest {
         var document = binary.openAuto(Files.write(temporary.resolve("comments.bin"), bytes));
         assertTrue(document.text().contains("/* TLV: [3]"));
         assertTrue(document.text().contains("/* TLV: [25.1]"));
+        assertFalse(document.text().lines().anyMatch(String::isBlank));
+        assertTrue(document.text().lines().filter(line -> line.contains("ServiceFlowReference"))
+                .allMatch(line -> Character.isWhitespace(line.charAt(0))));
         assertArrayEquals(bytes, document.origin().bytes());
         assertEquals(java.util.List.of(25, 1), document.root().childTlvs().get(1).childTlvs().getFirst().tlvPath());
     }
@@ -67,6 +70,7 @@ class OscarBinaryServiceTest {
         assertEquals(16, reopened.root().childTlvs().stream()
                 .filter(node -> node.tlvName().equals("Snmp11")).count());
         assertTrue(reopened.text().contains("lab-user"));
+        assertFalse(reopened.text().lines().anyMatch(String::isBlank));
         assertTrue(reopened.text().contains("lab-group"));
         assertTrue(reopened.text().contains("public"));
         assertTrue(reopened.text().contains("private"));
