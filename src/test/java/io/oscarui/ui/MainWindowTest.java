@@ -242,7 +242,7 @@ class MainWindowTest {
         }
     }
 
-    @Test void binaryInspectUsesMaskedListingForBothViews() throws Exception {
+    @Test void binaryHexRequiresAcknowledgmentAndBreakdownRemainsMasked() throws Exception {
         var service = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(service);
         var source = service.open(Files.writeString(temporary.resolve("inspect-secret.txt"),
@@ -260,13 +260,28 @@ class MainWindowTest {
             });
             action(window, "settingsSecrets").trigger();
             assertCallback();
+            respond(window, dialog -> {
+                var prompt = (QMessageBox) dialog;
+                assertEquals(prompt.button(QMessageBox.StandardButton.Cancel), prompt.defaultButton());
+                assertNull(dialog.findChild(QPlainTextEdit.class, "binaryInspectionText"));
+                prompt.button(QMessageBox.StandardButton.Cancel).click();
+            });
+            action(window, "inspectHexDump").trigger();
+            assertCallback();
+            QApplication.processEvents();
+            assertTrue(window.findChildren(BinaryInspectionDialog.class).isEmpty());
+            String expectedHex = com.comcast.oscar.utilities.HexDump.dumpHexString(Files.readAllBytes(file));
             for (String actionName : java.util.List.of("inspectHexDump", "inspectTlvBreakdown")) {
                 var closed = new java.util.concurrent.atomic.AtomicBoolean();
-                respond(window, dialog -> {
+                respondToInspection(window, actionName, dialog -> {
                     String listing = dialog.findChild(QPlainTextEdit.class, "binaryInspectionText").toPlainText();
-                    assertTrue(listing.contains("SNMPv1v2cCoexistenceConfig | FF FF FF FF"));
-                    assertFalse(listing.contains("6C:61:62"));
-                    assertFalse(listing.contains("lab-private"));
+                    if (actionName.equals("inspectHexDump")) {
+                        assertEquals(expectedHex, listing);
+                    } else {
+                        assertTrue(listing.contains("SNMPv1v2cCoexistenceConfig | FF FF FF FF"));
+                        assertFalse(listing.contains("6C:61:62"));
+                        assertFalse(listing.contains("lab-private"));
+                    }
                     dialog.reject();
                     closed.set(true);
                 });
@@ -590,7 +605,7 @@ class MainWindowTest {
             assertTrue(action(window, "inspectTlvBreakdown").isEnabled());
             for (String actionName : java.util.List.of("inspectHexDump", "inspectTlvBreakdown")) {
                 var closed = new java.util.concurrent.atomic.AtomicBoolean();
-                respond(window, dialog -> {
+                respondToInspection(window, actionName, dialog -> {
                     try {
                         assertEquals("binaryInspectionDialog", dialog.objectName());
                         var output = dialog.findChild(QPlainTextEdit.class, "binaryInspectionText");
@@ -1463,6 +1478,20 @@ class MainWindowTest {
     }
 
     private QAction action(MainWindow window, String name) { return window.findChild(QAction.class, name); }
+
+    private void respondToInspection(MainWindow window, String actionName, Consumer<QDialog> response) {
+        if (actionName.equals("inspectHexDump")) {
+            respond(window, dialog -> {
+                var prompt = (QMessageBox) dialog;
+                assertTrue(prompt.text().contains("clear text"));
+                assertNull(prompt.findChild(QPlainTextEdit.class, "binaryInspectionText"));
+                prompt.button(QMessageBox.StandardButton.Yes).click();
+                respond(window, response);
+            });
+        } else {
+            respond(window, response);
+        }
+    }
 
     private void respond(MainWindow window, Consumer<QDialog> response) {
         var timer = new QTimer(window);

@@ -22,6 +22,11 @@ against casual viewing by masking recognized sensitive SNMP values in the UI.
 Protected text uses `********`, and protected hex displays use `FF FF FF FF`.
 These fixed placeholders do not reflect the original value's length.
 
+**Inspect → HexDump** is an explicit exception: it requires acknowledgment each
+time, then shows the original bytes and ASCII, including secrets, even when
+masking is enabled. Cancel leaves the dump unopened. This does not disable
+masking in other views.
+
 This is display masking, not encryption, password hashing, access control, or
 secure deletion. The underlying configuration retains its real values, and
 saving or exporting a configuration does not replace those values with masks.

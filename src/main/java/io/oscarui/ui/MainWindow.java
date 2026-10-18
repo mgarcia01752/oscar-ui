@@ -482,12 +482,21 @@ public final class MainWindow extends QMainWindow {
         if (pending != null || document == null || document.path() != null || document.origin() == null) {
             return;
         }
+        if (view == BinaryInspectionDialog.View.HEX_DUMP
+                && QMessageBox.warning(this, "View HexDump?",
+                "HexDump shows the original binary bytes. Community strings, passwords, and other secrets "
+                        + "may be visible in clear text, even when masking is enabled. Do you acknowledge and want to continue?",
+                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
+                QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
+            return;
+        }
         Document snapshot = document;
-        submit(() -> secrets.masking().enabled() ? binaryService.maskedInspection(snapshot, secrets.masking()) : switch (view) {
+        boolean masked = view == BinaryInspectionDialog.View.TLV_BREAKDOWN && secrets.masking().enabled();
+        submit(() -> masked ? binaryService.maskedInspection(snapshot, secrets.masking()) : switch (view) {
             case HEX_DUMP -> binaryService.hexDump(snapshot);
             case TLV_BREAKDOWN -> binaryService.tlvBreakdown(snapshot);
         }, listing -> {
-            var dialog = new BinaryInspectionDialog(this, view, listing, secrets.masking().enabled());
+            var dialog = new BinaryInspectionDialog(this, view, listing, masked);
             try {
                 dialog.exec();
             } finally {

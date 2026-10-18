@@ -6,12 +6,17 @@
 
 Open a binary configuration, then choose:
 
-- **Inspect → HexDump** for the binary hex listing.
+- **Inspect → HexDump** for the original offset/hex/ASCII listing, after acknowledgment.
 - **Inspect → TLV breakdown** for its decoded TLV structure.
 
 Inspect is disabled when there is no open file or the current document is Text.
 Hovering the menu explains that a binary file must be selected. These views use
 the binary snapshot from the last open or save; unsaved edits are not included.
+
+HexDump first asks you to acknowledge that community strings, passwords, and
+other secrets may be visible in clear text. **Cancel** is the default and shows
+no dump. **Yes** opens the original bytes, even when masking is enabled. This
+acknowledgment is required each time and does not change your masking setting.
 
 ## Selected TLV hex
 
@@ -24,7 +29,7 @@ Double-click a name in this popup to view its description.
 
 With **Settings → Secrets → Obfuscate SNMP secrets** enabled, protected hex
 records and their containing parents display a fixed `FF FF FF FF` replacement.
-Whole-file masked inspection omits original sensitive lengths, offsets and ASCII
+Masked TLV breakdown omits original sensitive lengths, offsets and ASCII
 columns. The output is a masked view, not the file's literal bytes.
 
 Inspection does not check a shared secret or certify configuration validity.

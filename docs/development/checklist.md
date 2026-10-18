@@ -75,3 +75,10 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Pass `verify-java-distribution.py` on extracted DEB and installed MSI.
 - [ ] Retain GPLv2/Classpath text and all build-JDK module notice content.
 - [ ] Recheck source, version, and checksum pins together on Java upgrades.
+
+### HexDump acknowledgment
+
+- [ ] Opening HexDump always asks before showing original bytes; Cancel is default.
+- [ ] Cancel shows no dump; Yes shows OSCAR's traditional hex/offset/ASCII listing.
+- [ ] With masking enabled, TLV breakdown stays masked after viewing HexDump.
+- [ ] Reopening HexDump asks again; the saved masking preference is unchanged.

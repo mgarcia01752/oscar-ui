@@ -179,7 +179,11 @@ to wait for the current operation.
 `OscarBinaryService` renders the immutable bytes from the last open/binary save
 on the existing worker. It does not reread disk, encode edits, sign data, or log
 contents. The dialog labels this snapshot and excludes unsaved edits.
-HexDump uses Oscar `HexDump.dumpHexString`. TLV breakdown matches Oscar's
+HexDump requires acknowledgment on every open that original bytes can expose
+community strings and other secrets in clear text. Cancel is the default; no
+listing is generated or displayed until Yes is selected. After acknowledgment,
+HexDump uses Oscar `HexDump.dumpHexString` without masking, regardless of the
+masking preference. The preference and other masked views remain unchanged. TLV breakdown matches Oscar's
 `--hex toplevel` type-labelled rows, but reuses the existing length-aware payload
 walker (`TlvDictionary.getTopLevelByteLength`, `TlvBuilder.nextTLVIndex`) and
 `HexString` formatting: Oscar 3.1.2 `TlvBuilder.tlvDump` assumes one-byte lengths.
@@ -391,9 +395,10 @@ hidden while obfuscation is active because upstream errors may echo input.
 Selected-TLV hex masks the entire protected record and every ancestor that
 contains its bytes, while preserving unaffected sibling rows. Binary Inspect
 uses the original binary snapshot, not the current edited tree, to classify
-records. Both inspection modes show a labeled top-level masked preview without
+records. TLV breakdown shows a labeled top-level masked preview without
 original offsets or ASCII columns. If safe snapshot mapping fails, the entire
-listing becomes the fixed hex mask; raw bytes are never used as a fallback.
+TLV breakdown becomes the fixed hex mask; raw bytes are never used as a fallback.
+HexDump is a separate, explicitly acknowledged clear-text view as described above.
 Masked previews are not compilable/exportable replacement configurations.
 
 Deferred symbolic SNMPv3/VACM configuration and its acceptance checks are
