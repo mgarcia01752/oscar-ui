@@ -8,9 +8,24 @@ no repository checkout or separate Java/Qt installation is needed.
 | Windows x64 `.msi` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, app-local Visual C++ runtime DLLs, Start menu entry, and optional desktop shortcut |
 | Ubuntu 22.04 / 24.04 x64 `.deb` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, ICU, and application-menu launcher; APT installs required system display libraries |
 
-**Both packages also contain license notices, dependency source archives, and
-source checksums.** Source archives are not needed to run the UI, but are bundled
-for source availability and contribute substantially to package size.
+## Included dependency source archives
+
+| Dependency | Compressed source size (approx.) | Included in |
+| --- | ---: | --- |
+| OpenJDK 21.0.10+7 | 110 MB | Windows and Ubuntu |
+| Qt 6.8.3 | 46 MB | Windows and Ubuntu |
+| Qt Jambi 6.8.3 | 5 MB | Windows and Ubuntu |
+| ICU 73.2 | 27 MB | Ubuntu |
+
+These are **source archive sizes**, not runtime sizes or total installed sizes.
+The archives are bundled for source availability and contribute substantially
+to installer size. Users do not need to download or compile them separately.
+Both packages include license notices and source checksums.
+
+## Installation instructions
+
+[Windows installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/windows.md)
+· [Ubuntu installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/ubuntu.md)
 
 - **Windows:** run the MSI and launch OSCAR-UI from the Start menu.
   Uninstall through Settings → Apps → Installed apps → OSCAR-UI.
