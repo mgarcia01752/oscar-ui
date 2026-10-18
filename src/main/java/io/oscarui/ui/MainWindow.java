@@ -3,6 +3,8 @@ package io.oscarui.ui;
 import io.oscarui.service.*;
 import io.oscarui.service.OscarDocumentService.*;
 import io.qt.core.QTimer;
+import io.qt.core.QEvent;
+import io.qt.gui.QHelpEvent;
 import io.qt.core.QStandardPaths;
 import io.qt.core.QMetaObject;
 import io.qt.core.QObject;
@@ -69,6 +71,8 @@ public final class MainWindow extends QMainWindow {
     private final SessionSecrets secrets = new SessionSecrets();
 
     private QMenu saveAsMenu;
+
+    private QMenu inspectMenu;
 
     private final QTimer poller = new QTimer(this);
 
@@ -259,6 +263,23 @@ public final class MainWindow extends QMainWindow {
         return document;
     }
 
+    /**
+     * Shows the inspection prerequisite even when its menu action is disabled.
+     *
+     * @param watched object receiving the event
+     * @param event event dispatched by Qt on the UI thread
+     * @return true when the Inspect tooltip was handled, otherwise Qt's result
+     */
+    @Override public boolean eventFilter(QObject watched, QEvent event) {
+        if (watched == menuBar() && event.type() == QEvent.Type.ToolTip
+                && event instanceof QHelpEvent helpEvent && inspectMenu != null
+                && menuBar().actionAt(helpEvent.pos()) == inspectMenu.menuAction()) {
+            QToolTip.showText(helpEvent.globalPos(), inspectMenu.menuAction().toolTip(), menuBar());
+            return true;
+        }
+        return super.eventFilter(watched, event);
+    }
+
     @Override protected void closeEvent(QCloseEvent event) {
         if (interactive && pending != null) {
             event.ignore();
@@ -358,7 +379,8 @@ public final class MainWindow extends QMainWindow {
         });
         settings.addAction(secretsAction);
         secretsAction.triggered.connect(this::showSecrets);
-        var inspectMenu = menuBar().addMenu("&Inspect");
+        inspectMenu = menuBar().addMenu("&Inspect");
+        menuBar().installEventFilter(this);
         inspectMenu.setObjectName("inspectMenu");
         inspectMenu.addAction(inspectHexDump);
         inspectMenu.addAction(inspectTlvBreakdown);
@@ -769,6 +791,11 @@ public final class MainWindow extends QMainWindow {
         saveAsShortcut.setEnabled(idle && document != null);
         secretsAction.setEnabled(idle);
         boolean binaryActive = idle && document != null && document.path() == null && document.origin() != null;
+        inspectMenu.setEnabled(binaryActive);
+        inspectMenu.menuAction().setToolTip(binaryActive
+                ? "Inspect the active binary file."
+                : idle ? "A binary file must be selected to inspect the file."
+                : "Wait for the current operation to finish before inspecting.");
         inspectHexDump.setEnabled(binaryActive);
         inspectTlvBreakdown.setEnabled(binaryActive);
         configChecks.setEnabled(idle && document != null);

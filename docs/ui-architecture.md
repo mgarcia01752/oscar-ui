@@ -40,10 +40,13 @@ components. Run the service tests and the native Qt tests described in the
 
 ## Binary inspection
 
-Inspect follows Settings in the menu bar. HexDump and TLV breakdown are enabled
+Inspect follows Settings in the menu bar. The menu itself and its HexDump and
+TLV breakdown actions are enabled
 only when idle with an active binary document (`path == null`, `origin != null`).
 Opening text or saving as text disables both even if the document retains a
-binary origin for overwrite protection. New text drafts also disable inspection.
+binary origin for overwrite protection. New text drafts also disable inspection. Hovering over the disabled Inspect
+menu explains that a binary file must be selected; while busy, it asks the user
+to wait for the current operation.
 
 `OscarBinaryService` renders the immutable bytes from the last open/binary save
 on the existing worker. It does not reread disk, encode edits, sign data, or log
@@ -58,6 +61,7 @@ appear only in HexDump. This is not a recursive decoded TLV tree.
 Inspection checklist:
 
 - [x] Menu order and binary-only enablement, including busy states.
+- [x] Disable the Inspect menu for no file/text; show a prerequisite hover hint.
 - [x] Read-only, selectable, monospace listings with no line wrapping.
 - [x] Original snapshot retained after edits or external file deletion.
 - [x] Repeated TLV order, padding/end-marker handling, and text-save gating.

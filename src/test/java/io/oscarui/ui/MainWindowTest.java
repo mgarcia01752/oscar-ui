@@ -119,11 +119,24 @@ class MainWindowTest {
         try {
             assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&About"),
                     window.menuBar().actions().stream().map(QAction::text).toList());
+            var inspectMenu = window.findChild(QMenu.class, "inspectMenu");
+            assertFalse(inspectMenu.isEnabled());
+            var hoverPosition = window.menuBar().actionGeometry(inspectMenu.menuAction()).center();
+            var tooltipEvent = new io.qt.gui.QHelpEvent(QEvent.Type.ToolTip, hoverPosition,
+                    window.menuBar().mapToGlobal(hoverPosition));
+            try {
+                QApplication.sendEvent(window.menuBar(), tooltipEvent);
+                assertEquals("A binary file must be selected to inspect the file.", QToolTip.text());
+                QToolTip.hideText();
+            } finally {
+                tooltipEvent.dispose();
+            }
             assertFalse(action(window, "inspectHexDump").isEnabled());
             assertFalse(action(window, "inspectTlvBreakdown").isEnabled());
             byte[] bytes = java.util.HexFormat.of().parseHex("030101ff00");
             window.openFile(Files.write(temporary.resolve("inspect.bin"), bytes));
             await(() -> window.completed());
+            assertTrue(inspectMenu.isEnabled());
             assertTrue(action(window, "inspectHexDump").isEnabled());
             assertTrue(action(window, "inspectTlvBreakdown").isEnabled());
             for (String actionName : java.util.List.of("inspectHexDump", "inspectTlvBreakdown")) {
@@ -148,6 +161,7 @@ class MainWindowTest {
             }
             window.openFile(Files.writeString(temporary.resolve("inspect.txt"), "Docsis { NetworkAccess 1; }"));
             await(() -> window.completed());
+            assertFalse(inspectMenu.isEnabled());
             assertFalse(action(window, "inspectHexDump").isEnabled());
             assertFalse(action(window, "inspectTlvBreakdown").isEnabled());
         } finally {
