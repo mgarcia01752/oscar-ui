@@ -48,22 +48,22 @@ final class AboutDialog extends QDialog {
         var description = new QLabel("View, edit, and inspect cable modem configurations with OSCAR.");
         description.setWordWrap(true);
         layout.addWidget(description);
-        var programs = new QGroupBox();
-        var programGrid = new QGridLayout(programs);
-        programGrid.setHorizontalSpacing(24);
-        programGrid.setVerticalSpacing(12);
-        programGrid.setColumnStretch(0, 2);
-        programGrid.setColumnStretch(1, 1);
-        programGrid.setColumnStretch(2, 1);
-        programGrid.addWidget(new QLabel("<b>Program</b>"), 0, 0);
-        programGrid.addWidget(new QLabel("<b>Version</b>"), 0, 1);
-        programGrid.addWidget(new QLabel("<b>Link</b>"), 0, 2);
-        addProgramRow(programGrid, 1, "OSCAR-UI", installedVersion, ReleaseUpdateService.UI_PROJECT);
-        addProgramRow(programGrid, 2, "OSCAR", build.getProperty("oscar.version", "unknown"),
+        var packages = new QGroupBox();
+        var packageGrid = new QGridLayout(packages);
+        packageGrid.setHorizontalSpacing(24);
+        packageGrid.setVerticalSpacing(12);
+        packageGrid.setColumnStretch(0, 2);
+        packageGrid.setColumnStretch(1, 1);
+        packageGrid.setColumnStretch(2, 1);
+        packageGrid.addWidget(new QLabel("<b>Package</b>"), 0, 0);
+        packageGrid.addWidget(new QLabel("<b>Version</b>"), 0, 1);
+        packageGrid.addWidget(new QLabel("<b>Link</b>"), 0, 2);
+        addPackageRow(packageGrid, 1, "OSCAR-UI", installedVersion, ReleaseUpdateService.UI_PROJECT);
+        addPackageRow(packageGrid, 2, "OSCAR", build.getProperty("oscar.version", "unknown"),
                 ReleaseUpdateService.OSCAR_PROJECT);
-        addProgramRow(programGrid, 3, "Qt Jambi", build.getProperty("qt.version", "unknown"),
+        addPackageRow(packageGrid, 3, "Qt Jambi", build.getProperty("qt.version", "unknown"),
                 "https://github.com/OmixVisualization/qtjambi");
-        layout.addWidget(programs);
+        layout.addWidget(packages);
         var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
         layout.addWidget(license);
@@ -123,12 +123,12 @@ final class AboutDialog extends QDialog {
         checkButton.setEnabled(true);
     }
 
-    private static void addProgramRow(QGridLayout grid, int row, String programName,
-                                      String programVersion, String projectUrl) {
-        grid.addWidget(new QLabel(programName), row, 0);
-        grid.addWidget(new QLabel(programVersion), row, 1);
+    private static void addPackageRow(QGridLayout grid, int row, String packageName,
+                                      String packageVersion, String projectUrl) {
+        grid.addWidget(new QLabel(packageName), row, 0);
+        grid.addWidget(new QLabel(packageVersion), row, 1);
         var projectLink = link("GitHub", projectUrl);
-        projectLink.setAccessibleName(programName + " on GitHub");
+        projectLink.setAccessibleName(packageName + " on GitHub");
         projectLink.setToolTip(projectUrl);
         grid.addWidget(projectLink, row, 2);
     }

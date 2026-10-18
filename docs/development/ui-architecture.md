@@ -151,7 +151,7 @@ Appearance checklist:
 ## About and release checks
 
 `AboutDialog` owns the branded About panel, project links, build versions, and
-manual update status. A Program | Version | Link grid lists OSCAR-UI, OSCAR,
+manual update status. A Package | Version | Link grid lists OSCAR-UI, OSCAR,
 and Qt Jambi with clickable GitHub links. The OSCAR-UI license links to the
 repository’s `LICENSE` file on GitHub. Maven filters `build-info.properties` from the project,
 Oscar, and Qt Jambi versions so packaged and development builds report their
