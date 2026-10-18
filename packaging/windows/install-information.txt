@@ -10,6 +10,8 @@ Java and Qt do not need to be installed separately. The bundled runtimes
 are for OSCAR-UI; they do not replace your system Java or Qt installation.
 The source archives are included for source availability, not for running
 OSCAR-UI. They contribute substantially to the download and installed size.
+Qt DLLs are stored once beside the launcher. Download size, installed file
+size, and the estimate in Windows Installed apps can differ.
 
 Setup adds a Start menu entry and offers a desktop shortcut. Remove the
 application through Windows Settings > Apps > Installed apps > OSCAR-UI.

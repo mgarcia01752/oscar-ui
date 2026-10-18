@@ -21,15 +21,30 @@ No separate OSCAR installation is needed.
 
 | Dependency | Compressed source size (approx.) | Included in |
 | --- | ---: | --- |
-| OpenJDK 21.0.10+7 | 110 MB | Windows and Ubuntu |
-| Qt 6.8.3 | 46 MB | Windows and Ubuntu |
-| Qt Jambi 6.8.3 | 5 MB | Windows and Ubuntu |
+| OpenJDK 21.0.10+7 | 114.8 MB | Windows and Ubuntu |
+| Qt 6.8.3 | 48.4 MB | Windows and Ubuntu |
+| Qt Jambi 6.8.3 | 5.2 MB | Windows and Ubuntu |
 | ICU 73.2 | 27 MB | Ubuntu |
 
 These are **source archive sizes**, not runtime sizes or total installed sizes.
 The archives are bundled for source availability and contribute substantially
 to installer size. Users do not need to download or compile them separately.
 Both packages include license notices and source checksums.
+
+## Package size
+
+Windows packaging keeps one copy of the Qt DLLs beside the launcher. Applied to
+the v0.3.0 payload, this removes **21.9 MB (20.93 MiB)** of duplicate files;
+Java and dependency source archives remain included.
+
+Download size is shown beside each release asset. It differs from the installed
+file size, and Windows **Installed apps** may show a different estimate. The
+v0.3.0 file payload measured 318.4 MB; applying only DLL deduplication reduced
+that extracted payload to 296.4 MB. These are reference measurements, not a
+size guarantee for this release or a measurement of a newly built MSI.
+
+MB uses decimal bytes; MiB uses binary bytes. See the
+[Windows installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/windows.md#installation-size).
 
 ## Installation instructions
 

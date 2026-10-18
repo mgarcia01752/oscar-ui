@@ -283,6 +283,35 @@ layout after installation, launches from a separate working directory, and
 checks removal of the root Qt DLLs during uninstall. These Windows CI checks
 must pass before publishing; portable layout tests do not prove DLL loading.
 
-The v0.3.0 MSI contained about 21 MiB of duplicate Qt Core/Gui/Widgets DLLs.
-Future savings depend on the exact Qt build; Windows Installed apps size is
-an estimate and need not equal the installed file payload.
+## Windows package size measurements
+
+The published v0.3.0 MSI download was 225,156,232 bytes (225.2 MB). Its MSI file
+table totals 318,381,949 bytes (318.4 MB, about 303.6 MiB) of installed payload:
+
+| Component | Approximate size (MB) |
+| --- | ---: |
+| Dependency source archives | 168.5 |
+| Private Java runtime | 80.2 |
+| Qt libraries and plugins under app/qt | 23.9 |
+| Launcher, root native DLLs, and other files | 24.6 |
+| Application dependency JARs | 21.2 |
+
+The source archives include OpenJDK (114.8 MB), Qt (48.4 MB), and Qt Jambi
+(5.2 MB). These are compressed archives stored inside the installed application,
+not runtime sizes. Removing Java alone would not remove the other components.
+
+Applying the single-copy DLL layout to the extracted v0.3.0 MSI reduced its file
+payload to **296,436,193 bytes (296.4 MB, about 282.7 MiB)**, saving
+**21,945,756 bytes (20.93 MiB)** including the small launcher configuration edit.
+This validates the layout savings, not native Windows launch behavior or the
+compressed size of the next MSI. Windows CI must validate the resulting package.
+
+Use decimal MB (1,000,000 bytes) and binary MiB (1,048,576 bytes) explicitly.
+Windows Installed apps reported 519 MB in the observed installation, while its
+application folder matched the roughly 304 MiB file payload. The cause of that
+estimate discrepancy has not been established; do not describe it as measured
+runtime usage or assume it is caused by cached MSI files.
+
+For each release, measure the final MSI asset and installed file tree separately.
+Keep source archive sizes distinct from runtime and total installed sizes in
+`packaging/release-notes.md`. Do not promise a fixed Windows displayed size.

@@ -113,3 +113,6 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] On Windows CI, launch the prepared image and installed MSI without Java/Qt
   developer paths; verify root Qt DLLs exist and app/qt/lib has no DLL copies.
 - [ ] Uninstall and verify that the launcher-side Qt DLLs are removed.
+
+- [ ] Record final MSI download size and installed file totals separately; update
+  release size notes with explicit MB/MiB units and label reference measurements.

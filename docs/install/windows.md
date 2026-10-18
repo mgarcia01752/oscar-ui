@@ -86,6 +86,25 @@ notepad "%TEMP%\oscar-ui-install.log"
 Include the error message and the lines surrounding `Return value 3`, if present,
 when reporting the problem. Review logs for personal information before sharing.
 
+## Installation size
+
+The MSI includes a private Java runtime, Qt, the application libraries, and
+compressed dependency source archives. Java does not need a separate install
+or uninstall. Source archives are included for source availability and account
+for a substantial part of the package; they are not loaded to run the UI.
+
+Windows packaging now keeps one copy of the Qt DLLs. Testing this layout against
+the v0.3.0 files removed **20.93 MiB (21.9 MB)**, reducing that extracted payload
+from **318.4 MB to 296.4 MB**. New release sizes can differ. Existing installations
+receive the change only after installing a release built with the new layout.
+
+The release asset lists the compressed download size. Windows **Installed apps**
+shows an estimate that can differ from the files in the installation directory.
+For comparison, PowerShell's `1MB` divisor measures MiB (1,048,576 bytes), while
+MB here means 1,000,000 bytes. See the
+[packaging measurements](../development/packaging.md#windows-package-size-measurements)
+for the component breakdown.
+
 ## Update
 
 Close OSCAR-UI and download the newer Windows MSI from
