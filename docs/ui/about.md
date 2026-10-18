@@ -5,6 +5,8 @@
 Choose **About → About OSCAR-UI** to see installed component versions in the
 **Package | Version | Link** table. Project links open OSCAR-UI, OSCAR and Qt
 Jambi on GitHub. The license link opens OSCAR-UI's license in its repository.
+**Report an issue with OSCAR-UI** opens the project's GitHub issue form in your
+browser.
 **About → About Qt** displays the Qt information dialog.
 
 Choose **About → Check for updates** for a manual online check against the latest

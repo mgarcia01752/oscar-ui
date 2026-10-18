@@ -71,6 +71,10 @@ final class AboutDialog extends QDialog {
         var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
         layout.addWidget(license);
+        var reportIssue = link("Report an issue with OSCAR-UI", ReleaseUpdateService.UI_PROJECT + "/issues/new/choose");
+        reportIssue.setObjectName("reportIssueLink");
+        reportIssue.setToolTip("Open the OSCAR-UI issue tracker on GitHub");
+        layout.addWidget(reportIssue);
         var updates = new QGroupBox("Release updates");
         var updateLayout = new QVBoxLayout(updates);
         updateStatus.setObjectName("updateStatus");
