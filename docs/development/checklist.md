@@ -1,5 +1,8 @@
 # Development and release verification checklist
 
+- [ ] On Windows, verify the MSI welcome/completion panel and top banner show
+  OSCAR-UI artwork with readable text, including at increased display scaling.
+
 [Development guide](README.md) · [Architecture](ui-architecture.md) · [Deferred work](TODO.md)
 
 This is a reusable checklist, not a permanent record of passed releases.

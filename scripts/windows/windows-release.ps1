@@ -81,7 +81,34 @@ $PackageInformation = Get-Content "$Root/packaging/windows/install-information.t
 $ApplicationLicense = Get-Content "$Root/LICENSE" -Raw
 [IO.File]::WriteAllText($InstallerInformation, "$PackageInformation`r`n$ApplicationLicense")
 $JPackage = if ($env:JAVA_HOME) { "$env:JAVA_HOME/bin/jpackage.exe" } else { 'jpackage.exe' }
+# Customize the current JDK template, retaining its installation behavior.
+$InstallerResources = "$Root/target/windows-installer-resources"
+New-Item -ItemType Directory -Force $InstallerResources | Out-Null
+$JdkHome = Split-Path -Parent (Split-Path -Parent (Get-Command $JPackage).Source)
+$TemplateEntry = 'classes/jdk/jpackage/internal/resources/main.wxs'
+Push-Location $InstallerResources
+try {
+    & "$JdkHome/bin/jmod.exe" extract --dir extracted "$JdkHome/jmods/jdk.jpackage.jmod"
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to extract the JDK installer template'
+    }
+    $Template = Get-Content "extracted/$TemplateEntry" -Raw
+    if ([regex]::Matches($Template, '</Product>').Count -ne 1) {
+        throw 'Unexpected JDK installer template: expected one Product closing tag'
+    }
+    $Branding = @'
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.JpConfigDir)/dialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.JpConfigDir)/banner.bmp" />
+'@
+    # Absolute resource paths avoid relying on jpackage copying extra files.
+    $Branding = $Branding.Replace('$(var.JpConfigDir)', [System.Security.SecurityElement]::Escape($InstallerResources))
+    [IO.File]::WriteAllText("$InstallerResources/main.wxs", $Template.Replace('</Product>', "$Branding`n</Product>"))
+    Copy-Item "$Root/packaging/windows/dialog.bmp", "$Root/packaging/windows/banner.bmp" $InstallerResources
+} finally {
+    Pop-Location
+}
 & $JPackage --type msi --name OSCAR-UI --app-version $Version `
+    --resource-dir $InstallerResources `
     --vendor 'OSCAR-UI contributors' --app-image $Image --dest $InstallerOutput `
     --install-dir OSCAR-UI --license-file $InstallerInformation `
     --win-menu --win-menu-group OSCAR-UI --win-shortcut --win-shortcut-prompt `

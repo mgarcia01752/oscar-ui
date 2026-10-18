@@ -186,6 +186,18 @@ new application release when their runtime is updated.
 
 ## Application icons
 
+The Windows MSI wizard uses `packaging/windows/dialog.bmp` (493 × 312)
+for its welcome/completion background and `banner.bmp` (493 × 58) for its
+header. Both are 24-bit RGB bitmaps composed from the existing light icon.
+Keep the dialog's area to the right of pixel 164 white and the banner's left
+area white so native installer text stays readable. Refresh these assets
+along with the ICO when changing the logo; normal builds need no image tools.
+The release script extracts the build JDK's `main.wxs`, adds the two WiX
+bitmap variables, and supplies it through `--resource-dir`. It rejects an
+unexpected template structure, preserving the JDK's installation logic
+without maintaining a copied WiX template. Check both graphics interactively
+on Windows; silent CI installation does not validate wizard appearance.
+
 The window and About dialog use the supplied light/dark square PNG icons from
 `docs/images/`, bundled in the application JAR. Changing Appearance updates the
 application icon. The supplied square light/dark files currently contain identical
