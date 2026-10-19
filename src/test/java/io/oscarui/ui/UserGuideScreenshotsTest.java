@@ -99,10 +99,89 @@ class UserGuideScreenshotsTest {
             window.openFile(binaryFile);
             waitForDocument(window);
             captureInspection(window, images.resolve("tlv-breakdown-dark.png"));
+            captureEditingSections(window, source, images);
         } finally {
             window.close();
             window.dispose();
             QApplication.shutdown();
+        }
+    }
+
+    private void captureEditingSections(MainWindow window, Path source, Path images) throws Exception {
+        window.openFile(source);
+        waitForDocument(window);
+        var tree = window.findChild(QTreeWidget.class, "configurationTree");
+        tree.setCurrentItem(tree.topLevelItem(0));
+        captureAction(window, "addTlv", images.resolve("add-tlv-dark.png"), dialog -> {
+            dialog.findChild(QLineEdit.class, "tlvSearch").setText("DownstreamFrequency");
+            dialog.findChild(QLineEdit.class, "tlvValue").setText("500000000");
+        });
+        tree.setCurrentItem(tree.topLevelItem(0).child(2));
+        window.findChild(QAction.class, "duplicateTlv").trigger();
+        waitForDocument(window);
+        tree.expandAll();
+        assertEquals(5, window.currentDocument().root().childTlvs().size());
+        capture(window, images.resolve("duplicate-tlv-dark.png"));
+        captureAction(window, "deleteTlv", images.resolve("delete-tlv-dark.png"), dialog -> {});
+        Path snmpSource = Files.writeString(temporary.resolve("snmp-example.txt"),
+                "Docsis { NetworkAccess 1; Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"lab-modem\"; }");
+        window.openFile(snmpSource);
+        waitForDocument(window);
+        tree.setCurrentItem(tree.topLevelItem(0).child(1));
+        captureAction(window, "editTlv", images.resolve("snmp-fields-dark.png"), dialog -> {
+            dialog.resize(680, 520);
+            assertNotNull(dialog.findChild(QLineEdit.class, "snmpOid"));
+            assertNotNull(dialog.findChild(QComboBox.class, "snmpType"));
+            assertNotNull(dialog.findChild(QLineEdit.class, "snmpValue"));
+        });
+    }
+
+    private void captureAction(MainWindow window, String actionName, Path destination,
+                               java.util.function.Consumer<QDialog> prepare) {
+        var loop = new QEventLoop();
+        var finished = new java.util.concurrent.atomic.AtomicBoolean();
+        var timer = new QTimer(window);
+        var deadline = new QTimer(window);
+        deadline.setSingleShot(true);
+        deadline.timeout.connect(() -> {
+            captureFailure = new AssertionError("Timed out capturing " + actionName);
+            finished.set(true);
+            loop.quit();
+            if (QApplication.activeModalWidget() instanceof QDialog dialog) {
+                dialog.reject();
+            }
+        });
+        timer.timeout.connect(() -> {
+            if (QApplication.activeModalWidget() instanceof QDialog dialog) {
+                timer.stop();
+                deadline.stop();
+                try {
+                    prepare.accept(dialog);
+                    capture(dialog, destination);
+                } catch (Throwable failure) {
+                    captureFailure = failure;
+                } finally {
+                    dialog.reject();
+                    finished.set(true);
+                    loop.quit();
+                }
+            }
+        });
+        try {
+            var action = window.findChild(QAction.class, actionName);
+            assertTrue(action.isEnabled(), actionName);
+            timer.start(30);
+            deadline.start(10000);
+            action.trigger();
+            if (!finished.get()) {
+                loop.exec();
+            }
+            assertNull(captureFailure);
+            assertTrue(Files.exists(destination));
+        } finally {
+            timer.dispose();
+            deadline.dispose();
+            loop.dispose();
         }
     }
 

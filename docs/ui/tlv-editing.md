@@ -14,6 +14,10 @@ Nested parents stay empty until explicitly populated. Placeholders are not
 recommended values or deployment defaults. Delete unwanted children and enter
 supported values before compiling.
 
+![Search the catalog and enter a value when adding a TLV.](../images/user-guide/add-tlv-dark.png)
+
+Search the catalog and enter a value when adding a TLV.
+
 ## Edit
 
 Double-click a scalar TLV, or select **Edit → Edit TLV**. The popup contains the
@@ -25,6 +29,10 @@ codecs are read-only, and generated CM/CMTS MICs cannot be edited manually.
 For a masked secret value, leave the replacement field blank to retain the
 existing value, or enter a replacement. See [Settings](settings.md#secrets).
 
+![Edit the selected TLV value.](../images/user-guide/edit-tlv-dark.png)
+
+Edit the selected TLV value.
+
 ## Duplicate
 
 Select a top-level TLV and choose **Edit → Duplicate TLV** or its context-menu
@@ -32,6 +40,10 @@ command. This inserts a copy, including its children, immediately after the
 original and selects the copy. For a service flow, edit the copied identifiers
 and rates as needed; duplicating does not automatically assign unique values.
 Catalog instance limits and protected entries still apply.
+
+![The copied downstream service flow is selected, including its children.](../images/user-guide/duplicate-tlv-dark.png)
+
+The copied downstream service flow is selected, including its children.
 
 ## Delete
 
@@ -41,6 +53,10 @@ its descendants. Protected entries remain read-only.
 
 Changes remain in the document until you [save](files.md#save-and-save-as).
 Use [View TLV Hex](inspection.md#selected-tlv-hex) to inspect a selected entry.
+
+![Confirm removal of a parent TLV and all its children.](../images/user-guide/delete-tlv-dark.png)
+
+Confirm removal of a parent TLV and all its children.
 
 ## SNMP fields
 
@@ -71,8 +87,6 @@ PacketCable Snmp64 uses these same controls and validation. OSCAR 3.2.1 fixes
 value export so projected IPv4 values retain their expected format. PacketCable
 SNMP binary import remains unsupported; this fix does not remove that limit.
 
-## Dark-mode screenshots
+![Edit the OID, Type, and Value separately using synthetic lab data.](../images/user-guide/snmp-fields-dark.png)
 
-**Edit a TLV value**
-
-![Edit a TLV value in OSCAR-UI dark mode](../images/user-guide/edit-tlv-dark.png)
+Edit the OID, Type, and Value separately using synthetic lab data.

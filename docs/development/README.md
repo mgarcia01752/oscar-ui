@@ -271,7 +271,9 @@ version-bump commit and new tag together.
 ## Refresh user-guide screenshots
 
 The opt-in `UserGuideScreenshotsTest` captures real Qt widgets in dark mode
-using synthetic DOCSIS data and empty secret fields. It does not open customer
+using synthetic DOCSIS data and empty secret fields. TLV editing captures include
+the Add chooser, scalar editor, duplicated subtree, deletion confirmation, and
+SNMP OID/Type/Value editor. It does not open customer
 files, save personal preferences, or query GitHub for updates. Ordinary test
 runs skip this documentation capture.
 
