@@ -68,3 +68,14 @@ Test that no-op paths do not run the checker or change versions/tags.
 
 Keep `tools/git/README.md` synchronized with release/push helper changes in the
 same change: inventory, CLI examples, checks, side effects, and retry behavior.
+
+## User-facing Git commands
+
+Start every copy/paste command block for Git activity with an executable `cd`
+to the actual target repository's absolute path. This includes save/commit,
+push, tag, release, and direct Git commands. A repository comment alone is not
+enough. Verify the target checkout and its helper interface; do not assume the
+current shell is already in the correct project. Use `cd /absolute/repo &&`
+as the first line so a failed directory change prevents the following command.
+Provide push/release commands for the user to execute unless explicitly asked
+to execute them.
