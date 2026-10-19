@@ -36,11 +36,11 @@ class DebDependenciesTest(unittest.TestCase):
                         str(self.package)], check=True, capture_output=True)
 
     def test_removes_only_indirect_pcre_and_preserves_payload(self):
-        self.build('libc6, libglib-2.0-0 (>= 2.0), libpcre3 (>= 8.0), libpcre2-8-0')
+        self.build('libc6, libglib2.0-0 (>= 2.0), libpcre3 (>= 8.0), libpcre2-8-0')
         MODULE.normalize(self.package)
         dependencies = subprocess.check_output(
             ['dpkg-deb', '-f', str(self.package), 'Depends'], text=True)
-        self.assertEqual(dependencies.strip(), 'libc6, libglib-2.0-0 (>= 2.0), libpcre2-8-0')
+        self.assertEqual(dependencies.strip(), 'libc6, libglib2.0-0 (>= 2.0), libpcre2-8-0')
         extracted = self.root / 'extracted'
         subprocess.run(['dpkg-deb', '-x', str(self.package), str(extracted)], check=True)
         self.assertEqual((extracted / 'opt/keep.txt').read_text(), 'preserve payload\n')
@@ -65,7 +65,7 @@ class DebDependenciesTest(unittest.TestCase):
                           'int main(void) { return synthetic_pcre(); }\n')
         subprocess.run(['cc', str(source), str(library), '-o',
                         str(self.payload / 'opt/probe')], check=True)
-        self.build('libglib-2.0-0, libpcre3')
+        self.build('libglib2.0-0, libpcre3')
         before = self.package.read_bytes()
         with self.assertRaisesRegex(ValueError, 'directly requires PCRE1'):
             MODULE.normalize(self.package)

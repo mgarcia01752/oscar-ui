@@ -351,7 +351,8 @@ payload uses GLib rather than PCRE1 directly. Ubuntu 26.04 cannot satisfy that
 obsolete dependency. `scripts/build/deb-dependencies.py` inspects every payload
 ELF with `readelf` before removing only `libpcre3` from the generated DEB.
 It refuses removal if any ELF directly needs `libpcre.so.*` or the GLib
-package dependency is missing. Other dependencies and payload files remain
+package dependency (`libglib2.0-0` or `libglib2.0-0t64`) is missing.
+Other dependencies and payload files remain
 intact; the destination system's GLib package selects its own dependencies.
 The normalized DEB replaces the original only after a successful rebuild.
 

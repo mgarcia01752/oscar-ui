@@ -29,7 +29,7 @@ def normalize(package):
         if not any(re.fullmatch(r'libpcre3(?: \([^)]*\))?', entry) for entry in dependencies):
             print('[DEB] No indirect libpcre3 dependency to remove.')
             return
-        if not any(re.match(r'libglib-2\.0-0(?:t64)?(?: |$)', entry) for entry in dependencies):
+        if not any(re.match(r'libglib2\.0-0(?:t64)?(?: |$)', entry) for entry in dependencies):
             raise ValueError('Refusing to remove libpcre3 without a GLib dependency')
         for binary in payload.rglob('*'):
             if binary.is_symlink() or not binary.is_file():
