@@ -8,7 +8,8 @@
   </picture>
 </p>
 
-[![Security scans](https://github.com/mgarcia01752/oscar-ui/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/security.yml)
+[![CodeQL](https://github.com/mgarcia01752/oscar-ui/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/codeql.yml)
+[![Dependency security](https://github.com/mgarcia01752/oscar-ui/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/security.yml)
 [![CI status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/java-ci.yml?branch=main&label=CI)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)
 [![Windows MSI and Ubuntu DEB release status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/release.yml?label=Windows%20MSI%20%2B%20Ubuntu%20DEB)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)
 [![Java CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/java-ci.yml)

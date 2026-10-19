@@ -1,6 +1,21 @@
 name: Dependency review
 on:
   pull_request:
+    paths:
+      - '**/pom.xml'
+      - '.mvn/**'
+      - 'mvnw'
+      - 'mvnw.cmd'
+      - 'install.sh'
+      - '.github/workflows/**'
+      - '.github/dependabot.yml'
+      - 'scripts/unix/bootstrap-oscar.sh'
+      - 'scripts/windows/bootstrap-oscar.ps1'
+      - 'scripts/unix/setup-qt.sh'
+      - 'scripts/windows/setup-qt.ps1'
+      - 'scripts/build/collect-release-sources.py'
+      - 'scripts/build/desktop.py'
+      - 'tools/development/update-oscar.py'
 permissions:
   contents: read
 jobs:

@@ -168,7 +168,8 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 
 ## Security release checks
 
-- [ ] Confirm CodeQL and dependency scans pass for the release revision.
+- [ ] Confirm dependency scans pass for the release revision; review the latest
+  weekly/manual CodeQL results separately.
 - [ ] Review high/critical findings and confirm reports survive failures.
 - [ ] Verify Dependabot graph submission and secret push protection.
 - [ ] Do not claim native runtime coverage from the JAR scan.
