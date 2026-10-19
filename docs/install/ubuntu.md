@@ -9,17 +9,38 @@ Java and Qt are included; no repository checkout is needed.
 ## Install and launch
 
 1. Download the Ubuntu `.deb` asset from the release into **Downloads**.
-2. Open a terminal. Install using the commands below, replacing the filename
-   if you downloaded a different version. The temporary copy lets APT read
-   the package without access to your private Downloads folder.
+2. Open a terminal and paste this block. It selects the **most recently modified
+   OSCAR-UI DEB in Downloads** (normally the latest download), prints its name,
+   and installs only that file. This selects by download time, not version number.
+   The temporary copy lets APT read the package without access to your private
+   Downloads folder. Your downloaded files are kept.
 
    ```bash
-   package_dir=$(mktemp -d /tmp/oscar-ui-install.XXXXXX)
-   chmod 755 "$package_dir"
-   install -m 644 "$HOME/Downloads/oscar-ui_0.2.2_amd64.deb" "$package_dir/"
-   sudo apt install "$package_dir/oscar-ui_0.2.2_amd64.deb"
-   rm -f "$package_dir/oscar-ui_0.2.2_amd64.deb"
-   rmdir "$package_dir"
+   (
+     set -euo pipefail
+     downloads_dir="$HOME/Downloads"
+     if command -v xdg-user-dir >/dev/null 2>&1; then
+       downloads_dir=$(xdg-user-dir DOWNLOAD)
+     fi
+     shopt -s nullglob
+     packages=("$downloads_dir"/oscar-ui_*_amd64*.deb)
+     latest_package=""
+     for candidate in "${packages[@]}"; do
+       if [[ -f "$candidate" && ( -z "$latest_package" || "$candidate" -nt "$latest_package" ) ]]; then
+         latest_package="$candidate"
+       fi
+     done
+     if [[ -z "$latest_package" ]]; then
+       echo "No OSCAR-UI amd64 DEB found in $downloads_dir. Download it first." >&2
+       exit 1
+     fi
+     printf 'Installing: %s\n' "$latest_package"
+     package_dir=$(mktemp -d /tmp/oscar-ui-install.XXXXXX)
+     trap 'rm -f -- "$package_dir/oscar-ui.deb"; rmdir -- "$package_dir"' EXIT
+     chmod 755 "$package_dir"
+     install -m 644 "$latest_package" "$package_dir/oscar-ui.deb"
+     sudo apt install "$package_dir/oscar-ui.deb"
+   )
    ```
 
 3. Confirm installation:
@@ -28,7 +49,7 @@ Java and Qt are included; no repository checkout is needed.
    dpkg-query -W -f='${Status} ${Version}\n' oscar-ui
    ```
 
-   Expected for this example: `install ok installed 0.2.2`.
+   Expected: `install ok installed` followed by the installed version.
 4. Open the application menu, search for **OSCAR-UI**, and launch it.
    Alternatively, run this command as your normal user:
 
@@ -45,9 +66,10 @@ if it reports `install ok installed`, no reinstall is needed.
 
 Close OSCAR-UI and download the newer DEB from
 [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
-Install it using the same steps above, substituting the actual downloaded
-filename. `sudo apt install ./<downloaded-filename>.deb` upgrades the installed
-package; you do not need to uninstall first.
+Run the same installation block above to select the latest download and upgrade
+the installed package. Review the printed filename before confirming APT’s prompt;
+if you recently downloaded an older release, that file will be selected instead.
+You do not need to uninstall first.
 
 OSCAR-UI does not currently provide an APT repository. `sudo apt update` does
 not discover new OSCAR-UI releases from GitHub.
