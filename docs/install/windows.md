@@ -61,21 +61,20 @@ Use these commands in PowerShell, not Command Prompt. PowerShell uses
 ## Install from Command Prompt
 
 If double-clicking does not start installation, open **Command Prompt** (`cmd`)
-and paste this command. It installs version **0.2.2** and writes a diagnostic log:
+and paste these lines. They select the most recently modified Windows x64
+OSCAR-UI MSI in Downloads and write a diagnostic log. No version number is needed:
 
 ```bat
-msiexec.exe /i "%USERPROFILE%\Downloads\OSCAR-UI-0.2.2-windows-x64.msi" /L*V "%TEMP%\oscar-ui-install.log"
+set "OSCAR_MSI="
+for /f "delims=" %F in ('dir /b /a-d /o-d /t:w "%USERPROFILE%\Downloads\OSCAR-UI-*-windows-x64.msi" 2^>nul') do @if not defined OSCAR_MSI set "OSCAR_MSI=%F"
+if defined OSCAR_MSI (echo Installing: %OSCAR_MSI%) else (echo No OSCAR-UI MSI found in Downloads.)
+if defined OSCAR_MSI msiexec.exe /i "%USERPROFILE%\Downloads\%OSCAR_MSI%" /L*V "%TEMP%\oscar-ui-install.log"
 ```
 
-For another version, use its actual downloaded filename. To list MSI files:
-
-```bat
-dir "%USERPROFILE%\Downloads\*.msi"
-```
-
-Do not enter a placeholder such as `EXACT-FILENAME.msi`. If Windows says
-“This installation package could not be opened”, first check that the filename
-and location match the downloaded file.
+These commands are for an interactive Command Prompt. In a `.bat` file, use
+`%%F` instead of `%F`. Selection uses file modification time, not the highest
+version number; check the printed filename. If no matching file exists,
+installation does not start. Download the Windows x64 MSI first.
 
 If installation fails, open the log:
 
