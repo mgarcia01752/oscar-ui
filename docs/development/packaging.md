@@ -108,13 +108,13 @@ bump or commit; existing tags are never moved. Use a new version for new code.
   silent install, Start menu/desktop shortcuts, uninstaller registration, native
   launch without developer tools on PATH, and silent uninstall.
 - **Ubuntu release** (`ubuntu-release.yml`) builds on Ubuntu 22.04 and checks
-  installation, X11 launch under Xvfb, and APT removal on Ubuntu 22.04 and 24.04.
+  installation, X11 launch under Xvfb, and APT removal on Ubuntu 22.04, 24.04, and 26.04.
   Both platforms verify that a user configuration outside the installation
   directory survives removal. Installer logs are retained as CI artifacts.
 
 `release.yml` handles version-tag pushes and manual runs selected on a tag.
 It first calls `java-ci.yml` for the exact tagged commit, running the full
-Ubuntu 22.04, Ubuntu 24.04 and macOS 15 matrix. Both platform jobs declare
+Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, and macOS 15 matrix. Both platform jobs declare
 `needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
 A passing branch build or an older tag does not satisfy this gate. The two
 platform workflows are callable only through the coordinator, so direct tag
@@ -260,7 +260,7 @@ The installer uses separate `install -d` and `install -m` commands, supported
 by GNU and BSD install, so isolated maintainer-script tests also run on macOS.
 Removal errors are not suppressed; only the package's own launcher is removed.
 CI checks that the registered launcher matches the bundled entry and disappears
-after uninstall on Ubuntu 22.04 and 24.04, while user configurations survive.
+after uninstall on Ubuntu 22.04, 24.04, and 26.04, while user configurations survive.
 
 Already-built v0.2.0 packages retain the old removal script. Publish the fix
 under a new patch tag after validation; rerunning v0.2.0 builds the old code.

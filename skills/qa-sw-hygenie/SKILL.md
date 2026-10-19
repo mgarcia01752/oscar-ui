@@ -90,7 +90,7 @@ Read `docs/development/packaging.md` and the affected workflow/helper. Confirm:
   shortcut cleanup and preservation of user configurations outside install paths.
 - Only those two application assets are uploaded. Dependency sources, notices,
   and checksums remain inside packages and match the bundled dependencies.
-- Ubuntu install checks cover 22.04 and 24.04. macOS Java CI is not evidence of
+- Ubuntu install checks cover 22.04, 24.04, and 26.04. macOS Java CI is not evidence of
   a working macOS desktop package.
 - Release helpers reject dirty trees and conflicting tags, preserve existing
   tags, and push branch/tag atomically. Exercise them in temporary repositories,

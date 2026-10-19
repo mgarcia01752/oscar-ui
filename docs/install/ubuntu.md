@@ -2,7 +2,7 @@
 
 [README](../../README.md) · [Windows installation](windows.md)
 
-Supports Ubuntu 22.04 and 24.04 on x64. Download the `.deb` from
+Targets Ubuntu 22.04, 24.04, and 26.04 LTS on x64. Download the `.deb` from
 [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
 Java and Qt are included; no repository checkout is needed.
 
@@ -12,21 +12,18 @@ Java and Qt are included; no repository checkout is needed.
 2. Download and install the latest published release:
 
    ```bash
-   curl -fL -o oscar-ui_amd64.deb \
-     https://github.com/mgarcia01752/oscar-ui/releases/latest/download/oscar-ui_amd64.deb
-
+   url=$(curl -fsSL https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest |
+     python3 -c 'import json,sys; print(next(a["browser_download_url"] for a in json.load(sys.stdin)["assets"] if a["name"].endswith("_amd64.deb")))') &&
+   curl -fL "$url" -o oscar-ui_amd64.deb &&
    sudo apt install ./oscar-ui_amd64.deb
    ```
 
-   Run the install command only after the download succeeds. If `curl` is
-   missing, install it with `sudo apt install curl` first. No tag or version
-   number is needed. APT reads the package version from inside the DEB.
-   The download remains in the current folder and can be deleted after installation.
-
-   The fixed download name is available starting with the next release containing
-   this change. For earlier releases, download the versioned DEB from
-   [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases) and pass
-   that filename to `sudo apt install ./<downloaded-filename>.deb`.
+   GitHub supplies the latest release's download URL, so no tag or version is
+   needed. This works with both versioned and fixed DEB filenames. The `&&`
+   operators run installation only after lookup and download succeed.
+   If needed, install the download tools with `sudo apt install curl python3`.
+   The downloaded DEB remains in the current folder and can be deleted after
+   installation.
 
 3. Confirm installation:
 
