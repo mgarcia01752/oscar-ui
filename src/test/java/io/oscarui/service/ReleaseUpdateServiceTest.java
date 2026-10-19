@@ -14,7 +14,8 @@ class ReleaseUpdateServiceTest {
     @Test void comparesNumericVersionsAndDevelopmentBuilds() throws Exception {
         assertTrue(service.describe("0.9.9", release("v0.10.0")).startsWith("Update available"));
         assertTrue(service.describe("0.10.0", release("v0.10.0")).contains("up to date"));
-        assertTrue(service.describe("0.11.0", release("v0.10.0")).contains("newer than"));
+        assertEquals("Installed: 0.11.0 · Latest release: 0.10.0.",
+                service.describe("0.11.0", release("v0.10.0")));
         assertTrue(service.describe("0.10.0-SNAPSHOT", release("v0.10.0")).startsWith("Update available"));
         assertTrue(service.describe("0.10.0+build.1", release("v0.10.0")).contains("up to date"));
     }

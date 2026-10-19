@@ -108,8 +108,7 @@ public final class ReleaseUpdateService {
             return "Update available: " + latestVersion + ". Installed: " + installedVersion + ".";
         }
         if (comparison < 0) {
-            return "Your installed version (" + installedVersion + ") is newer than the latest release ("
-                    + latestVersion + ").";
+            return "Installed: " + installedVersion + " · Latest release: " + latestVersion.replaceFirst("^v", "") + ".";
         }
         return "You’re up to date. Latest release: " + latestVersion + ".";
     }
