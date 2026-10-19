@@ -187,3 +187,9 @@ git apply --check docs/development/deferred-tlv-reordering.patch
   repeated instances, text and binary save/reopen, and masked values.
 - [ ] Document the completed behavior in the user guide, architecture, and
   verification checklist after the upstream dependency is resolved.
+
+## Native dependency vulnerability coverage
+
+- [ ] Inventory bundled OpenJDK, Qt, ICU, and Visual C++ runtimes with versions
+  and provenance; add native vulnerability scanning to installer release checks.
+  Current security checks cover resolved runtime JARs, not the full installer.
