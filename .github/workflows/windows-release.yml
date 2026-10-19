@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           # Use Adoptium's full SemVer, including its LTS build suffix.
