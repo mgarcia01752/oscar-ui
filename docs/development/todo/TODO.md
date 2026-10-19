@@ -191,11 +191,12 @@ git apply --check docs/development/todo/deferred-tlv-reordering.patch
 
 ## Windows updates
 
-Status: proposed; awaiting review. See the
+Status: approach approved; phase 1 investigation. See the
 [Windows update plan](../architecture/windows-updates.md) for requirements,
 repair concerns, compatibility rules and phased acceptance checks.
 
-- [ ] Review the proposed MSP patch / full-reinstall split.
+- [x] Approve the MSP patch / full-reinstall split.
+- [ ] Establish a new baseline: jpackage changes ProductCode by version.
 - [ ] Prove patch, repair, rollback and uninstall with our generated MSI on Windows.
 - [ ] Agree signing, baseline support and any required packaging changes.
 - [ ] Implement the approved helper and UI handoff, then add Windows CI coverage.

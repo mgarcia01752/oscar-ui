@@ -1,6 +1,6 @@
 # Windows update plan
 
-**Status: proposed; awaiting review. No Windows updater or MSP packaging is implemented.**
+**Status: approach approved; phase 1 investigation. Windows updater and MSP packaging are not implemented.**
 
 [Development guide](../README.md) · [UI architecture](ui-architecture.md#upgrade-chip) ·
 [Packaging](../build/packaging.md#uninstall-and-upgrade-behavior) · [Deferred work](../todo/TODO.md#windows-updates)
@@ -158,3 +158,38 @@ and About guides only when the behavior is available to users.
   cannot be patched reliably.
 - Select signing and supported baseline/retention policy from prototype findings
   before implementation or publication.
+
+## Phase 1 findings and reproducible audit
+
+The pinned OpenJDK 21.0.10+7 `WinMsiBundler.getProductCode()` derives the
+ProductCode from vendor, application name **and version**. Our packaging passes
+that version to jpackage and does not override ProductCode. Therefore ordinary
+successive release MSIs do not retain the product identity required by the
+planned minor-update MSP. This is a packaging constraint, not an OSCAR defect.
+The versioned application JAR also changes installed paths between releases.
+
+Source: [pinned OpenJDK MSI bundler](https://github.com/openjdk/jdk21u/blob/jdk-21.0.10%2B7/src/jdk.jpackage/windows/classes/jdk/jpackage/internal/WinMsiBundler.java).
+See Microsoft's [minor upgrade requirements](https://learn.microsoft.com/en-us/windows/win32/msi/minor-upgrades).
+
+Run the read-only audit on Windows against two locally built MSI packages:
+
+```powershell
+./scripts/windows/compare-msi-baselines.ps1 -Baseline C:/packages/baseline.msi -Target C:/packages/target.msi > msi-comparison.json
+```
+
+Replace those paths with the actual packages. The script installs nothing and
+queries databases read-only. Its JSON records ProductCode, UpgradeCode,
+ProductVersion, PackageCode, architecture/language template, component/key-path
+identities, file names, directory layout and feature membership. Exit 2 means a
+prerequisite failed; other errors abort the audit. Layout equality is deliberately
+conservative. Exit 0 does not establish payload compatibility or safe repair.
+
+Next prototype: author a new full-MSI baseline with stable application JAR and
+launcher paths and a ProductCode retained only within its supported patch family.
+Retain baseline authoring inputs and symbols; generate a candidate MSP and run
+the phase 1 lifecycle tests before enabling any updater. Do not change existing
+release identities or distribute this proposed baseline before those tests.
+
+Windows MSI execution, patch generation, repair/rollback and signing selection
+remain pending. The development host used for this investigation has neither
+Windows Installer nor PowerShell; the audit has not been executed on Windows.

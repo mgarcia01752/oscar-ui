@@ -187,3 +187,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 - [ ] Click to open update options without automatically downloading/installing.
 - [ ] Manual About checks refresh visibility; closing cancels pending checks.
 - [ ] Verify light/dark appearance and keyboard focus.
+
+## Windows patch prototype (pending)
+
+- [ ] Run the read-only MSI baseline comparison on Windows; retain JSON evidence.
+- [ ] Complete the [Windows update phase 1 checks](../architecture/windows-updates.md#1-prove-installer-compatibility-first) before enabling MSP updates.

@@ -52,6 +52,10 @@ can also run the root `install.sh --development` to orchestrate setup.
 `test-windows-install.ps1` installs, launches, and removes the MSI; it is intended
 for disposable Windows CI runners, not routine checks on a developer machine.
 
+`compare-msi-baselines.ps1 -Baseline PATH -Target PATH` reads two MSI databases
+without installing them and reports identity/layout blockers. It is a prototype
+audit, not a patch builder; see the [Windows update plan](../docs/development/architecture/windows-updates.md#phase-1-findings-and-reproducible-audit).
+
 ## Shared implementation and tests
 
 `build/desktop.py` implements build, run, smoke, and packaging commands.
