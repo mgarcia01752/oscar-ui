@@ -107,6 +107,50 @@ class UserGuideScreenshotsTest {
         }
     }
 
+    @Test void captureCvcGuide() throws Exception {
+        QApplication.initialize(new String[0]);
+        QApplication.setQuitOnLastWindowClosed(false);
+        Path images = Path.of("target/user-guide-images");
+        Files.createDirectories(images);
+        try {
+            DesktopTheme.apply(Appearance.DARK);
+            var service = new OscarDocumentService();
+            var document = service.open(Files.writeString(temporary.resolve("cvc-example.txt"),
+                    "Docsis { NetworkAccess 1; }"));
+            byte[] payload = new byte[48];
+            for (int index = 0; index < payload.length; index++) {
+                payload[index] = (byte) index;
+            }
+            String hex = io.oscarui.service.CertificateInput.toOscarHex(payload);
+            String pem = "-----BEGIN CERTIFICATE-----\n"
+                    + java.util.Base64.getMimeEncoder().encodeToString(payload)
+                    + "\n-----END CERTIFICATE-----";
+            for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+                var definition = service.choices(document, document.root()).stream()
+                        .filter(entry -> entry.name().equals(name)).findFirst().orElseThrow();
+                var dialog = new TlvEditorDialog(null, service, document, document.root(),
+                        java.util.List.of(definition));
+                dialog.resize(760, 650);
+                dialog.findChild(QPlainTextEdit.class, "certificateText")
+                        .setPlainText(name.equals("ManufacturerCVC") ? hex : pem);
+                assertTrue(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
+                captureDialog(dialog, images.resolve(name.equals("ManufacturerCVC")
+                        ? "cvc-manufacturer-hex-dark.png" : "cvc-cosigner-pem-dark.png"));
+                document = service.insert(document, document.root(), definition, hex);
+            }
+            var node = document.root().childTlvs().stream()
+                    .filter(entry -> entry.tlvName().equals("ManufacturerCVC")).findFirst().orElseThrow();
+            var definition = com.comcast.oscar.dictionary.TlvRegistry.forFamily("docsis").find(node.tlvPath());
+            var edit = new TlvEditorDialog(null, service, document, document.root(),
+                    java.util.List.of(definition), node);
+            edit.resize(760, 560);
+            assertTrue(edit.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+            captureDialog(edit, images.resolve("cvc-edit-dark.png"));
+        } finally {
+            QApplication.shutdown();
+        }
+    }
+
     private void captureEditingSections(MainWindow window, Path source, Path images) throws Exception {
         window.openFile(source);
         waitForDocument(window);

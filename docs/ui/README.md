@@ -14,6 +14,7 @@ does not establish full configuration validity or modem interoperability.
 | Understand the tree, text preview and status | [Workspace](workspace.md) |
 | Create, open, save or convert configurations | [Files](files.md) |
 | Add, edit, duplicate or delete TLVs | [TLV editing](tlv-editing.md) |
+| Load or paste manufacturer and co-signer certificates | [CVC input](tlv-editing.md#manufacturer-and-co-signer-certificates) |
 | View binary hex and TLV breakdowns | [Inspection](inspection.md) |
 | Choose appearance, show MICs and mask secrets | [Settings](settings.md) |
 | Check a shared secret against a binary | [Tools: Check Shared Secret](check-shared-secret.md) |

@@ -30,6 +30,31 @@ contents into the multiline input:
 - **HEX**: paste complete byte pairs, contiguous or separated by spaces,
   newlines or colons; `.hex` and `.txt` files are treated as HEX text.
 
+### Choose a file or paste HEX
+
+Use **Choose certificate…** to load a local certificate. To paste HEX instead,
+enter the byte pairs directly in the multiline field. Add becomes available
+when the input passes validation.
+
+![Add a manufacturer CVC from a certificate file or pasted HEX bytes.](../images/user-guide/cvc-manufacturer-hex-dark.png)
+
+### Paste PEM text
+
+Select **Co-signerCVC** for TLV 33, then paste the entire PEM block. PEM input
+also works for ManufacturerCVC; both entries offer the same file and text options.
+
+![Add a co-signer CVC using pasted PEM text.](../images/user-guide/cvc-cosigner-pem-dark.png)
+
+### Replace an existing certificate
+
+Double-click the CVC row, choose another file or replace the pasted contents,
+then select **Apply**. **Cancel** discards the replacement.
+
+![Edit an existing manufacturer CVC and apply its replacement.](../images/user-guide/cvc-edit-dark.png)
+
+These screenshots use synthetic bytes to demonstrate the controls, not valid
+certificates for deployment.
+
 The input shows the decoded byte count. Invalid or empty input disables Add or
 Apply. Double-click an existing CVC to replace it using the same controls.
 Cancel leaves the document unchanged. File contents are embedded in the

@@ -274,7 +274,8 @@ version-bump commit and new tag together.
 The opt-in `UserGuideScreenshotsTest` captures real Qt widgets in dark mode
 using synthetic DOCSIS data and empty secret fields. TLV editing captures include
 the Add chooser, scalar editor, duplicated subtree, deletion confirmation, and
-SNMP OID/Type/Value editor. It does not open customer
+SNMP OID/Type/Value editor. The CVC capture adds manufacturer HEX, co-signer
+PEM, and certificate replacement dialogs using synthetic byte payloads. It does not open customer
 files, save personal preferences, or query GitHub for updates. Ordinary test
 runs skip this documentation capture.
 
