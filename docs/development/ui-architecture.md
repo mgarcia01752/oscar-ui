@@ -467,7 +467,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.2.4 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.2.5 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.

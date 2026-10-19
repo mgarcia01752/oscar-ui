@@ -1,0 +1,202 @@
+diff --git a/src/main/java/io/oscarui/service/OscarDocumentService.java b/src/main/java/io/oscarui/service/OscarDocumentService.java
+index 2cedb52..449b544 100644
+--- a/src/main/java/io/oscarui/service/OscarDocumentService.java
++++ b/src/main/java/io/oscarui/service/OscarDocumentService.java
+@@ -655,6 +655,54 @@ public final class OscarDocumentService {
+                 .withOrigin(document.origin());
+     }
+ 
++    /**
++     * Checks whether a TLV can exchange positions with an adjacent sibling.
++     *
++     * @param document current snapshot; may be null
++     * @param node selected TLV; may be null or stale
++     * @param direction sibling offset, either -1 (up) or 1 (down)
++     * @return true when both siblings are editable and share the same parent
++     */
++    public boolean canMove(Document document, Node node, int direction) {
++        if (document == null || (direction != -1 && direction != 1) || !canDelete(document, node)) {
++            return false;
++        }
++        Node parent = parentOf(document.root(), node);
++        int destination = parent.childTlvs().indexOf(node) + direction;
++        return destination >= 0 && destination < parent.childTlvs().size()
++                && canDelete(document, parent.childTlvs().get(destination));
++    }
++
++    /**
++     * Exchanges adjacent sibling statements, carrying complete subtrees together.
++     *
++     * <p>Recompiles through OSCAR and retains the source file and document origin.
++     * Inter-statement comments and whitespace remain in their original slots.
++     *
++     * @param document current document snapshot
++     * @param node owned TLV to move
++     * @param direction sibling offset, either -1 (up) or 1 (down)
++     * @return updated document with refreshed text and binary-backed tree
++     * @throws InspectionException if movement is disallowed or compilation fails
++     */
++    public Document move(Document document, Node node, int direction) throws InspectionException {
++        if (!canMove(document, node, direction)) {
++            throw new InspectionException("Move a TLV only within its parent and past editable siblings.");
++        }
++        Node parent = parentOf(document.root(), node);
++        Node neighbor = parent.childTlvs().get(parent.childTlvs().indexOf(node) + direction);
++        Node first = node.sourceStartOffset() < neighbor.sourceStartOffset() ? node : neighbor;
++        Node second = first == node ? neighbor : node;
++        String text = document.text();
++        String changedText = text.substring(0, first.sourceStartOffset())
++                + text.substring(second.sourceStartOffset(), second.sourceEndExclusive())
++                + text.substring(first.sourceEndExclusive(), second.sourceStartOffset())
++                + text.substring(first.sourceStartOffset(), first.sourceEndExclusive())
++                + text.substring(second.sourceEndExclusive());
++        return parse(document.path(), changedText, document.diskHash(), document.reference())
++                .withOrigin(document.origin());
++    }
++
+     /**
+      * Removes a TLV and its descendants while preserving valid parent syntax.
+      *
+diff --git a/src/main/java/io/oscarui/ui/MainWindow.java b/src/main/java/io/oscarui/ui/MainWindow.java
+index 5a16dae..d55df5a 100644
+--- a/src/main/java/io/oscarui/ui/MainWindow.java
++++ b/src/main/java/io/oscarui/ui/MainWindow.java
+@@ -57,6 +57,10 @@ public final class MainWindow extends QMainWindow {
+ 
+     private final QAction duplicateTlv = action("Duplicate TLV", "duplicateTlv", null);
+ 
++    private final QAction moveTlvUp = action("Move Up", "moveTlvUp", null);
++
++    private final QAction moveTlvDown = action("Move Down", "moveTlvDown", null);
++
+     private final QAction deleteTlv = action("&Del TLV...", "deleteTlv", null);
+ 
+     private final QAction editTlv = action("&Edit TLV...", "editTlv", null);
+@@ -174,7 +178,7 @@ public final class MainWindow extends QMainWindow {
+                 editSelectedTlv();
+             }
+         });
+-        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv, viewTlvHex));
++        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, moveTlvUp, moveTlvDown, deleteTlv, viewTlvHex));
+         poller.timeout.connect(this::receiveResult);
+         poller.start(40);
+         updateActions();
+@@ -371,6 +375,10 @@ public final class MainWindow extends QMainWindow {
+         edit.addAction(editTlv);
+         edit.addAction(duplicateTlv);
+         duplicateTlv.triggered.connect(this::duplicateSelectedTlv);
++        edit.addAction(moveTlvUp);
++        moveTlvUp.triggered.connect(() -> moveSelectedTlv(-1));
++        edit.addAction(moveTlvDown);
++        moveTlvDown.triggered.connect(() -> moveSelectedTlv(1));
+         edit.addAction(deleteTlv);
+         editTlv.triggered.connect(this::editSelectedTlv);
+         deleteTlv.triggered.connect(this::deleteSelectedTlv);
+@@ -648,6 +656,23 @@ public final class MainWindow extends QMainWindow {
+         });
+     }
+ 
++    private void moveSelectedTlv(int direction) {
++        Node selected = configurationTreePane.selectedTlv();
++        if (pending != null || !documentService.canMove(document, selected, direction)) {
++            return;
++        }
++        Document original = document;
++        Node parent = configurationTreePane.parentOf(selected);
++        int destination = parent.childTlvs().indexOf(selected) + direction;
++        submit(() -> documentService.move(original, selected, direction), changed -> {
++            display(changed, true);
++            configurationTreePane.selectCorresponding(parent);
++            Node updatedParent = configurationTreePane.selectedTlv();
++            configurationTreePane.selectCorresponding(updatedParent.childTlvs().get(destination));
++            configurationTreePane.expandSelection();
++        });
++    }
++
+     private void deleteSelectedTlv() {
+         Node selected = configurationTreePane.selectedTlv();
+         if (pending != null || document == null || !documentService.canDelete(document, selected)) {
+@@ -918,6 +943,8 @@ public final class MainWindow extends QMainWindow {
+         Node selected = configurationTreePane.selectedTlv();
+         viewTlvHex.setEnabled(idle && document != null && selected != null && !selected.tlvPath().isEmpty()
+                 && !selected.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE));
++        moveTlvUp.setEnabled(idle && documentService.canMove(document, selected, -1));
++        moveTlvDown.setEnabled(idle && documentService.canMove(document, selected, 1));
+         duplicateTlv.setEnabled(idle && documentService.canDuplicate(document, selected));
+         deleteTlv.setEnabled(idle && document != null && documentService.canDelete(document, selected));
+         editTlv.setEnabled(idle && canOpenEditor(selected));
+diff --git a/src/test/java/io/oscarui/service/DocumentEditingTest.java b/src/test/java/io/oscarui/service/DocumentEditingTest.java
+index 8289ae0..7ee36f6 100644
+--- a/src/test/java/io/oscarui/service/DocumentEditingTest.java
++++ b/src/test/java/io/oscarui/service/DocumentEditingTest.java
+@@ -17,6 +17,35 @@ class DocumentEditingTest {
+         return service.open(Files.writeString(temporary.resolve("input.txt"), text));
+     }
+ 
++    @Test void oscarMustPreserveRequestedChildOrder() throws Exception {
++        byte[] encoded = OscarTextCompileCheck.compile(
++                "Docsis { DownstreamServiceFlow { MaxSubstainedTrafficRate 1000; ServiceFlowReference 1; } }");
++        assertEquals(8, Byte.toUnsignedInt(encoded[2]),
++                "OSCAR must encode the first requested child (25.8) before 25.1");
++    }
++
++    @Test void movesSubtreesAndChildrenOnlyWithinTheirParent() throws Exception {
++        String flow = "DownstreamServiceFlow { ServiceFlowReference 1; MaxSubstainedTrafficRate 1000000000; }";
++        String source = "\uFEFFDocsis {\r\n NetworkAccess 1; /* keep */ " + flow + "\r\n}";
++        var original = open(source);
++        var parent = original.root().childTlvs().get(1);
++        var moved = service.move(original, parent, -1);
++        assertEquals("\uFEFFDocsis {\r\n " + flow + " /* keep */ NetworkAccess 1;\r\n}", moved.text());
++        assertEquals("DownstreamServiceFlow", moved.root().childTlvs().getFirst().tlvName());
++        assertEquals(source, service.move(moved, moved.root().childTlvs().getFirst(), 1).text());
++        assertFalse(service.canMove(original, parent.childTlvs().getFirst(), -1));
++        assertFalse(service.canMove(original, parent.childTlvs().getLast(), 1));
++        var childMoved = service.move(original, parent.childTlvs().getLast(), -1);
++        assertEquals("MaxSubstainedTrafficRate", childMoved.root().childTlvs().get(1).childTlvs().getFirst().tlvName());
++        assertTrue(childMoved.text().contains("MaxSubstainedTrafficRate 1000000000; ServiceFlowReference 1;"));
++        assertFalse(service.canMove(childMoved, parent, -1));
++        assertFalse(service.canMove(original, original.root(), 1));
++        assertFalse(service.canMove(null, null, 1));
++        assertThrows(InspectionException.class, () -> service.move(original, parent, 2));
++        var saved = service.save(childMoved, original.path(), original.diskHash());
++        assertEquals(childMoved.text(), service.open(saved.path()).text());
++    }
++
+     @Test void duplicatesServiceFlowWithoutChangingOriginalOrSourceFile() throws Exception {
+         String flow = "DownstreamServiceFlow { /* keep */ ServiceFlowReference 1; QualityOfServiceParameterSetType 07; }";
+         String text = "Docsis {\r\n    " + flow + "\r\n    NetworkAccess 1;\r\n}";
+diff --git a/src/test/java/io/oscarui/ui/MainWindowTest.java b/src/test/java/io/oscarui/ui/MainWindowTest.java
+index 4343afc..5696abb 100644
+--- a/src/test/java/io/oscarui/ui/MainWindowTest.java
++++ b/src/test/java/io/oscarui/ui/MainWindowTest.java
+@@ -18,6 +18,30 @@ import org.junit.jupiter.api.io.TempDir;
+ 
+ @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
+ class MainWindowTest {
++    @Test void movingTlvRefreshesTextSelectionAndBoundaryActions() throws Exception {
++        Path source = Files.writeString(temporary.resolve("move.txt"),
++                "Docsis { NetworkAccess 1; DownstreamServiceFlow { ServiceFlowReference 1; MaxSubstainedTrafficRate 1000; } }");
++        var window = new MainWindow(false);
++        try {
++            window.openFile(source);
++            await(() -> window.completed() && window.currentDocument() != null);
++            var tree = window.findChild(QTreeWidget.class, "configurationTree");
++            tree.setCurrentItem(tree.topLevelItem(0).child(1).child(1));
++            assertFalse(action(window, "moveTlvDown").isEnabled());
++            action(window, "moveTlvUp").trigger();
++            await(window::completed);
++            assertEquals("MaxSubstainedTrafficRate", tree.currentItem().text(0));
++            assertFalse(action(window, "moveTlvUp").isEnabled());
++            assertTrue(action(window, "moveTlvDown").isEnabled());
++            assertTrue(window.currentDocument().text().contains("MaxSubstainedTrafficRate 1000; ServiceFlowReference 1;"));
++            assertTrue(window.findChildren(QPlainTextEdit.class).stream().anyMatch(editor ->
++                    editor.toPlainText().indexOf("MaxSubstainedTrafficRate") < editor.toPlainText().indexOf("ServiceFlowReference")));
++            assertTrue(action(window, "fileSave").isEnabled());
++        } finally {
++            window.dispose();
++        }
++    }
++
+     @Test void binaryFailureReportIsReadOnlyAndCopyable() {
+         String report = "000000  45  9  Unknown [UNKNOWN_TYPE]";
+         var dialog = new BinaryFailureDialog(null, report);

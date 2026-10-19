@@ -157,9 +157,15 @@ Status: deferred at the user's request (2026-10-19). UI implementation drafted;
 blocked by OSCAR 3.2.4 child ordering. Resume only when requested.
 Do not release the draft until source, binary, and tree order agree.
 
-The working tree contains unfinished UI/service changes and regression tests
-that currently fail against OSCAR 3.2.4. These are not release-ready; upstream
-OSCAR has not been modified.
+The unfinished UI/service changes and regression tests are saved in
+[deferred-tlv-reordering.patch](deferred-tlv-reordering.patch), outside active
+source so they do not block unrelated dependency updates. They fail against
+OSCAR 3.2.4 and 3.2.5 and are not release-ready. Upstream ordering has not been
+modified. When resuming, review the patch and check it before applying:
+
+```bash
+git apply --check docs/development/deferred-tlv-reordering.patch
+```
 
 - [ ] Trace dictionary storage and assembler traversal in OSCAR. Determine
   whether hash-based iteration loses insertion order or assembly follows

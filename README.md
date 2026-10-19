@@ -1,4 +1,4 @@
-# OSCAR-UI
+# OSCAR-UI - Yet Another DOCSIS Configuration Editor
 
 <p align="center">
   <picture>
