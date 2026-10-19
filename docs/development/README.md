@@ -10,6 +10,7 @@ Run development commands from the repository root. Use Java 21 and the
 project-local bootstrap tools; no machine-specific checkout location is required.
 Keep personal configuration files in the ignored `test-config/` directory.
 
+- [Common CLI shortcuts](short-cuts.md)
 - [Deferred work and follow-up checks](TODO.md)
 - [UI architecture](ui-architecture.md)
 - [Verification checklist](checklist.md)
