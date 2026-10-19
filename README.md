@@ -29,7 +29,7 @@ you do not need to download the repository.
 
 | System | Package | Instructions |
 | --- | --- | --- |
-| Ubuntu 22.04 / 24.04 (x64) | `.deb` | [Ubuntu installation](docs/install/ubuntu.md) |
+| Ubuntu 22.04 / 24.04 / 26.04 (x64) | `.deb` | [Ubuntu installation](docs/install/ubuntu.md) |
 | Windows (x64) | `.msi` | [Windows installation](docs/install/windows.md) |
 
 The **Windows MSI + Ubuntu DEB** badge shows the combined release workflow status;
