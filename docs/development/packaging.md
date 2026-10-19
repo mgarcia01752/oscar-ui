@@ -131,6 +131,8 @@ Windows MSI and Ubuntu DEB assets are uploaded and nonempty, then automatically
 publishes the release. A failed or skipped required job prevents publication;
 any draft already created remains a draft. The push helper returns after pushing;
 follow the Release workflow in GitHub Actions for the publication result.
+Use `python3 tools/git/release-status.py` for the latest run or add `--tag TAG`
+to select a release; see the [status helper](../../tools/git/README.md#check-release-status).
 The helper triggers this CI flow; it does not publish from the local machine.
 Existing old release assets are not deleted by these workflows.
 

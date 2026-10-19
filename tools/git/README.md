@@ -89,6 +89,31 @@ checks origin and pushes a missing tag through the validation hook; remote-only
 tags are fetched and conflicting tags are rejected. It does not edit `pom.xml`.
 For normal new releases, prefer the release-bump commands above.
 
+## Check release status
+
+Requires GitHub CLI (`gh`) authenticated with `gh auth login`.
+Show the newest release workflow (including queued or failed releases):
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+python3 tools/git/release-status.py
+```
+
+Select a specific tag:
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+python3 tools/git/release-status.py --tag v0.4.0
+```
+
+The helper reads the repository associated with this checkout, prints the run
+URL and all job results from the latest attempt, and identifies failed steps
+with log commands. It works outside the checkout directory too. It does not
+push, cancel, rerun, or publish anything. Run it again to refresh; it reports
+GitHub's current API state, which may be delayed during an incident.
+Exit codes: 0 for success or pending, 1 for a completed unsuccessful workflow,
+and 2 for no matching run or a query/tool error. A pending result is not a pass.
+
 ## Validation and failure recovery
 
 ```bash
@@ -117,6 +142,7 @@ Local checks do not replace native installer checks in release CI.
 | `push-release.sh` | Bash entry point for the release implementation |
 | `push-release.py` | Version calculation, preflight, commit/tag creation, atomic push |
 | `update-tag.sh` | Create/check a tag, optionally synchronize it with origin |
+| `release-status.py` | Read latest or tagged release progress and failed jobs |
 | `install-hooks.py` | Enable the tracked hook for this checkout |
 | `hooks/pre-push` | Git hook entry point |
 | `pre-push.py` | Require a clean checkout matching pushed commits; run validation |
