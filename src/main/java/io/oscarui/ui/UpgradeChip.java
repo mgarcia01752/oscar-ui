@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 
 /** Quiet startup release lookup; all widget changes remain on the Qt thread. */
 final class UpgradeChip extends QPushButton {
+    private final Runnable openUpdates;
     private final QTimer poller = new QTimer(this);
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
         var thread = new Thread(task, "oscar-upgrade-chip");
@@ -21,6 +22,7 @@ final class UpgradeChip extends QPushButton {
 
     UpgradeChip(Runnable openUpdates) {
         super("Upgrade");
+        this.openUpdates = openUpdates;
         setObjectName("upgradeChip");
         setAccessibleName("Upgrade OSCAR-UI");
         setToolTip("A newer OSCAR-UI release is available. View upgrade options.");
@@ -29,7 +31,7 @@ final class UpgradeChip extends QPushButton {
                 + " QPushButton:hover { background: #2ea043; }"
                 + " QPushButton:focus { border: 2px solid white; }");
         hide();
-        clicked.connect(openUpdates::run);
+        clicked.connect(this::openUpdateOptions);
         poller.setInterval(100);
         poller.timeout.connect(this::finishCheck);
     }
@@ -58,6 +60,10 @@ final class UpgradeChip extends QPushButton {
             pending = null;
         }
         worker.shutdownNow();
+    }
+
+    private void openUpdateOptions() {
+        openUpdates.run();
     }
 
     private void finishCheck() {

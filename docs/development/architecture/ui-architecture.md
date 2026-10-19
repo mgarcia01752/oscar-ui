@@ -579,6 +579,10 @@ availability. About's successful checks refresh the chip on the Qt thread and
 supersede an outstanding startup lookup. Closing the window cancels the worker.
 Failures are quiet and do not show an upgrade offer; manual retries remain in About.
 
+The Upgrade chip retains its update callback for the widget lifetime and connects
+clicks through a widget-owned method, so collection of a temporary callback
+receiver cannot disconnect the update action.
+
 ### Planned Windows update handoff
 
 The [Windows update plan](windows-updates.md) proposes installer-managed MSP

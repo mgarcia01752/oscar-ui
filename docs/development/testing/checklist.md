@@ -185,6 +185,7 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 - [ ] Equal/newer installed version, missing release or failed startup lookup: hide it.
 - [ ] Show it for a newer release even without a DEB asset (including Windows).
 - [ ] Click to open update options without automatically downloading/installing.
+- [ ] Verify the Upgrade callback survives garbage collection and full-suite execution.
 - [ ] Manual About checks refresh visibility; closing cancels pending checks.
 - [ ] Verify light/dark appearance and keyboard focus.
 

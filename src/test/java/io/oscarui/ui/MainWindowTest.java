@@ -25,6 +25,8 @@ class MainWindowTest {
             assertTrue(chip.isHidden());
             chip.check(() -> new io.oscarui.service.ReleaseUpdateService.ReleaseCheck("New release", null, true));
             await(() -> !chip.isHidden());
+            // The callback must remain owned by the chip after constructor return.
+            System.gc();
             chip.click();
             assertTrue(clicked.get());
             chip.setAvailable(false);
