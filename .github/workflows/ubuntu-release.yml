@@ -26,7 +26,7 @@ jobs:
           ./scripts/unix/setup-qt.sh
       - name: Build and check Debian package
         run: ./scripts/unix/linux-release.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-release
           path: dist/linux/release/*.deb
