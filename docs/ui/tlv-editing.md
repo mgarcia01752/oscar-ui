@@ -18,6 +18,28 @@ supported values before compiling.
 
 Search the catalog and enter a value when adding a TLV.
 
+## Manufacturer and co-signer certificates
+
+At the document root, choose **Add TLV** and search for **ManufacturerCVC**
+(TLV 32) or **Co-signerCVC** (TLV 33). Choose a certificate file or paste its
+contents into the multiline input:
+
+- **DER**: select a binary `.der`, `.cer` or `.crt` file.
+- **PEM**: select a PEM file or paste one complete `BEGIN CERTIFICATE` /
+  `END CERTIFICATE` block, including its delimiters.
+- **HEX**: paste complete byte pairs, contiguous or separated by spaces,
+  newlines or colons; `.hex` and `.txt` files are treated as HEX text.
+
+The input shows the decoded byte count. Invalid or empty input disables Add or
+Apply. Double-click an existing CVC to replace it using the same controls.
+Cancel leaves the document unchanged. File contents are embedded in the
+configuration; the file path is not saved as a reference.
+
+OSCAR handles encoding and certificate fragmentation. The tree shows one row
+per certificate, the text panel contains its HEX value, and its hex popup includes
+all encoded fragments. Both CVCs can be present together. Input validation does
+not verify ASN.1 certificate structure, signatures, trust, or device acceptance.
+
 ## Edit
 
 Double-click a scalar TLV, or select **Edit → Edit TLV**. The popup contains the

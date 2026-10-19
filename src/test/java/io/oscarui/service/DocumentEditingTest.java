@@ -17,6 +17,45 @@ class DocumentEditingTest {
         return service.open(Files.writeString(temporary.resolve("input.txt"), text));
     }
 
+    @Test void addsAndEditsAdjacentCertificatesThroughOscar() throws Exception {
+        var document = open("Docsis { NetworkAccess 1; }");
+        byte[] payload = new byte[1025];
+        for (int index = 0; index < payload.length; index++) {
+            payload[index] = (byte) index;
+        }
+        String hex = CertificateInput.toOscarHex(payload);
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+            var definition = service.choices(document, document.root()).stream()
+                    .filter(entry -> entry.name().equals(name)).findFirst().orElseThrow();
+            assertTrue(CertificateInput.supports(definition));
+            assertEquals("", service.valueIssue(document.configurationType(), definition, hex));
+            assertFalse(service.valueIssue(document.configurationType(), definition, "GG").isEmpty());
+            document = service.insert(document, document.root(), definition, hex);
+        }
+        byte[] encoded = OscarTextCompileCheck.compile(document.text());
+        var projected = service.openCompiledText(document.path(), document.text(),
+                document.text().getBytes(java.nio.charset.StandardCharsets.UTF_8), encoded);
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+            var node = projected.root().childTlvs().stream().filter(entry -> entry.tlvName().equals(name))
+                    .findFirst().orElseThrow();
+            assertArrayEquals(payload, CertificateInput.parse(node.encodedValueText()));
+            var inspected = new SelectedTlvHexService().inspect(projected, node);
+            byte[] fragments = java.util.HexFormat.ofDelimiter(":").parseHex(inspected.hex());
+            assertEquals(payload.length + 2 * ((payload.length + 253) / 254), fragments.length);
+        }
+        var binaries = new OscarBinaryService(service);
+        byte[] finalized = binaries.encode(projected, "synthetic-lab-key");
+        var reopened = binaries.openAuto(Files.write(temporary.resolve("certificates.bin"), finalized));
+        assertArrayEquals(finalized, binaries.encode(reopened, "synthetic-lab-key"));
+        var manufacturer = projected.root().childTlvs().stream()
+                .filter(node -> node.tlvName().equals("ManufacturerCVC")).findFirst().orElseThrow();
+        var edited = service.replaceValue(projected, manufacturer, "30:01:FF");
+        assertTrue(edited.text().contains("ManufacturerCVC 30:01:FF;"));
+        var cosigner = edited.root().childTlvs().stream()
+                .filter(node -> node.tlvName().equals("Co-signerCVC")).findFirst().orElseThrow();
+        assertArrayEquals(payload, CertificateInput.parse(cosigner.encodedValueText()));
+    }
+
     @Test void duplicatesServiceFlowWithoutChangingOriginalOrSourceFile() throws Exception {
         String flow = "DownstreamServiceFlow { /* keep */ ServiceFlowReference 1; QualityOfServiceParameterSetType 07; }";
         String text = "Docsis {\r\n    " + flow + "\r\n    NetworkAccess 1;\r\n}";

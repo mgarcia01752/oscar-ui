@@ -18,6 +18,42 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void certificateAddAndEditUseMultilineValidatedInput() throws Exception {
+        var service = new OscarDocumentService();
+        var document = service.open(Files.writeString(temporary.resolve("cert.txt"), "Docsis { NetworkAccess 1; }"));
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+            var definition = service.choices(document, document.root()).stream()
+                    .filter(entry -> entry.name().equals(name)).findFirst().orElseThrow();
+            var dialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
+            try {
+                dialog.show();
+                var input = dialog.findChild(QPlainTextEdit.class, "certificateText");
+                var add = dialog.findChild(QPushButton.class, "confirmAddTlv");
+                assertFalse(add.isEnabled());
+                input.setPlainText("-----BEGIN CERTIFICATE-----\nMAH/\n-----END CERTIFICATE-----");
+                assertTrue(add.isEnabled());
+                assertEquals("30:01:FF", dialog.selection().value());
+                input.setPlainText("broken");
+                assertFalse(add.isEnabled());
+                input.setPlainText("30 01 FF");
+                assertTrue(add.isEnabled());
+                document = service.insert(document, document.root(), definition, dialog.selection().value());
+            } finally {
+                dialog.dispose();
+            }
+            var node = document.root().childTlvs().stream().filter(entry -> entry.tlvName().equals(name))
+                    .findFirst().orElseThrow();
+            var edit = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition), node);
+            try {
+                edit.show();
+                assertEquals("30:01:FF", edit.selection().value());
+                assertTrue(edit.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+            } finally {
+                edit.dispose();
+            }
+        }
+    }
+
     @Test void ubuntuCancelWaitsForWorkerAndDiscardsCompletedDownload() throws Exception {
         var installer = new io.oscarui.service.UbuntuUpdateService.Installer("0.4.0",
                 java.net.URI.create(io.oscarui.service.ReleaseUpdateService.UI_PROJECT

@@ -251,7 +251,9 @@ public final class OscarBinaryService {
         byte[] bytes = inspectionBytes(document);
         try {
             Document original = decode(document.origin().path(), bytes, document.configurationType());
-            var entries = payloads(bytes, dictionary(document.configurationType()).getTopLevelByteLength());
+            var entries = logicalPayloads(
+                    payloads(bytes, dictionary(document.configurationType()).getTopLevelByteLength()),
+                    document.configurationType());
             if (entries.size() != original.root().childTlvs().size()) {
                 return SnmpSecretMask.HEX_MASK;
             }
@@ -316,7 +318,7 @@ public final class OscarBinaryService {
                 }
             }
             var decodedSource = new StringBuilder(configurationType.header()).append(" {\n");
-            for (String entry : original) {
+            for (String entry : logicalPayloads(original, configurationType)) {
                 var snapshot = new TlvBuilder();
                 snapshot.add(new TlvVariableBinding(HexFormat.of().parseHex(entry), lengthFieldBytesByTlvType));
                 var exporter = new ConfigurationFileExport(snapshot, configurationType.id());
@@ -348,6 +350,32 @@ public final class OscarBinaryService {
         } catch (java.security.NoSuchAlgorithmException error) {
             throw new IllegalStateException(error);
         }
+    }
+
+    private List<String> logicalPayloads(List<String> physicalEntries, FileType configurationType) {
+        var registry = com.comcast.oscar.dictionary.TlvRegistry.forFamily(configurationType.family());
+        var logicalEntries = new ArrayList<String>();
+        StringBuilder pendingCertificateHex = new StringBuilder();
+        Integer pendingCertificateType = null;
+        for (String entry : physicalEntries) {
+            int tlvTypeCode = Integer.parseInt(entry.substring(0, 2), 16);
+            boolean certificate = CertificateInput.supports(registry.find(List.of(tlvTypeCode)));
+            if (!pendingCertificateHex.isEmpty() && (!certificate || !Integer.valueOf(tlvTypeCode).equals(pendingCertificateType))) {
+                logicalEntries.add(pendingCertificateHex.toString());
+                pendingCertificateHex.setLength(0);
+                pendingCertificateType = null;
+            }
+            if (certificate) {
+                pendingCertificateType = tlvTypeCode;
+                pendingCertificateHex.append(entry);
+            } else {
+                logicalEntries.add(entry);
+            }
+        }
+        if (!pendingCertificateHex.isEmpty()) {
+            logicalEntries.add(pendingCertificateHex.toString());
+        }
+        return logicalEntries;
     }
 
     private List<String> payloads(byte[] bytes, Map<Integer, Integer> lengthFieldBytesByTlvType)

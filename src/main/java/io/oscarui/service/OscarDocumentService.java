@@ -367,7 +367,7 @@ public final class OscarDocumentService {
             return "Unsupported text name";
         }
         return isContainer(configurationType, definition) || isSnmpValue(definition)
-                || EDITABLE_VALUE_CODECS.contains(definition.codec()) ? "" : "Unsupported encoding";
+                || CertificateInput.supports(definition) || EDITABLE_VALUE_CODECS.contains(definition.codec()) ? "" : "Unsupported encoding";
     }
 
     /**
@@ -394,6 +394,16 @@ public final class OscarDocumentService {
         }
         if (supplied.indexOf('\n') >= 0 || supplied.indexOf('\r') >= 0) {
             return "Enter a single TLV value";
+        }
+        if (CertificateInput.supports(definition)) {
+            try {
+                CertificateInput.parse(supplied);
+                OscarTextCompileCheck.validate(configurationType.header() + " { "
+                        + definition.name() + " " + supplied + "; }");
+                return "";
+            } catch (InspectionException | IllegalArgumentException error) {
+                return "Enter valid certificate HEX bytes";
+            }
         }
         if (isSnmpValue(definition)) {
             try {

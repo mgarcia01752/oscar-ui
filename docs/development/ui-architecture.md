@@ -551,3 +551,19 @@ to 120 seconds for the UI PID to disappear, then uses pkexec to authorize a fixe
 APT remove command for oscar-ui. Python and the UI are never elevated. Zenity
 reports progress and result, with output retained in a temporary uninstall log.
 No purge, autoremove, restart, or deletion of external user configurations occurs.
+
+## CVC input and fragment projection
+
+`CertificateValuePane` owns file selection and multiline HEX/PEM input for
+manufacturer and co-signer CVC add/edit. `CertificateInput` identifies these
+entries from OSCAR constants and codec metadata, decodes PEM/HEX to bytes,
+and formats OSCAR scalar HEX. DER is treated as opaque bytes; certificate
+trust and ASN.1 validity are not checked. No local file paths enter the document.
+`OscarDocumentService` permits these two previously unsupported codec entries
+and validates their normalized text through OSCAR before insertion/replacement.
+
+`BinaryTreeProjection` passes each contiguous CVC fragment group to OSCAR as
+one logical instance and binds it to one source node. `SelectedTlvHexService`
+retains all fragments in the selected row. Binary opening also groups contiguous CVC fragments for export while retaining
+physical-fragment byte comparisons on reimport. Other TLVs retain their existing
+instance handling. OSCAR 3.3.0 owns fragmentation and adjacent-CVC export.

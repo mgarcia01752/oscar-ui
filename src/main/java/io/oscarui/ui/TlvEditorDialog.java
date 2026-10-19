@@ -6,6 +6,7 @@ package io.oscarui.ui;
 
 import com.comcast.oscar.dictionary.TlvDefinition;
 import io.oscarui.service.OscarDocumentService;
+import io.oscarui.service.CertificateInput;
 import io.oscarui.service.SnmpSecretMask;
 import io.qt.core.QRegularExpression;
 import io.qt.core.Qt;
@@ -19,6 +20,7 @@ final class TlvEditorDialog extends QDialog {
 
     private final QLineEdit value = new QLineEdit();
     private SnmpValuePane snmp;
+    private CertificateValuePane certificate;
 
     private final QTreeWidget list = new QTreeWidget();
 
@@ -109,11 +111,15 @@ final class TlvEditorDialog extends QDialog {
         var form = new QFormLayout();
         var valueLabel = new QLabel("Value");
         value.setObjectName("tlvValue");
+        value.setMaxLength(Integer.MAX_VALUE);
         form.addRow(valueLabel, value);
         layout.addLayout(form);
         snmp = new SnmpValuePane(() -> value.setText(snmp.statement()));
         snmp.hide();
         layout.addWidget(snmp);
+        certificate = new CertificateValuePane(() -> value.setText(certificate.value()));
+        certificate.hide();
+        layout.addWidget(certificate);
         var validation = new QLabel();
         validation.setObjectName("tlvValidation");
         validation.setWordWrap(true);
@@ -141,7 +147,7 @@ final class TlvEditorDialog extends QDialog {
             boolean container = selected != null && service.isContainer(document.configurationType(), selected);
             boolean supported = selected != null && service.editingIssue(document.configurationType(), selected).isEmpty();
             value.setEnabled(supported && !container);
-            String issue = isSnmp() ? snmp.issue() : "";
+            String issue = isSnmp() ? snmp.issue() : isCertificate() ? certificate.issue() : "";
             if (selected != null && issue.isEmpty()) {
                 issue = service.valueIssue(document.configurationType(), selected, value.text());
             }
@@ -151,9 +157,11 @@ final class TlvEditorDialog extends QDialog {
         list.currentItemChanged.connect((current, previous) -> {
             selected = current instanceof TlvItem item ? item.definition : null;
             value.clear();
-            value.setVisible(!isSnmp());
-            valueLabel.setVisible(!isSnmp());
+            value.setVisible(!isSnmp() && !isCertificate());
+            valueLabel.setVisible(!isSnmp() && !isCertificate());
             snmp.setVisible(isSnmp());
+            certificate.setVisible(isCertificate());
+            certificate.setValue("");
             if (isSnmp()) {
                 snmp.setStatement("");
                 snmp.applyMask(masking.enabled(), false);
@@ -200,11 +208,16 @@ final class TlvEditorDialog extends QDialog {
             resize(620, 340);
             if (isSnmp()) {
                 snmp.setStatement(editing.encodedValueText());
+            } else if (isCertificate()) {
+                certificate.setValue(editing.encodedValueText());
+                resize(620, 540);
             } else {
                 value.setText(editing.encodedValueText());
             }
             if (isSnmp()) {
                 snmp.findChild(QLineEdit.class, "snmpOid").setFocus();
+            } else if (isCertificate()) {
+                certificate.findChild(QPlainTextEdit.class, "certificateText").setFocus();
             } else {
                 value.setFocus();
                 value.selectAll();
@@ -236,6 +249,9 @@ final class TlvEditorDialog extends QDialog {
     static String valueHelp(TlvDefinition definition, boolean container) {
         if (container) {
             return "Parent TLV | Add values to its child TLVs";
+        }
+        if (CertificateInput.supports(definition)) {
+            return "Certificate | Choose DER / PEM / HEX file or paste HEX / PEM text";
         }
         return switch (definition.codec()) {
             case "oid" -> "SNMP varbind | Enter OID, type, and value separately";
@@ -273,6 +289,10 @@ final class TlvEditorDialog extends QDialog {
     Selection selection() {
         return new Selection(selected, maskedOriginal && value.text().isEmpty()
                 ? editingNode.encodedValueText() : value.text());
+    }
+
+    private boolean isCertificate() {
+        return CertificateInput.supports(selected);
     }
 
     private boolean isSnmp() {

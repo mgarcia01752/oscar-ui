@@ -165,3 +165,16 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Verify Windows opens Installed apps and the registered uninstaller works.
 - [ ] Run mocked helper tests; do not uninstall the developer's actual package
   as a routine check. Interactive polkit/Windows checks remain separate.
+
+## CVC add/edit
+
+- [ ] At the root, find ManufacturerCVC (32) and Co-signerCVC (33).
+- [ ] Add each using DER file, PEM file/paste and HEX file/paste.
+- [ ] Reject empty, odd-length/non-HEX and malformed PEM input.
+- [ ] Verify a payload over 254 bytes remains one editable tree row.
+- [ ] Add both CVCs; verify text and binary payloads retain every byte.
+- [ ] Edit one CVC without changing the other; Cancel preserves the document.
+- [ ] Verify selected-TLV hex includes all certificate fragments.
+- [ ] Run CertificateInputTest, DocumentEditingTest and opt-in MainWindowTest.
+- [ ] Verify native file selection on Ubuntu and Windows; synthetic byte tests
+  do not establish certificate trust or modem interoperability.

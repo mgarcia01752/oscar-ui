@@ -86,7 +86,14 @@ public final class SelectedTlvHexService {
         if (definition == null) {
             throw new InspectionException("This TLV has no supported Oscar definition.");
         }
-        validate(encoded, definition.type(), definition.lengthBytes());
+        if (CertificateInput.supports(definition)) {
+            if (encoded.length == 0 || Byte.toUnsignedInt(encoded[0]) != definition.type()
+                    || CertificateInput.encodedEnd(encoded, 0, definition) != encoded.length) {
+                throw new InspectionException("OSCAR returned unexpected certificate fragments.");
+            }
+        } else {
+            validate(encoded, definition.type(), definition.lengthBytes());
+        }
         var children = new ArrayList<HexNode>();
         if (!node.childTlvs().isEmpty()) {
             byte[] payload = TlvBuilder.getTlvValue(encoded, 0, definition.lengthBytes());

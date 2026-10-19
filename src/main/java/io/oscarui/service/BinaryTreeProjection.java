@@ -28,7 +28,7 @@ final class BinaryTreeProjection {
         try {
             var registry = TlvRegistry.forFamily(source.configurationType().family());
             var decoded = new ArrayList<Node>();
-            // Export one physical instance at a time: Oscar's whole-file exporter
+            // Export one logical instance (including CVC fragments): Oscar's whole-file exporter
             // groups repeated types, which must not reorder the user's source.
             for (int byteOffset = 0; byteOffset < encoded.length;) {
                 int tlvTypeCode = Byte.toUnsignedInt(encoded[byteOffset]);
@@ -36,7 +36,7 @@ final class BinaryTreeProjection {
                 if (definition == null) {
                     throw new InspectionException("OSCAR encoded an unmapped TLV.");
                 }
-                int endOffset = TlvBuilder.nextTLVIndex(encoded, byteOffset, definition.lengthBytes());
+                int endOffset = CertificateInput.encodedEnd(encoded, byteOffset, definition);
                 if (endOffset <= byteOffset || endOffset > encoded.length) {
                     throw new InspectionException("OSCAR returned a truncated TLV.");
                 }
@@ -76,7 +76,7 @@ final class BinaryTreeProjection {
             Node decoded = remainingDecoded.stream().filter(candidate -> candidate.tlvPath().equals(source.tlvPath()))
                     .findFirst().orElseThrow(() -> new InspectionException("OSCAR omitted a decoded TLV instance."));
             remainingDecoded.remove(decoded);
-            int endOffset = TlvBuilder.nextTLVIndex(encoded, byteOffset, definition.lengthBytes());
+            int endOffset = CertificateInput.encodedEnd(encoded, byteOffset, definition);
             if (endOffset <= byteOffset || endOffset > encoded.length) {
                 throw new InspectionException("OSCAR returned a truncated child TLV.");
             }
