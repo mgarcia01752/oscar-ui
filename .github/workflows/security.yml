@@ -68,7 +68,7 @@ jobs:
           ./mvnw -B -Dmaven.repo.local=.m2 -Plinux,windows org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies -DincludeScope=runtime -DoutputDirectory=target/security-dependencies
           ./mvnw -B -Dmaven.repo.local=.m2 -Plinux,windows org.apache.maven.plugins:maven-dependency-plugin:3.8.1:tree -DoutputFile=target/security-dependency-tree.txt
       - name: Scan resolved JARs (block high and critical)
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
         with:
           path: target/security-dependencies
           fail-build: true
