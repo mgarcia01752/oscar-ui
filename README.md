@@ -19,6 +19,8 @@
 A desktop editor for Comcast Oscar configuration files on Ubuntu and Windows.
 **Under development:** complete configuration validation is still unfinished.
 
+![OSCAR-UI main window in dark mode](docs/images/user-guide/workspace-dark.png)
+
 ## Download
 
 Open [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases) and
