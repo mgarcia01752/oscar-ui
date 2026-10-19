@@ -146,3 +146,10 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
   packaged installer helper, reject a repeat install, smoke-launch the result,
   preserve user configurations, and uninstall cleanly. This does not substitute
   for interactive polkit/cancellation testing on each desktop.
+
+## Ubuntu dependency portability
+
+- [ ] Run DEB normalization tests: preserve payload/other dependencies, reject
+  direct PCRE1 linkage or missing GLib, and keep the original on failure.
+- [ ] Verify the normalized DEB installs, launches, and removes on Ubuntu
+  22.04, 24.04, and 26.04; a local synthetic DEB test is not this CI check.

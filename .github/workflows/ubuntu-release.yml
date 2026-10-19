@@ -95,7 +95,9 @@ jobs:
       - name: Remove package and verify cleanup
         if: always()
         run: |
-          sudo apt-get remove -y oscar-ui
+          if dpkg-query -W oscar-ui >/dev/null 2>&1; then
+            sudo apt-get remove -y oscar-ui
+          fi
           test "$(dpkg-query -W -f='${Status}' oscar-ui 2>/dev/null || true)" != 'install ok installed'
           test ! -e /opt/oscar-ui/bin/OSCAR-UI
           test ! -e /usr/share/applications/oscar-ui-OSCAR-UI.desktop

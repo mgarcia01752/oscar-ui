@@ -157,6 +157,9 @@ def package(kind):
                          'libxcb-render-util0, libxcb-shape0, libxcb-randr0, '
                          'libxcb-xfixes0, libxcb-sync1, libxcb-render0']
     run(args)
+    if kind == 'deb':
+        for package_file in (ROOT / 'dist/linux/deb').glob('*.deb'):
+            run([sys.executable, ROOT / 'scripts/build/deb-dependencies.py', package_file])
 
 
 def main():

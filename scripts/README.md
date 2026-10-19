@@ -85,3 +85,8 @@ validates a root-owned copy of the DEB, and uses APT to upgrade only OSCAR-UI an
 required dependencies. It reports results through zenity and can reopen the app
 as the original user. It is not a developer release/push script. See the
 [architecture](../docs/development/ui-architecture.md#ubuntu-update-handoff).
+
+`build/deb-dependencies.py` checks payload ELF dependencies and removes only
+the build host's indirect PCRE1 requirement from generated DEBs, allowing
+Ubuntu 26.04 to select its own GLib dependencies. See the
+[dependency checks](../docs/development/packaging.md#ubuntu-cross-version-dependencies).

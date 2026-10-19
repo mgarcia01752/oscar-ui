@@ -342,3 +342,21 @@ rejects a repeat update, smoke-launches, and preserves user configuration.
 Interactive polkit authorization is a separate desktop check. Release assets
 without a GitHub SHA-256 digest remain manually downloadable but cannot use the
 in-app installer. The updater creates no extra release asset or APT repository.
+
+### Ubuntu cross-version dependencies
+
+JDK 21 jpackage uses `ldd`, which includes indirect build-host dependencies.
+On Ubuntu 22.04, this adds `libpcre3` through system GLib, even though our
+payload uses GLib rather than PCRE1 directly. Ubuntu 26.04 cannot satisfy that
+obsolete dependency. `scripts/build/deb-dependencies.py` inspects every payload
+ELF with `readelf` before removing only `libpcre3` from the generated DEB.
+It refuses removal if any ELF directly needs `libpcre.so.*` or the GLib
+package dependency is missing. Other dependencies and payload files remain
+intact; the destination system's GLib package selects its own dependencies.
+The normalized DEB replaces the original only after a successful rebuild.
+
+This runs for local and CI DEB packaging, requires `readelf` from binutils
+(also a dependency of dpkg-dev), and does not install anything on the host.
+The three Ubuntu install/launch/remove jobs remain the compatibility gate.
+Cleanup skips APT removal when the package was never registered with dpkg;
+it still verifies removal and preserves unrelated user configurations.
