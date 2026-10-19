@@ -165,11 +165,3 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Verify Windows opens Installed apps and the registered uninstaller works.
 - [ ] Run mocked helper tests; do not uninstall the developer's actual package
   as a routine check. Interactive polkit/Windows checks remain separate.
-
-## Security release checks
-
-- [ ] Confirm dependency scans pass for the release revision; review the latest
-  weekly/manual CodeQL results separately.
-- [ ] Review high/critical findings and confirm reports survive failures.
-- [ ] Verify Dependabot graph submission and secret push protection.
-- [ ] Do not claim native runtime coverage from the JAR scan.

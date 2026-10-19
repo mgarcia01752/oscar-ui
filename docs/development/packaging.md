@@ -115,9 +115,8 @@ bump or commit; existing tags are never moved. Use a new version for new code.
 `release.yml` handles version-tag pushes and manual runs selected on a tag.
 It first calls `java-ci.yml` for the exact tagged commit, running the full
 Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, and macOS 15 matrix. Both platform jobs declare
-`needs: [ci, security]`: failed, cancelled or skipped CI prevents packaging and uploads.
-The reusable [dependency Security workflow](security-scanning.md) also checks the tagged
-revision before packaging. A passing branch build or an older tag does not satisfy this gate. The two
+`needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
+A passing branch build or an older tag does not satisfy this gate. The two
 platform workflows are callable only through the coordinator, so direct tag
 triggers or manual platform runs cannot bypass CI. Manual runs on branches
 skip release jobs; choose the release tag when rerunning through Actions.

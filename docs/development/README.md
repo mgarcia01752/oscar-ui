@@ -14,7 +14,6 @@ Keep personal configuration files in the ignored `test-config/` directory.
 - [Deferred work and follow-up checks](TODO.md)
 - [UI architecture](ui-architecture.md)
 - [Verification checklist](checklist.md)
-- [Security scanning and release gates](security-scanning.md)
 - [Local pre-push checks](pre-push-checks.md)
 - [Release packaging and version tags](packaging.md)
 - [Build script layout and commands](../../scripts/README.md)
