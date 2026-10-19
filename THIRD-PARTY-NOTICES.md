@@ -4,7 +4,7 @@ The application's Apache-2.0 license does not replace third-party licenses.
 
 | Component | Selected license / source |
 | --- | --- |
-| Comcast/Oscar 3.2.3, commit 4542214b951ab90cec1c90073f287483ade3a821 | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v3.2.3 |
+| Comcast/Oscar 3.2.4, commit 5d342f20ead63d296f37e65e8c785585210bd163 | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v3.2.4 |
 | Qt Jambi 6.8.3 | LGPL-2.1 option; https://github.com/OmixVisualization/qtjambi/tree/v6.8.3 |
 | Qt 6.8.3 Core, GUI, Widgets, DBus and their platform plugins | LGPL-3.0 option; https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz |
 | ICU 73.2 (Linux Qt dependency) | ICU/Unicode license; https://github.com/unicode-org/icu/releases/tag/release-73-2 |

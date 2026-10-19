@@ -467,7 +467,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.2.3 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.2.4 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -488,3 +488,15 @@ The release preparation helper moves Qt DLLs beside the executable and sets
 remain under `app/qt/plugins`. Java stays private to the application. The MSI
 includes a single copy of the staged Qt libraries; development launches retain
 their separate staging layout. See [packaging](packaging.md#windows-native-dll-layout).
+
+### Failed binary import diagnostics
+
+`OscarBinaryService` attaches an OSCAR structural report to `InspectionException`
+after binary import fails, using the same byte snapshot on the worker thread.
+`BinaryFailureReport` formats metadata from OSCAR 3.2.4's diagnostic API; it does
+not parse bytes or infer a successful family. Automatic failures use an explicitly
+labeled DOCSIS candidate, and explicit DPoE failures use DPoE. Unsupported framing
+is reported without a scan. First-failure stopping is enabled in OSCAR options.
+`MainWindow` presents `BinaryFailureDialog` with Copy report and Close, preserving
+the active document. Metadata-only reports bypass masking of upstream exception
+text; no payload, path, or raw exception content enters the popup or clipboard.

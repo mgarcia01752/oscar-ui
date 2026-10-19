@@ -5,6 +5,13 @@
 package io.oscarui.service;
 
 public final class InspectionException extends Exception {
+    private final String binaryReport;
+
+    InspectionException(String message, String binaryReport) {
+        super(message);
+        this.binaryReport = binaryReport;
+    }
+
     /**
      * Creates a caller-facing configuration operation failure.
      *
@@ -14,6 +21,7 @@ public final class InspectionException extends Exception {
      */
     public InspectionException(String message) {
         super(message);
+        binaryReport = null;
     }
     /**
      * Creates a caller-facing configuration operation failure.
@@ -25,6 +33,16 @@ public final class InspectionException extends Exception {
      */
     public InspectionException(String message, Throwable cause) {
         super(message, cause);
+        binaryReport = null;
+    }
+
+    /**
+     * Returns metadata-only diagnostics attached to a failed binary import.
+     *
+     * @return safe report, or null for other operation failures
+     */
+    public String binaryReport() {
+        return binaryReport;
     }
 
     /**

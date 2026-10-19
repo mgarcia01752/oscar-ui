@@ -18,6 +18,21 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void binaryFailureReportIsReadOnlyAndCopyable() {
+        String report = "000000  45  9  Unknown [UNKNOWN_TYPE]";
+        var dialog = new BinaryFailureDialog(null, report);
+        try {
+            assertEquals("Binary import failed", dialog.windowTitle());
+            var output = dialog.findChild(QPlainTextEdit.class, "binaryFailureReport");
+            assertTrue(output.isReadOnly());
+            assertEquals(report, output.toPlainText());
+            dialog.findChild(QPushButton.class, "copyBinaryFailureReport").click();
+            assertEquals(report, QApplication.clipboard().text());
+        } finally {
+            dialog.dispose();
+        }
+    }
+
     @TempDir Path temporary;
     private Throwable callbackFailure;
 

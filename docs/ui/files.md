@@ -50,3 +50,24 @@ unfinished. Some codecs remain read-only. Editable PacketCable binary import
 with generated SNMP statements is not yet supported.
 
 See [TLV editing](tlv-editing.md) and [configuration file security](../configuration-file-security.md).
+
+## When a binary cannot open
+
+If OSCAR cannot import a binary without losing TLV data, a **Binary import failed**
+popup shows a read-only text diagnostic report. The current document and the
+original file remain unchanged. **Copy report** copies the metadata listing;
+**Close** dismisses it. No separate tool or menu is required.
+
+The listing shows decimal byte offsets, dotted TLV paths, names, lengths, and
+structural statuses, with indented child TLVs. It stops at the first structural
+failure and identifies uninspected bytes. Unknown TLVs with complete framing
+remain listed; their assumed one-byte lengths make subsequent boundaries conditional.
+A scan reaching the end does not prove that values, MICs, or text round-trips are valid.
+
+For automatic opens, the report explicitly uses a DOCSIS framing candidate;
+this is not automatic family identification. Explicit DPoE opens use DPoE.
+PacketCable and DOCSIS 4.0 envelope diagnostics are not supported by this API.
+Payload values, raw hex, file paths, and upstream exception messages are omitted,
+including when obfuscation is disabled. The metadata report remains available
+when obfuscation is enabled. Text syntax errors and file-read errors retain their
+normal error messages.

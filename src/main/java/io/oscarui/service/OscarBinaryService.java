@@ -73,7 +73,7 @@ public final class OscarBinaryService {
             catch (InspectionException ignored) { /* Try the next catalog. */ }
         }
         throw new InspectionException("Cannot identify a supported configuration without losing TLV data. "
-                + "The file may be truncated or contain unsupported TLVs.");
+                + "The file may be truncated or contain unsupported TLVs.", BinaryFailureReport.create(bytes, null));
     }
 
     /**
@@ -90,7 +90,13 @@ public final class OscarBinaryService {
         if (!documents.types().contains(configurationType)) {
             throw new InspectionException("Unsupported configuration type.");
         }
-        return decode(path, read(path), configurationType);
+        byte[] bytes = read(path);
+        try {
+            return decode(path, bytes, configurationType);
+        } catch (InspectionException failure) {
+            throw new InspectionException(failure.getMessage(),
+                    BinaryFailureReport.create(bytes, configurationType.family()));
+        }
     }
 
     /**

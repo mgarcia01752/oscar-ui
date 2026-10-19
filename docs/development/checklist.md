@@ -119,3 +119,9 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 
 - [ ] Record final MSI download size and installed file totals separately; update
   release size notes with explicit MB/MiB units and label reference measurements.
+
+- [ ] Fail a binary open with an existing edited document: retain that document,
+  show the read-only diagnostic popup, and verify Copy report/Close.
+- [ ] Verify first-error stopping, unknown entries, and candidate-family labeling;
+  ensure reports omit payloads with obfuscation both enabled and disabled.
+- [ ] Confirm text syntax and file-read errors use their ordinary error flow.

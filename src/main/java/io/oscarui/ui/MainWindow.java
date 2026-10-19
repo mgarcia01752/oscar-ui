@@ -874,7 +874,16 @@ public final class MainWindow extends QMainWindow {
             }
             showStatus(message);
             if (interactive) {
-                QMessageBox.warning(this, "Document operation failed", message);
+                if (cause instanceof InspectionException inspection && inspection.binaryReport() != null) {
+                    var dialog = new BinaryFailureDialog(this, inspection.binaryReport());
+                    try {
+                        dialog.exec();
+                    } finally {
+                        dialog.dispose();
+                    }
+                } else {
+                    QMessageBox.warning(this, "Document operation failed", message);
+                }
             }
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();

@@ -16,6 +16,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class OscarBinaryServiceTest {
+    @Test void failedBinaryOpenIncludesSafeDiagnosticsAndPreservesBytes() throws Exception {
+        byte[] bytes = {45, 6, 83, 69, 67, 82, 69, 84, (byte) 255};
+        Path file = Files.write(temporary.resolve("unknown.bin"), bytes);
+        var failure = assertThrows(InspectionException.class, () -> binary.openAuto(file));
+        assertNotNull(failure.binaryReport());
+        assertTrue(failure.binaryReport().contains("UNKNOWN_TYPE"));
+        assertTrue(failure.binaryReport().contains("not identified"));
+        assertFalse(failure.binaryReport().contains("SECRET"));
+        assertFalse(failure.binaryReport().contains("534543524554"));
+        assertArrayEquals(bytes, Files.readAllBytes(file));
+    }
+
+    @Test void diagnosticStopsBeforeLaterSiblingAndTextErrorsStayOrdinary() throws Exception {
+        String report = BinaryFailureReport.create(new byte[]{60,3,1,5,1,3,1,1}, "docsis");
+        assertTrue(report.contains("TRUNCATED_VALUE"));
+        assertTrue(report.contains("5..8"));
+        assertFalse(report.contains("NetworkAccess"));
+        Path text = Files.writeString(temporary.resolve("bad.txt"), "Docsis { BrokenSyntax }");
+        var failure = assertThrows(InspectionException.class, () -> binary.openAuto(text));
+        assertNull(failure.binaryReport());
+        assertTrue(BinaryFailureReport.create(new byte[]{1}, "packetcable").contains("No diagnostic scan"));
+    }
+
     private static final String LAB_KEY = "public-test-key";
     @TempDir Path temporary;
     private final OscarDocumentService documents = new OscarDocumentService();
