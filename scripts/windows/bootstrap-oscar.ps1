@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-$Version = '3.2.5'
-$Commit = '0b24f87e55706584e3afefc062c987c2dffd9316'
-$Sha256 = 'a6aa352c9806067b152476c913a541ed3bbe8847c677baaeffa4e3944564aa49'
+$Version = '3.3.0'
+$Commit = 'c20e2139ce4f404d7b6d9293e249d3ea96b1bed2'
+$Sha256 = '2b6f87d131578ffcfe1f0a45b81b199b440218c3b0577257832eb392b497d775'
 $Release = "$Root/.tools/oscar-$Version"
 New-Item -ItemType Directory -Force -Path $Release | Out-Null
 Invoke-WebRequest -Uri "https://github.com/Comcast/Oscar/releases/download/v$Version/oscar-thin.jar" -OutFile "$Release/oscar-thin.jar.download"
