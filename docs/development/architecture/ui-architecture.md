@@ -578,3 +578,12 @@ existing About update flow. Noninteractive tests and captures do not query GitHu
 availability. About's successful checks refresh the chip on the Qt thread and
 supersede an outstanding startup lookup. Closing the window cancels the worker.
 Failures are quiet and do not show an upgrade offer; manual retries remain in About.
+
+### Planned Windows update handoff
+
+The [Windows update plan](windows-updates.md) proposes installer-managed MSP
+patches for compatible application-only updates and a user-driven full
+uninstall/reinstall when dependencies or installation layout change. Direct
+JAR replacement is not the proposed path because MSI repair could restore old
+files. This plan awaits review and an MSI/MSP feasibility prototype; Windows
+currently retains manual release downloads.

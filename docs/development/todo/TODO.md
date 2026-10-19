@@ -188,3 +188,18 @@ git apply --check docs/development/todo/deferred-tlv-reordering.patch
   repeated instances, text and binary save/reopen, and masked values.
 - [ ] Document the completed behavior in the user guide, architecture, and
   verification checklist after the upstream dependency is resolved.
+
+## Windows updates
+
+Status: proposed; awaiting review. See the
+[Windows update plan](../architecture/windows-updates.md) for requirements,
+repair concerns, compatibility rules and phased acceptance checks.
+
+- [ ] Review the proposed MSP patch / full-reinstall split.
+- [ ] Prove patch, repair, rollback and uninstall with our generated MSI on Windows.
+- [ ] Agree signing, baseline support and any required packaging changes.
+- [ ] Implement the approved helper and UI handoff, then add Windows CI coverage.
+- [ ] Publish updated user instructions only when the feature is available.
+
+The cross-platform Upgrade chip is implemented; Windows automatic installation
+is not. Do not replace MSI-managed JARs directly as an interim workaround.

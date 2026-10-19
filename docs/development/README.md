@@ -13,7 +13,7 @@ Keep personal configuration files in the ignored `test-config/` directory.
 | Area | Documents |
 | --- | --- |
 | Daily commands | [CLI shortcuts](short-cuts.md) |
-| Architecture | [UI design and component ownership](architecture/ui-architecture.md) |
+| Architecture | [UI design and component ownership](architecture/ui-architecture.md) · [Windows update plan](architecture/windows-updates.md) |
 | Build and release | [Packaging](build/packaging.md) · [Local installers](build/build-images.md) · [OSCAR dependency updates](build/oscar-dependency-updates.md) |
 | Testing | [Verification checklist](testing/checklist.md) · [Pre-push checks](testing/pre-push-checks.md) |
 | Deferred work | [TODO and deferred patches](todo/TODO.md) |
