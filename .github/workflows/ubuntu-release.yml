@@ -41,7 +41,7 @@ jobs:
         os: [ubuntu-22.04, ubuntu-24.04, ubuntu-26.04]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux-release
           path: release
@@ -118,7 +118,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux-release
           path: release
