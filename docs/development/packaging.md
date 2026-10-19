@@ -363,3 +363,11 @@ This runs for local and CI DEB packaging, requires `readelf` from binutils
 The three Ubuntu install/launch/remove jobs remain the compatibility gate.
 Cleanup skips APT removal when the package was never registered with dpkg;
 it still verifies removal and preserves unrelated user configurations.
+
+### Ubuntu uninstall helper
+
+The DEB also bundles `ubuntu-uninstall.py`; extraction compares it with the
+tracked source. About starts it unprivileged and it invokes pkexec for APT only
+after the UI exits. It uses the existing python3/pkexec/zenity dependencies.
+The install matrix checks package removal; interactive authorization and About
+handoff require the separate checks in the verification checklist.

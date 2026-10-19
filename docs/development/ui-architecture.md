@@ -538,3 +538,16 @@ is reported without a scan. First-failure stopping is enabled in OSCAR options.
 `MainWindow` presents `BinaryFailureDialog` with Copy report and Close, preserving
 the active document. Metadata-only reports bypass masking of upstream exception
 text; no payload, path, or raw exception content enters the popup or clipboard.
+
+## Uninstall handoff
+
+About exposes a removal request only for supported packaged installations.
+MainWindow confirms (Cancel by default), then uses its existing unsaved-document
+gate before UninstallService starts an external handoff and closes the UI.
+A launch failure keeps the document open. Windows opens `ms-settings:appsfeatures`
+so the user selects OSCAR-UI; it does not invoke an arbitrary MSI product code.
+Ubuntu runs the packaged `ubuntu-uninstall.py` as the normal user. It waits up
+to 120 seconds for the UI PID to disappear, then uses pkexec to authorize a fixed
+APT remove command for oscar-ui. Python and the UI are never elevated. Zenity
+reports progress and result, with output retained in a temporary uninstall log.
+No purge, autoremove, restart, or deletion of external user configurations occurs.

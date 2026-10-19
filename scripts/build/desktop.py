@@ -57,7 +57,8 @@ def build():
         shutil.copy2(ROOT / name, app)
     shutil.copytree(ROOT / 'licenses', app / 'licenses', dirs_exist_ok=True)
     if not WINDOWS:
-        shutil.copy2(ROOT / 'scripts/unix/ubuntu-update.py', app / 'ubuntu-update.py')
+        for helper in ('ubuntu-update.py', 'ubuntu-uninstall.py'):
+            shutil.copy2(ROOT / 'scripts/unix' / helper, app / helper)
     # Keep the pinned original Oscar attribution alongside its unmodified library.
     upstream = ROOT / '.tools/oscar-3.2.5'
     if not (upstream / 'LICENSE').exists():

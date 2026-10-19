@@ -120,3 +120,7 @@ Keep configuration files in your own folders, outside the installation directory
 Uninstall removes the application and bundled runtime; those files remain.
 
 Continue with the [user guide](../ui/README.md).
+
+You can also start removal from **About → Uninstall OSCAR-UI…** in an installed
+package. Save your changes when prompted. Windows opens Installed apps; select OSCAR-UI and choose Uninstall.
+See the [About guide](../ui/about.md#uninstall-oscar-ui).

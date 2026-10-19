@@ -153,3 +153,15 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
   direct PCRE1 linkage or missing GLib, and keep the original on failure.
 - [ ] Verify the normalized DEB installs, launches, and removes on Ubuntu
   22.04, 24.04, and 26.04; a local synthetic DEB test is not this CI check.
+
+## About uninstall
+
+- [ ] Verify the button is hidden in development runs and present in installed
+  Ubuntu/Windows packages; retain the uninstall-guide link.
+- [ ] Verify confirmation Cancel and unsaved Save/Discard/Cancel, including save
+  failure; helper-start failure must keep the UI open.
+- [ ] Verify Ubuntu waits for UI exit, handles approval cancellation and APT
+  failure with a log, removes successfully, and keeps external configurations.
+- [ ] Verify Windows opens Installed apps and the registered uninstaller works.
+- [ ] Run mocked helper tests; do not uninstall the developer's actual package
+  as a routine check. Interactive polkit/Windows checks remain separate.

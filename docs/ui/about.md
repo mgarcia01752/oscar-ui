@@ -37,3 +37,17 @@ to reopen OSCAR-UI. Canceling before installation does not change the package.
 This is available for installed Ubuntu x64 DEB packages. Other platforms and
 development runs retain the release download link. See the
 [Ubuntu update instructions](../install/ubuntu.md#update) for fallback and failures.
+
+## Uninstall OSCAR-UI
+
+In an installed package, choose **Uninstall OSCAR-UI…** at the bottom of About.
+Confirm, then save or discard unsaved changes; Cancel keeps the application open.
+On Ubuntu the UI closes, administrator approval appears, and a separate progress
+window reports removal. On Windows the UI closes and Installed apps opens;
+select OSCAR-UI and choose Uninstall there.
+
+Configuration files outside the installation directory remain. Ubuntu removal
+does not purge or autoremove dependencies. If authorization is canceled, the
+package remains installed and you can launch it again. A failed removal shows
+the log path; use the platform installation guide to recover from APT errors.
+The button is hidden in development checkouts; the guide link remains available.

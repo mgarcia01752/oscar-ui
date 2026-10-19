@@ -452,19 +452,44 @@ public final class MainWindow extends QMainWindow {
     private void showAbout(boolean checkUpdates) {
         var dialog = new AboutDialog(this);
         io.oscarui.service.UbuntuUpdateService.Installer installer;
+        boolean uninstallRequested;
         try {
             if (checkUpdates) {
                 dialog.checkUpdates();
             }
             dialog.exec();
             installer = dialog.requestedInstaller();
+            uninstallRequested = dialog.uninstallRequested();
         } finally {
             dialog.stopChecking();
             dialog.dispose();
         }
-        if (installer != null && pending == null) {
+        if (uninstallRequested && pending == null) {
+            confirmUninstall();
+        } else if (installer != null && pending == null) {
             withDiscardPermission(() -> installUbuntuUpdate(installer));
         }
+    }
+
+    private void confirmUninstall() {
+        String action = System.getProperty("os.name", "").startsWith("Windows")
+                ? "Close OSCAR-UI and open Windows Installed apps? Select OSCAR-UI there to uninstall."
+                : "Close OSCAR-UI and request administrator approval to uninstall?";
+        if (QMessageBox.question(this, "Uninstall OSCAR-UI", action
+                + "\nConfiguration files outside the installation directory will be kept.",
+                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
+                QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
+            return;
+        }
+        withDiscardPermission(() -> {
+            try {
+                new io.oscarui.service.UninstallService().launch();
+                modified = false;
+                close();
+            } catch (java.io.IOException exception) {
+                QMessageBox.warning(this, "Uninstall could not start", exception.getMessage());
+            }
+        });
     }
 
     private void installUbuntuUpdate(io.oscarui.service.UbuntuUpdateService.Installer installer) {

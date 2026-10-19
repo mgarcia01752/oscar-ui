@@ -662,6 +662,9 @@ class MainWindowTest {
         var dialog = new AboutDialog(null, result::get);
         dialog.show();
         try {
+            var uninstall = dialog.findChild(QPushButton.class, "uninstallButton");
+            assertFalse(uninstall.isVisible());
+            assertFalse(dialog.uninstallRequested());
             var button = dialog.findChild(QPushButton.class, "checkUpdatesButton");
             var status = dialog.findChild(QLabel.class, "updateStatus");
             assertTrue(dialog.findChildren(QLabel.class).stream()

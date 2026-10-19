@@ -78,3 +78,7 @@ Keep configuration files in your own folders, outside the installation directory
 Uninstall removes the application and bundled runtime; those files remain.
 
 Continue with the [user guide](../ui/README.md).
+
+You can also start removal from **About → Uninstall OSCAR-UI…** in an installed
+package. Save your changes when prompted. Ubuntu asks for administrator approval after the app closes.
+See the [About guide](../ui/about.md#uninstall-oscar-ui).

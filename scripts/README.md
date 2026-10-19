@@ -90,3 +90,8 @@ as the original user. It is not a developer release/push script. See the
 the build host's indirect PCRE1 requirement from generated DEBs, allowing
 Ubuntu 26.04 to select its own GLib dependencies. See the
 [dependency checks](../docs/development/packaging.md#ubuntu-cross-version-dependencies).
+
+`unix/ubuntu-uninstall.py` is bundled in the DEB for About's uninstall action.
+It waits for the UI to exit, requests authorization for APT removal, and reports
+the result without deleting external configurations or restarting the app.
+Tests mock all removal processes; no real package removal is performed locally.

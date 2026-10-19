@@ -20,6 +20,7 @@ final class AboutDialog extends QDialog {
     private final QPushButton updateButton = new QPushButton("Update on Ubuntu");
     private volatile UbuntuUpdateService.Installer availableInstaller;
     private UbuntuUpdateService.Installer requestedInstaller;
+    private boolean uninstallRequested;
     private final QLabel releaseNotes = link("View releases and downloads", ReleaseUpdateService.UI_PROJECT + "/releases/latest");
     private final QTimer pollTimer = new QTimer(this);
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
@@ -108,6 +109,14 @@ final class AboutDialog extends QDialog {
         updateInstructions.setObjectName("updateUninstallLink");
         updateLayout.addWidget(updateInstructions);
         layout.addWidget(updates);
+        var uninstall = new QPushButton("Uninstall OSCAR-UI…");
+        uninstall.setObjectName("uninstallButton");
+        uninstall.setVisible(new io.oscarui.service.UninstallService().supported());
+        uninstall.clicked.connect(() -> {
+            uninstallRequested = true;
+            accept();
+        });
+        layout.addWidget(uninstall);
         var buttons = new QDialogButtonBox();
         buttons.addButton(QDialogButtonBox.StandardButton.Close);
         buttons.rejected.connect(this::reject);
@@ -131,6 +140,10 @@ final class AboutDialog extends QDialog {
 
     UbuntuUpdateService.Installer requestedInstaller() {
         return requestedInstaller;
+    }
+
+    boolean uninstallRequested() {
+        return uninstallRequested;
     }
 
     void stopChecking() {

@@ -29,7 +29,9 @@ for maintainer in postinst prerm; do
   cmp "$ROOT/packaging/linux/$maintainer" "$PROBE/control/$maintainer"
 done
 dpkg-deb -x "$PACKAGE" "$PROBE"
-cmp "$ROOT/scripts/unix/ubuntu-update.py" "$PROBE/opt/oscar-ui/lib/app/ubuntu-update.py"
+for helper in ubuntu-update.py ubuntu-uninstall.py; do
+  cmp "$ROOT/scripts/unix/$helper" "$PROBE/opt/oscar-ui/lib/app/$helper"
+done
 BUILD_JDK="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
 python3 "$ROOT/scripts/build/verify-java-distribution.py" \
   --runtime "$PROBE/opt/oscar-ui/lib/runtime" \
