@@ -137,7 +137,7 @@ It downloads the JAR, updates Linux/Windows pins and current-version references,
 installs locally, and runs Maven verification with progress output.
 
 Until Oscar is published to Maven Central, use the prebuilt thin JAR from
-[Oscar v3.2.1](https://github.com/Comcast/Oscar/releases/tag/v3.2.1).
+[Oscar v3.2.3](https://github.com/Comcast/Oscar/releases/tag/v3.2.3).
 Bootstrap verifies its pinned SHA-256 and installs the JAR with its embedded
 Maven POM into this project's `.m2` cache. Dependencies still come from Maven
 Central; no Oscar source checkout or source build is required.
@@ -233,7 +233,7 @@ particular platform or release passed; record actual commands and results.
 
 ## Check Shared Secret
 
-Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.1.
+Tools → Check Shared Secret checks a selected binary through OSCAR 3.2.3.
 See the [architecture](ui-architecture.md#check-shared-secret) for compatible
 profile selection, result semantics, and secret lifetime.
 
