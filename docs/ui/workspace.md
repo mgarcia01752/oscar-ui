@@ -43,3 +43,9 @@ These are the standard Linux/Windows shortcuts; the menus reflect the platform.
 | Select all preview text | Ctrl+A |
 
 See [Files](files.md), [TLV editing](tlv-editing.md), and [Settings](settings.md).
+
+## Dark-mode screenshots
+
+**Workspace in dark mode**
+
+![Workspace in dark mode in OSCAR-UI dark mode](../images/user-guide/workspace-dark.png)

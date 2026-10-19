@@ -42,3 +42,13 @@ values remain in saved files regardless of masking. Read
 
 The [shared-secret checker](check-shared-secret.md) has its own temporary key
 field and does not change the export key in Settings.
+
+## Dark-mode screenshots
+
+**Global settings with Dark selected**
+
+![Global settings with Dark selected in OSCAR-UI dark mode](../images/user-guide/global-settings-dark.png)
+
+**Session secrets and masking settings**
+
+![Session secrets and masking settings in OSCAR-UI dark mode](../images/user-guide/secrets-dark.png)

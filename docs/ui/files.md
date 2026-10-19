@@ -71,3 +71,13 @@ Payload values, raw hex, file paths, and upstream exception messages are omitted
 including when obfuscation is disabled. The metadata report remains available
 when obfuscation is enabled. Text syntax errors and file-read errors retain their
 normal error messages.
+
+## Dark-mode screenshots
+
+**Create a new configuration**
+
+![Create a new configuration in OSCAR-UI dark mode](../images/user-guide/new-file-dark.png)
+
+**Choose a save format**
+
+![Choose a save format in OSCAR-UI dark mode](../images/user-guide/save-format-dark.png)

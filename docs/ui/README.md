@@ -19,6 +19,9 @@ does not establish full configuration validity or modem interoperability.
 | Check a shared secret against a binary | [Tools: Check Shared Secret](check-shared-secret.md) |
 | View package versions, licenses and available updates | [About and updates](about.md) |
 
+Each feature guide includes dark-mode screenshots captured from the application
+using synthetic example data. Window borders can differ by operating system.
+
 ## First configuration
 
 1. Choose **File → Open** for an existing file, or **File → New** to start one.

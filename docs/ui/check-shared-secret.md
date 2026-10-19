@@ -36,3 +36,9 @@ full provisioning validity or modem interoperability.
 
 See [Settings](settings.md) for the separate binary-export secret and
 [Inspection](inspection.md) for hex and TLV views.
+
+## Dark-mode screenshots
+
+**Binary shared-secret checker**
+
+![Binary shared-secret checker in OSCAR-UI dark mode](../images/user-guide/shared-secret-check-dark.png)

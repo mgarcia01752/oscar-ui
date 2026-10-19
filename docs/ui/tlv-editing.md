@@ -70,3 +70,9 @@ preserved and the tree shows OSCAR-resolved names.
 PacketCable Snmp64 uses these same controls and validation. OSCAR 3.2.1 fixes
 value export so projected IPv4 values retain their expected format. PacketCable
 SNMP binary import remains unsupported; this fix does not remove that limit.
+
+## Dark-mode screenshots
+
+**Edit a TLV value**
+
+![Edit a TLV value in OSCAR-UI dark mode](../images/user-guide/edit-tlv-dark.png)

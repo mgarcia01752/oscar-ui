@@ -34,3 +34,21 @@ columns. The output is a masked view, not the file's literal bytes.
 
 Inspection does not check a shared secret or certify configuration validity.
 For a key check, use [Tools → Check Shared Secret](check-shared-secret.md).
+
+## Dark-mode screenshots
+
+**Whole-file HexDump**
+
+![Whole-file HexDump in OSCAR-UI dark mode](../images/user-guide/hexdump-dark.png)
+
+**Whole-file TLV breakdown**
+
+![Whole-file TLV breakdown in OSCAR-UI dark mode](../images/user-guide/tlv-breakdown-dark.png)
+
+**Selected parent TLV and child hex values**
+
+![Selected parent TLV and child hex values in OSCAR-UI dark mode](../images/user-guide/selected-tlv-hex-dark.png)
+
+**TLV description**
+
+![TLV description in OSCAR-UI dark mode](../images/user-guide/tlv-description-dark.png)

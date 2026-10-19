@@ -267,3 +267,26 @@ Both run the local validation gate through the pre-push hook. See
 To create a new release, use `tools/git/git-push.sh --tag-major`, `--tag-minor`,
 or `--tag-patch`. Each delegates to the validated release helper and pushes the
 version-bump commit and new tag together.
+
+## Refresh user-guide screenshots
+
+The opt-in `UserGuideScreenshotsTest` captures real Qt widgets in dark mode
+using synthetic DOCSIS data and empty secret fields. It does not open customer
+files, save personal preferences, or query GitHub for updates. Ordinary test
+runs skip this documentation capture.
+
+After building and staging Qt with `./scripts/unix/desktop.sh build` and
+`./scripts/unix/desktop.sh smoke`, run from the repository root on Linux:
+
+```bash
+QT_QPA_PLATFORM=offscreen \
+LD_LIBRARY_PATH="$PWD/target/app/qt/lib" \
+QT_PLUGIN_PATH="$PWD/target/app/qt/plugins" \
+./mvnw -q -Dmaven.repo.local=.m2 \
+  -Doscar.ui.screenshots=true -Dtest=UserGuideScreenshotsTest test
+```
+
+Review every PNG in `target/user-guide-images/` for clipping and readability.
+Copy approved images to `docs/images/user-guide/` and update the corresponding
+`docs/ui/` guide links in the same change. Captures omit operating-system window
+frames; captions identify each view. About shows the current build versions.
