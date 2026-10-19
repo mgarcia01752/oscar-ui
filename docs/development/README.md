@@ -10,15 +10,16 @@ Run development commands from the repository root. Use Java 21 and the
 project-local bootstrap tools; no machine-specific checkout location is required.
 Keep personal configuration files in the ignored `test-config/` directory.
 
-- [Common CLI shortcuts](short-cuts.md)
-- [Deferred work and follow-up checks](TODO.md)
-- [UI architecture](ui-architecture.md)
-- [Verification checklist](checklist.md)
-- [Local pre-push checks](pre-push-checks.md)
-- [Release packaging and version tags](packaging.md)
-- [Build script layout and commands](../../scripts/README.md)
-- [Agent instructions](../../AGENTS.md)
-- [Coding style](../../skills/coding-style/SKILL.md)
+| Area | Documents |
+| --- | --- |
+| Daily commands | [CLI shortcuts](short-cuts.md) |
+| Architecture | [UI design and component ownership](architecture/ui-architecture.md) |
+| Build and release | [Packaging](build/packaging.md) · [Local installers](build/build-images.md) · [OSCAR dependency updates](build/oscar-dependency-updates.md) |
+| Testing | [Verification checklist](testing/checklist.md) · [Pre-push checks](testing/pre-push-checks.md) |
+| Deferred work | [TODO and deferred patches](todo/TODO.md) |
+
+Related references: [Scripts](../../scripts/README.md),
+[Agent instructions](../../AGENTS.md), and [Coding style](../../skills/coding-style/SKILL.md).
 
 ## Development setup
 
@@ -49,7 +50,7 @@ by the wrapper; Qt's `aqtinstall` is installed in `.tools/venv`. No system Maven
 Qt development packages, or separate Python pip installation is needed.
 
 Normal development accepts any Java 21 JDK. Release source bundling additionally
-requires **Temurin 21.0.10+7**, as described in [packaging](packaging.md);
+requires **Temurin 21.0.10+7**, as described in [packaging](build/packaging.md);
 passing development preflight does not verify that release-specific pin.
 RPM packaging and Windows build tools are outside this Linux setup.
 
@@ -133,7 +134,7 @@ for automated tests and does not show a window.
 
 ## Oscar dependency
 
-To upgrade the pinned release, use the [OSCAR dependency updater](oscar-dependency-updates.md).
+To upgrade the pinned release, use the [OSCAR dependency updater](build/oscar-dependency-updates.md).
 It downloads the JAR, updates Linux/Windows pins and current-version references,
 installs locally, and runs Maven verification with progress output.
 
@@ -173,7 +174,7 @@ release's original license and notice for inclusion in desktop packages.
 
 ## Saving Repository Changes
 
-Enable [local pre-push checks](pre-push-checks.md) once per checkout with
+Enable [local pre-push checks](testing/pre-push-checks.md) once per checkout with
 `python3 tools/git/install-hooks.py`. The hook covers branch and tag pushes;
 `python3 tools/development/pre-push-checks.py` runs the same gate before committing.
 
@@ -219,23 +220,23 @@ QT_PLUGIN_PATH="$PWD/target/app/qt/plugins" \
 ```
 
 Native dialog tests are skipped in ordinary Maven runs without this opt-in.
-See the [verification checklist](checklist.md) for coverage, release checks,
+See the [verification checklist](testing/checklist.md) for coverage, release checks,
 and outstanding desktop verification. The checklist is not evidence that a
 particular platform or release passed; record actual commands and results.
 
 ## Architecture and feature documentation
 
-- [UI architecture](ui-architecture.md): component ownership, document lifecycle,
+- [UI architecture](architecture/ui-architecture.md): component ownership, document lifecycle,
   editing, saved-byte inspection, masking, and settings.
-- [Verification checklist](checklist.md): repeatable checks and test-suite mapping.
-- [Development TODO](TODO.md): deferred requirements and known blockers.
+- [Verification checklist](testing/checklist.md): repeatable checks and test-suite mapping.
+- [Development TODO](todo/TODO.md): deferred requirements and known blockers.
 - [UI user guide](../ui/README.md): task-based instructions for each feature.
 - [Configuration examples](../../cm-config/README.md): sample files and limitations.
 
 ## Check Shared Secret
 
 Tools → Check Shared Secret checks a selected binary through OSCAR 3.3.0.
-See the [architecture](ui-architecture.md#check-shared-secret) for compatible
+See the [architecture](architecture/ui-architecture.md#check-shared-secret) for compatible
 profile selection, result semantics, and secret lifetime.
 
 ## Source license headers
@@ -253,7 +254,7 @@ covers Java source, development/build scripts, and owned installer/Git hooks,
 and excludes Maven Wrapper, generated files, and dependencies. Local pre-push
 validation and Java CI run the read-only check automatically.
 
-For native DEB/MSI builds, see [Build local installers](build-images.md).
+For native DEB/MSI builds, see [Build local installers](build/build-images.md).
 
 ## Push checked changes
 
@@ -263,7 +264,7 @@ release options, hooks, and failure recovery.
 Use `tools/git/git-push.sh --master` to push only the current `main` or `master`
 branch, or `tools/git/git-push.sh --tag vX.Y.Z` for an existing tag at HEAD.
 Both run the local validation gate through the pre-push hook. See
-[push instructions](pre-push-checks.md#push-a-branch-or-an-existing-tag).
+[push instructions](testing/pre-push-checks.md#push-a-branch-or-an-existing-tag).
 
 To create a new release, use `tools/git/git-push.sh --tag-major`, `--tag-minor`,
 or `--tag-patch`. Each delegates to the validated release helper and pushes the

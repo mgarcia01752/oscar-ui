@@ -3,7 +3,7 @@
 This directory owns local commits, checked pushes, release version bumps, and
 Git hook setup for OSCAR-UI. Run the examples from the repository root. Bash,
 Git, and Python 3 are required; on Windows use Git Bash with `python3` available.
-See [local validation prerequisites](../../docs/development/pre-push-checks.md)
+See [local validation prerequisites](../../docs/development/testing/pre-push-checks.md)
 for the tools needed by the full push gate.
 
 ## Common commands
@@ -125,7 +125,7 @@ The hook installer sets repository-local `core.hooksPath`; it preserves existing
 unrelated hooks by refusing conflicts. Push helpers enable it automatically.
 The shared checker runs source/header, script, documentation, workflow, Python,
 Java, and supported native UI checks. See the
-[validation guide](../../docs/development/pre-push-checks.md) for exact coverage
+[validation guide](../../docs/development/testing/pre-push-checks.md) for exact coverage
 and platform limits. Failures block uploading; do not bypass the hook.
 
 If a release push fails after creating its commit/tag, those are retained.
@@ -151,7 +151,7 @@ Local checks do not replace native installer checks in release CI.
 Build/package scripts belong in [`scripts/`](../../scripts/README.md).
 Dependency updates and the shared validation runner belong in
 `tools/development/`. Release behavior is documented in
-[Release packaging](../../docs/development/packaging.md).
+[Release packaging](../../docs/development/build/packaging.md).
 
 ## Tests and maintenance
 

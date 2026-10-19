@@ -5,7 +5,7 @@ description: Build local OSCAR-UI installers with the shared build-image CLI; se
 
 # Local installer builds
 
-Read root `AGENTS.md` and `docs/development/build-images.md`. Use
+Read root `AGENTS.md` and `docs/development/build/build-images.md`. Use
 `scripts/build/build-image.py` to orchestrate existing platform packaging;
 do not duplicate source collection, runtime assembly, or release verification.
 

@@ -18,7 +18,7 @@ UPDATER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(UPDATER)
 FILES = ('pom.xml', 'scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstrap-oscar.ps1',
          'scripts/build/desktop.py', 'THIRD-PARTY-NOTICES.md', 'docs/development/README.md',
-         'docs/development/ui-architecture.md')
+         'docs/development/architecture/ui-architecture.md')
 
 
 class UpdateOscarTest(unittest.TestCase):

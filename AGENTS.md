@@ -4,7 +4,7 @@ These shared instructions apply to all agents working in this repository.
 
 ## Deferred work
 
-Read [Development TODO](docs/development/TODO.md) before related work.
+Read [Development TODO](docs/development/todo/TODO.md) before related work.
 Keep deferred items and their verified blockers current. When resuming an item,
 check its upstream dependencies and acceptance checks before implementing it;
 mark it complete only after validation. Do not resume deferred work merely
@@ -13,7 +13,7 @@ because it appears in the list.
 ## Scope and implementation
 
 - Oscar UI is a Java 21 / Qt Jambi desktop application. Read `pom.xml`,
-  `docs/development/README.md`, and `docs/development/packaging.md` for dependencies and commands.
+  `docs/development/README.md`, and `docs/development/build/packaging.md` for dependencies and commands.
 - Keep DOCSIS parsing, encoding, and registry ownership in upstream Oscar.
   Do not silently repair upstream TLV identifiers in UI display code. Report
   upstream defects and modify upstream only within the requested scope.
@@ -32,9 +32,14 @@ because it appears in the list.
   validate a change.
 - Keep architecture, development instructions, and deferred requirements in
   `docs/development/`; do not recreate a parallel root `development/` tree.
-  `ui-architecture.md` owns current behavior, `checklist.md` owns repeatable
-  verification, and `TODO.md` owns deferred work. Avoid duplicate checklists
-  and stale prototype plans. User workflows belong in `docs/ui/`.
+  `architecture/ui-architecture.md` owns current behavior,
+  `testing/checklist.md` owns repeatable
+  verification, and `todo/TODO.md` owns deferred work. Keep deferred patches alongside it under
+  `docs/development/todo/`. Avoid duplicate checklists
+  and stale prototype plans. Keep packaging, installer and dependency guides in
+  `docs/development/build/`, validation guides in `testing/`, and design in
+  `architecture/`. Keep the development README and daily shortcuts at its root.
+  Update script-owned document paths when moving guides. User workflows belong in `docs/ui/`.
 - Update these documents and their links when commands or behavior change.
 
 ## QA skill and validation
@@ -49,7 +54,7 @@ Use descriptive domain names and typed identifiers for map keys. Replace magic
 protocol numbers with named definitions, checking upstream Oscar and the pinned
 API before adding constants, codec lists, or other potentially redundant code.
 Keep substantial panes and dialogs in focused classes, following
-[UI component ownership](docs/development/ui-architecture.md).
+[UI component ownership](docs/development/architecture/ui-architecture.md).
 
 Use [qa-sw-hygenie](skills/qa-sw-hygenie/SKILL.md) for software hygiene reviews
 and validation of code, TLV handling, build tooling, or release changes.
@@ -112,7 +117,7 @@ means current-host targets only. Keep local builds separate from release pushes.
   Keep corresponding dependency sources and checksums inside packages.
   GitHub's automatic source archives are separate from these uploaded assets.
 - Keep Ubuntu and Windows workflows compatible with the shared release draft.
-  Read `docs/development/packaging.md` before changing packaging or release helpers.
+  Read `docs/development/build/packaging.md` before changing packaging or release helpers.
 - Version bump options are `--push-major`, `--push-minor`, and
   `--push-patch` (default). Release helpers commit, tag, and push; do not execute
   them as a routine validation step. Use temporary repositories for their tests.

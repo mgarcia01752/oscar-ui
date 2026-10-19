@@ -3,7 +3,7 @@
 - [ ] On Windows, verify the MSI welcome/completion panel and top banner show
   OSCAR-UI artwork with readable text, including at increased display scaling.
 
-[Development guide](README.md) · [Architecture](ui-architecture.md) · [Deferred work](TODO.md)
+[Development guide](../README.md) · [Architecture](../architecture/ui-architecture.md) · [Deferred work](../todo/TODO.md)
 
 This is a reusable checklist, not a permanent record of passed releases.
 Record the tested commit/tag, platform, commands, results, and skipped checks
@@ -26,9 +26,9 @@ unfinished functionality lives in TODO rather than duplicated feature lists.
 | Native launch | `scripts/unix/desktop.sh smoke` | Qt startup, menus, tree/text agreement, clipboard |
 | Tooling | `tools/git`, `tools/development`, `scripts/tests` | Safe tags/pushes, verified dependency update/rollback, source bundling, DEB maintainer scripts |
 
-Java and native tests are under [src/test/java](../../src/test/java/io/oscarui).
-Use the commands in the [development guide](README.md#verification); use the
-[script index](../../scripts/README.md) for platform entry points.
+Java and native tests are under [src/test/java](../../../src/test/java/io/oscarui).
+Use the commands in the [development guide](../README.md#verification); use the
+[script index](../../../scripts/README.md) for platform entry points.
 
 ## Before merging implementation changes
 
@@ -52,8 +52,8 @@ Use the commands in the [development guide](README.md#verification); use the
   resolve any local failure before uploading a branch or tag.
 
 - [ ] Verify the selected OSCAR version/commit/checksum and both bootstrap pins;
-  use the [dependency updater](oscar-dependency-updates.md) for upgrades.
-- [ ] Review [configuration examples](../../cm-config/README.md) against tracked
+  use the [dependency updater](../build/oscar-dependency-updates.md) for upgrades.
+- [ ] Review [configuration examples](../../../cm-config/README.md) against tracked
   examples; check new/changed examples compile and describe their limitations.
 - [ ] Confirm installer summaries, dependency source versions/checksums, licenses,
   release description, and installation links match actual package contents.
@@ -69,8 +69,8 @@ Use the commands in the [development guide](README.md#verification); use the
   disabled Inspect hint, clipboard masking, and real system-theme notifications.
 
 Release commands, CI dependencies, source bundling, and platform limitations
-have one owner: [Release packaging](packaging.md). Outstanding clean-machine
-and broader interoperability work is tracked in [TODO](TODO.md#verification-backlog).
+have one owner: [Release packaging](../build/packaging.md). Outstanding clean-machine
+and broader interoperability work is tracked in [TODO](../todo/TODO.md#verification-backlog).
 
 ### Java redistribution materials
 

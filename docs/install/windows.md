@@ -101,7 +101,7 @@ The release asset lists the compressed download size. Windows **Installed apps**
 shows an estimate that can differ from the files in the installation directory.
 For comparison, PowerShell's `1MB` divisor measures MiB (1,048,576 bytes), while
 MB here means 1,000,000 bytes. See the
-[packaging measurements](../development/packaging.md#windows-package-size-measurements)
+[packaging measurements](../development/build/packaging.md#windows-package-size-measurements)
 for the component breakdown.
 
 ## Update

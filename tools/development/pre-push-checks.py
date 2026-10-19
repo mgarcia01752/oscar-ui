@@ -48,7 +48,7 @@ def _tool(name, local_path=None):
     if not executable and local_path and (ROOT / local_path).is_file():
         executable = str(ROOT / local_path)
     if not executable:
-        raise RuntimeError(f'{name} is required. See docs/development/pre-push-checks.md; no push was performed.')
+        raise RuntimeError(f'{name} is required. See docs/development/testing/pre-push-checks.md; no push was performed.')
     return executable
 
 

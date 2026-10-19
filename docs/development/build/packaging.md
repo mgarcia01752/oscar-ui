@@ -66,7 +66,7 @@ Keep these summaries aligned with the actual bundled components.
 ## Push the next release
 
 Commit pending work first. From a clean checkout, the helper enables the
-[pre-push hook](pre-push-checks.md) and runs local checks before version changes.
+[pre-push hook](../testing/pre-push-checks.md) and runs local checks before version changes.
 The hook checks the final release revision again before uploading. Missing
 validators or failed checks block the push; CI still verifies both installers.
 
@@ -132,7 +132,7 @@ publishes the release. A failed or skipped required job prevents publication;
 any draft already created remains a draft. The push helper returns after pushing;
 follow the Release workflow in GitHub Actions for the publication result.
 Use `python3 tools/git/release-status.py` for the latest run or add `--tag TAG`
-to select a release; see the [status helper](../../tools/git/README.md#check-release-status).
+to select a release; see the [status helper](../../../tools/git/README.md#check-release-status).
 The helper triggers this CI flow; it does not publish from the local machine.
 Existing old release assets are not deleted by these workflows.
 
@@ -278,7 +278,7 @@ Release helpers skip a new version when HEAD already matches the published tag
 for the current POM version. This check runs before local build/test validation.
 A matching local-only tag blocks another bump; push that existing release first.
 Changes already pushed to main can still be released if they follow the current
-version tag. See [push checks](pre-push-checks.md).
+version tag. See [push checks](../testing/pre-push-checks.md).
 
 ## Windows native DLL layout
 

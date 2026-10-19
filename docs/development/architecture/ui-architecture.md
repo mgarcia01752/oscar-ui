@@ -1,6 +1,6 @@
 # OSCAR-UI architecture
 
-[Development guide](README.md) · [Verification checklist](checklist.md) · [Deferred work](TODO.md)
+[Development guide](../README.md) · [Verification checklist](../testing/checklist.md) · [Deferred work](../todo/TODO.md)
 
 This document describes the current implementation. Optional configuration
 checks are incomplete; successful encoding is not deployment validation.
@@ -44,9 +44,9 @@ or semicolon. These editing instances remain separate from Oscar's registry
 definitions. Catalog lookup uses an extensible `RegistryFamily` key, while
 the UI's editable-codec allowlist deliberately supports fewer codecs than Oscar.
 
-Follow [coding-style](../../skills/coding-style/SKILL.md) when adding or changing
+Follow [coding-style](../../../skills/coding-style/SKILL.md) when adding or changing
 components. Run the service tests and the native Qt tests described in the
-[development guide](README.md) after moving UI responsibilities.
+[development guide](../README.md) after moving UI responsibilities.
 
 ## Document and service boundaries
 
@@ -73,7 +73,7 @@ structured metadata; descriptions are not enums, defaults, or protocol rules.
 New codecs or families may require upstream and adapter work.
 OSCAR owns the SNMP symbol LUT in its JAR; the UI does not maintain a copy.
 Its runtime may create the ignored `res/DottedTextualNetSNMPMap.json` cache.
-Indexed-symbol limitations remain in [TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
+Indexed-symbol limitations remain in [TODO](../todo/TODO.md#vacm-and-snmpv3-symbolic-configuration).
 
 New requires an explicit supported type and offers Empty or All TLVs.
 All TLVs calls `ConfigurationFileExport.EXPORT_DEFAULT_TLV` on the worker and
@@ -119,7 +119,7 @@ Save/Discard/Cancel protects replacement and exit while modified.
 
 Check Config is an optional draft preview, not a gate on Binary Save. Minimum
 rules, complete encoded-value checks, and interoperability remain unfinished;
-future requirements are tracked in [TODO](TODO.md#configuration-validation).
+future requirements are tracked in [TODO](../todo/TODO.md#configuration-validation).
 
 ## TLV editing transactions
 
@@ -440,7 +440,7 @@ HexDump is a separate, explicitly acknowledged clear-text view as described abov
 Masked previews are not compilable/exportable replacement configurations.
 
 Deferred symbolic SNMPv3/VACM configuration and its acceptance checks are
-tracked in [Development TODO](TODO.md#vacm-and-snmpv3-symbolic-configuration).
+tracked in [Development TODO](../todo/TODO.md#vacm-and-snmpv3-symbolic-configuration).
 
 ## Saved masking preference and status
 
@@ -462,7 +462,7 @@ re-encoded TLV payloads before destination replacement. Decode each physical
 top-level TLV separately to preserve repeated SNMP entries and source order;
 retain OSCAR-generated TLV comments. Unknown or lossy imports remain rejected.
 Editable PacketCable import with generated SNMP remains deferred in
-[Development TODO](TODO.md). Raw upstream diagnostics remain hidden while masked.
+[Development TODO](../todo/TODO.md). Raw upstream diagnostics remain hidden while masked.
 
 Binary import and binary tree projection request OSCAR's
 `ConfigurationFileExport.TEXTUAL_OID_FORMAT`. Known SNMP OIDs display symbolic
@@ -489,7 +489,7 @@ replacement. Validation messages do not echo credentials.
 
 OSCAR 3.2.0 advertises Counter64 in its BER type list but does not accept it in
 its text grammar. It remains listed; compile validation prevents acceptance.
-The upstream discrepancy is tracked in [TODO](TODO.md).
+The upstream discrepancy is tracked in [TODO](../todo/TODO.md).
 
 Snmp64 Add/Edit controls are covered for every supported PacketCable header.
 OSCAR 3.2.1 fixes the two-byte varbind export conversion; projected IpAddress
@@ -525,7 +525,7 @@ The release preparation helper moves Qt DLLs beside the executable and sets
 `java.library.path=$APPDIR/..` in the packaged launcher configuration. Plugins
 remain under `app/qt/plugins`. Java stays private to the application. The MSI
 includes a single copy of the staged Qt libraries; development launches retain
-their separate staging layout. See [packaging](packaging.md#windows-native-dll-layout).
+their separate staging layout. See [packaging](../build/packaging.md#windows-native-dll-layout).
 
 ### Failed binary import diagnostics
 

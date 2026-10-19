@@ -131,7 +131,7 @@ def _references(root, version, commit, digest):
              f'[Oscar v{version}](https://github.com/Comcast/Oscar/releases/tag/v{version})'),
             (rf'Tools → Check Shared Secret checks a selected binary through OSCAR {escaped}\.',
              f'Tools → Check Shared Secret checks a selected binary through OSCAR {version}.')],
-        'docs/development/ui-architecture.md': [
+        'docs/development/architecture/ui-architecture.md': [
             (rf'OSCAR {escaped} verifies the original bytes', f'OSCAR {version} verifies the original bytes')],
     }
     originals, updates = {}, {}

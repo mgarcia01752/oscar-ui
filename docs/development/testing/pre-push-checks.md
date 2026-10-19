@@ -1,6 +1,6 @@
 # Local pre-push checks
 
-[Development guide](README.md) · [Release packaging](packaging.md) · [Checklist](checklist.md)
+[Development guide](../README.md) · [Release packaging](../build/packaging.md) · [Checklist](checklist.md)
 
 Every push from a configured checkout runs the same local validation gate,
 including normal branches, tags, and release-helper pushes. A failure stops
@@ -45,7 +45,7 @@ and skips the bump and checks. If that tag is only local at HEAD, it stops and
 asks you to push the existing release instead of creating another version.
 Commits after that tag remain releasable even if already pushed to main.
 There is no default bump and modes cannot be combined.
-See [Release packaging](packaging.md). Conflicting existing hooks are preserved;
+See [Release packaging](../build/packaging.md). Conflicting existing hooks are preserved;
 resolve the reported conflict rather than bypassing checks.
 
 ## Enable once per checkout

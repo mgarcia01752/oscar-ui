@@ -2,7 +2,7 @@
 
 Run these commands from the repository root. See the
 [development guide](../docs/development/README.md) for prerequisites and the
-[packaging guide](../docs/development/packaging.md) for release validation.
+[packaging guide](../docs/development/build/packaging.md) for release validation.
 
 | Directory | Purpose |
 | --- | --- |
@@ -15,7 +15,7 @@ Run these commands from the repository root. See the
 
 Use `python3 scripts/build/build-image.py --linux`, `--windows`, or `--all`
 (`python` on Windows). `--all` selects the current host only. Add `--dry-run`
-to preview. See [Build local installers](../docs/development/build-images.md)
+to preview. See [Build local installers](../docs/development/build/build-images.md)
 for prerequisites, output paths, and rebuilding without overwriting output.
 
 ## Linux
@@ -73,7 +73,7 @@ The Bash test uses mocked prerequisites and temporary files; it does not install
 system packages. Git/release helpers live in `tools/git/`, and the OSCAR version
 updater lives in `tools/development/`.
 
-Before pushing, use the shared [local validation gate](../docs/development/pre-push-checks.md).
+Before pushing, use the shared [local validation gate](../docs/development/testing/pre-push-checks.md).
 The developer installer enables its Git hook; other checkouts can enable it
 with `python3 tools/git/install-hooks.py`.
 
@@ -84,12 +84,12 @@ It is launched by the Update UI, waits for app exit, requests polkit approval,
 validates a root-owned copy of the DEB, and uses APT to upgrade only OSCAR-UI and
 required dependencies. It reports results through zenity and can reopen the app
 as the original user. It is not a developer release/push script. See the
-[architecture](../docs/development/ui-architecture.md#ubuntu-update-handoff).
+[architecture](../docs/development/architecture/ui-architecture.md#ubuntu-update-handoff).
 
 `build/deb-dependencies.py` checks payload ELF dependencies and removes only
 the build host's indirect PCRE1 requirement from generated DEBs, allowing
 Ubuntu 26.04 to select its own GLib dependencies. See the
-[dependency checks](../docs/development/packaging.md#ubuntu-cross-version-dependencies).
+[dependency checks](../docs/development/build/packaging.md#ubuntu-cross-version-dependencies).
 
 `unix/ubuntu-uninstall.py` is bundled in the DEB for About's uninstall action.
 It waits for the UI to exit, requests authorization for APT removal, and reports

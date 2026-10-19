@@ -1,6 +1,6 @@
 # Update the OSCAR dependency
 
-[Development guide](README.md) · [Release packaging](packaging.md)
+[Development guide](../README.md) · [Release packaging](packaging.md)
 
 Publish the desired stable OSCAR release first. Its GitHub release must include
 `oscar-thin.jar` with the requested version in its embedded Maven POM.
@@ -63,7 +63,7 @@ not overwritten. The helper does not download the JAR a second time to install i
 After updating references, the helper runs Maven `clean verify`. This rebuilds
 the JAR and runs ordinary Java tests; it does not establish native Qt or Windows
 installer compatibility. Rebuild and check the desktop image using the
-[development guide](README.md) before releasing.
+[development guide](../README.md) before releasing.
 
 If installation fails, tracked references remain unchanged. If reference
 writing or Maven verification fails, their original contents are restored.

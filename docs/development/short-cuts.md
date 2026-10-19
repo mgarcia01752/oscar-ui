@@ -107,7 +107,7 @@ python3 tools/development/update-oscar.py --version X.Y.Z
 
 This downloads the JAR, updates local references, and runs Maven verification.
 Review and commit the changes, then rebuild the UI.
-[Dependency update guide](oscar-dependency-updates.md).
+[Dependency update guide](build/oscar-dependency-updates.md).
 
 ## Build a local Ubuntu installer
 
@@ -117,4 +117,4 @@ python3 scripts/build/build-image.py --linux
 ```
 
 This does not install, push, or publish. `--all` builds only the current OS;
-Windows MSI builds require Windows. [Local installer guide](build-images.md).
+Windows MSI builds require Windows. [Local installer guide](build/build-images.md).

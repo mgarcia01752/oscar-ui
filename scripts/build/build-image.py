@@ -42,7 +42,7 @@ def main(argv=None):
             if path.exists():
                 raise RuntimeError(f'Output already exists: {path}. Move it aside before rebuilding.')
         if not shutil.which(command[0]):
-            raise RuntimeError(f'{command[0]} is required; see docs/development/build-images.md')
+            raise RuntimeError(f'{command[0]} is required; see docs/development/build/build-images.md')
         print('[build-image] Building and checking the installer; dependency sources may be downloaded.', flush=True)
         subprocess.run(command, cwd=ROOT, check=True)
         if not artifact.is_file() or artifact.stat().st_size == 0:

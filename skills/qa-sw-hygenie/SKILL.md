@@ -82,7 +82,7 @@ wording. Documentation-only changes need link/path and consistency checks.
 
 ## Release-specific checks
 
-Read `docs/development/packaging.md` and the affected workflow/helper. Confirm:
+Read `docs/development/build/packaging.md` and the affected workflow/helper. Confirm:
 
 - Windows MSI and Ubuntu DEB include a usable launcher and runtime; users do
   not need the repository or a separately installed Java development kit.

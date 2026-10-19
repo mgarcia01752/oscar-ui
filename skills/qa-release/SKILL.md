@@ -5,12 +5,12 @@ description: Check OSCAR-UI release readiness and keep the configuration example
 
 # Release QA
 
-Read root `AGENTS.md` and `docs/development/TODO.md`. For package or workflow
+Read root `AGENTS.md` and `docs/development/todo/TODO.md`. For package or workflow
 changes, use [software hygiene](../qa-sw-hygenie/SKILL.md) for the existing
-platform checks and read `docs/development/packaging.md` for the release flow.
-Use `docs/development/checklist.md` for repeatable verification and keep current
-behavior in `ui-architecture.md` and deferred requirements in `TODO.md` in that
-directory. Do not recreate local architecture/checklist copies under a root
+platform checks and read `docs/development/build/packaging.md` for the release flow.
+Use `docs/development/testing/checklist.md` for repeatable verification and keep current
+behavior in `architecture/ui-architecture.md` and deferred requirements in `todo/TODO.md` under that
+directory. Keep deferred patches beside the TODO document. Do not recreate local architecture/checklist copies under a root
 `development/` directory. Do not run the push-release helper or publish as a
 validation step.
 
@@ -38,7 +38,7 @@ Report completed checks separately from platform checks still pending.
 ## OSCAR dependency updates
 
 Use `python3 tools/development/update-oscar.py --version X.Y.Z` for a published upstream release;
-see `docs/development/oscar-dependency-updates.md` for dry-run and recovery.
+see `docs/development/build/oscar-dependency-updates.md` for dry-run and recovery.
 Check that Linux/Windows pins, Maven version, attribution cache, and current
 release documentation agree. Preserve historical feature-version statements.
 Run `python3 -m unittest discover -s tools/development -p 'test_*.py'` when
@@ -48,7 +48,7 @@ changing the updater. Its Maven verification is separate from native UI tests.
 
 Run `python3 tools/development/pre-push-checks.py` before uploading code, and
 ensure `python3 tools/git/install-hooks.py` has enabled the checkout's pre-push
-hook. Read `docs/development/pre-push-checks.md` for required validators, clean
+hook. Read `docs/development/testing/pre-push-checks.md` for required validators, clean
 revision requirements, and platform limits. Add new release checks to the gate
 as well as CI; do not bypass a failure or treat native installer checks as local
 passes when they only ran in CI. Test hook changes with temporary repositories.

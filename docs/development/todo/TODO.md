@@ -1,6 +1,6 @@
 # Development TODO
 
-[Development guide](README.md) · [Architecture](ui-architecture.md) · [Verification checklist](checklist.md)
+[Development guide](../README.md) · [Architecture](../architecture/ui-architecture.md) · [Verification checklist](../testing/checklist.md)
 
 ## VACM and SNMPv3 symbolic configuration
 
@@ -164,7 +164,8 @@ OSCAR 3.2.4 and 3.2.5 and are not release-ready. Upstream ordering has not been
 modified. When resuming, review the patch and check it before applying:
 
 ```bash
-git apply --check docs/development/deferred-tlv-reordering.patch
+cd /home/dev01/Projects/oscar-ui &&
+git apply --check docs/development/todo/deferred-tlv-reordering.patch
 ```
 
 - [ ] Trace dictionary storage and assembler traversal in OSCAR. Determine
