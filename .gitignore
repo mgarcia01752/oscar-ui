@@ -11,6 +11,8 @@
 .mtj.tmp/
 
 # Package Files #
+*.deb
+*.msi
 *.jar
 *.war
 *.nar

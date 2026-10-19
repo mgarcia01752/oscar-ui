@@ -40,7 +40,8 @@ development runs retain the release download link. See the
 
 ## Uninstall OSCAR-UI
 
-In an installed package, choose **Uninstall OSCAR-UI…** at the bottom of About.
+Choose **About → About OSCAR-UI**. In a supported installed package, the
+**Uninstall OSCAR-UI…** button is below **Release updates**, above **Close**.
 Confirm, then save or discard unsaved changes; Cancel keeps the application open.
 On Ubuntu the UI closes, administrator approval appears, and a separate progress
 window reports removal. On Windows the UI closes and Installed apps opens;
@@ -50,4 +51,22 @@ Configuration files outside the installation directory remain. Ubuntu removal
 does not purge or autoremove dependencies. If authorization is canceled, the
 package remains installed and you can launch it again. A failed removal shows
 the log path; use the platform installation guide to recover from APT errors.
-The button is hidden in development checkouts; the guide link remains available.
+The button is hidden when running from a development checkout with `desktop.sh`.
+An older installed release will not gain the button until you install a package
+that includes this feature. The uninstall-guide link remains available.
+
+### Ubuntu terminal command
+
+Close OSCAR-UI, then run:
+
+```bash
+sudo apt remove oscar-ui
+```
+
+Configuration files outside the installation directory remain. This also works
+when your installed version does not have the uninstall button.
+
+### Windows manual removal
+
+Open **Settings → Apps → Installed apps → OSCAR-UI → Uninstall**.
+See the [Windows installation guide](../install/windows.md) for more details.
