@@ -8,40 +8,56 @@ Java and Qt are included; no repository checkout is needed.
 
 ## Install and launch
 
-1. Download the Ubuntu `.deb` asset from the release into **Downloads**.
-2. Open a terminal and paste this block. It selects the **most recently modified
-   OSCAR-UI DEB in Downloads** (normally the latest download), prints its name,
-   and installs only that file. This selects by download time, not version number.
-   The temporary copy lets APT read the package without access to your private
-   Downloads folder. Your downloaded files are kept.
+1. Ensure the download tools are installed (Java and Qt are already bundled):
+
+   ```bash
+   sudo apt install curl python3
+   ```
+
+2. Paste this block into a terminal. It finds the Ubuntu x64 DEB in GitHub's
+   **latest published release**, downloads it, and asks APT to install it. No tag,
+   filename, repository checkout, or GitHub account is needed. The temporary
+   download is removed afterward, including when installation fails.
 
    ```bash
    (
      set -euo pipefail
-     downloads_dir="$HOME/Downloads"
-     if command -v xdg-user-dir >/dev/null 2>&1; then
-       downloads_dir=$(xdg-user-dir DOWNLOAD)
-     fi
-     shopt -s nullglob
-     packages=("$downloads_dir"/oscar-ui_*_amd64*.deb)
-     latest_package=""
-     for candidate in "${packages[@]}"; do
-       if [[ -f "$candidate" && ( -z "$latest_package" || "$candidate" -nt "$latest_package" ) ]]; then
-         latest_package="$candidate"
-       fi
-     done
-     if [[ -z "$latest_package" ]]; then
-       echo "No OSCAR-UI amd64 DEB found in $downloads_dir. Download it first." >&2
+     if [[ "$(dpkg --print-architecture)" != amd64 ]]; then
+       echo "This installer requires Ubuntu x64 (amd64)." >&2
        exit 1
      fi
-     printf 'Installing: %s\n' "$latest_package"
      package_dir=$(mktemp -d /tmp/oscar-ui-install.XXXXXX)
-     trap 'rm -f -- "$package_dir/oscar-ui.deb"; rmdir -- "$package_dir"' EXIT
+     trap 'rm -f -- "$package_dir/release.json" "$package_dir/oscar-ui.deb"; rmdir -- "$package_dir"' EXIT
      chmod 755 "$package_dir"
-     install -m 644 "$latest_package" "$package_dir/oscar-ui.deb"
+     echo "Checking the latest OSCAR-UI release..."
+     curl --fail --location --retry 3 --silent --show-error \
+       https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest \
+       -o "$package_dir/release.json"
+     package_url=$(python3 -c '
+   import json, re, sys
+   with open(sys.argv[1], encoding="utf-8") as source:
+       release = json.load(source)
+   assets = [asset for asset in release.get("assets", [])
+             if re.fullmatch(r"oscar-ui_[^/]+_amd64\.deb", asset["name"])]
+   if len(assets) != 1:
+       sys.exit("Expected one Ubuntu amd64 DEB in the latest release. Try again after its build finishes.")
+   url = assets[0]["browser_download_url"]
+   if not url.startswith("https://github.com/mgarcia01752/oscar-ui/releases/download/"):
+       sys.exit("Unexpected release download URL.")
+   print("Downloading " + assets[0]["name"], file=sys.stderr)
+   print(url)
+   ' "$package_dir/release.json")
+     curl --fail --location --retry 3 --show-error \
+       "$package_url" -o "$package_dir/oscar-ui.deb"
+     chmod 644 "$package_dir/oscar-ui.deb"
+     echo "Installing OSCAR-UI..."
      sudo apt install "$package_dir/oscar-ui.deb"
    )
    ```
+
+   GitHub's latest-release endpoint selects a published non-prerelease. The
+   command stops if the release has no matching DEB, the API is unavailable or
+   rate-limited, or the download fails; it will not install an older local file.
 
 3. Confirm installation:
 
@@ -64,12 +80,9 @@ if it reports `install ok installed`, no reinstall is needed.
 
 ## Update
 
-Close OSCAR-UI and download the newer DEB from
-[GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
-Run the same installation block above to select the latest download and upgrade
-the installed package. Review the printed filename before confirming APT’s prompt;
-if you recently downloaded an older release, that file will be selected instead.
-You do not need to uninstall first.
+Close OSCAR-UI and rerun the installation block above. It downloads the latest
+published DEB and upgrades the installed package through APT. You do not need to
+uninstall first. Review the version and changes shown by APT before confirming.
 
 OSCAR-UI does not currently provide an APT repository. `sudo apt update` does
 not discover new OSCAR-UI releases from GitHub.
