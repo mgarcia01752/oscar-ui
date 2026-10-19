@@ -4,7 +4,7 @@ Each version has two uploaded application assets:
 
 - `OSCAR-UI-<version>-windows-x64.msi`: run the installer and launch
   OSCAR-UI from the Start menu.
-- `oscar-ui_<version>_amd64.deb`: install with `sudo apt install ./<file>.deb`,
+- `oscar-ui_amd64.deb`: install with `sudo apt install ./<file>.deb`,
   then launch OSCAR-UI from the application menu.
 
 Both include Java and Qt; the DEB also includes ICU and declares system display
@@ -327,3 +327,7 @@ runtime usage or assume it is caused by cached MSI files.
 For each release, measure the final MSI asset and installed file tree separately.
 Keep source archive sizes distinct from runtime and total installed sizes in
 `packaging/release-notes.md`. Do not promise a fixed Windows displayed size.
+
+The uploaded Ubuntu asset uses the stable name `oscar-ui_amd64.deb` so GitHub’s
+`releases/latest/download/oscar-ui_amd64.deb` URL works without a tag lookup.
+The DEB retains its version internally; only the release filename is stable.

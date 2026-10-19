@@ -63,7 +63,7 @@ MB uses decimal bytes; MiB uses binary bytes. See the
 2. Open a terminal in the download folder and install it using its actual filename:
 
    ```bash
-   sudo apt install ./oscar-ui_<version>_amd64.deb
+   sudo apt install ./oscar-ui_amd64.deb
    ```
 
 3. Launch **OSCAR-UI** from the application menu.

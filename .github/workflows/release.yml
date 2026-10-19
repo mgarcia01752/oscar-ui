@@ -42,7 +42,7 @@ jobs:
           version="${RELEASE_TAG#v}"
           gh release view "$RELEASE_TAG" --json assets > release-assets.json
           jq -e --arg msi "OSCAR-UI-${version}-windows-x64.msi" \
-            --arg deb "oscar-ui_${version}_amd64.deb" '
+            --arg deb "oscar-ui_amd64.deb" '
             .assets as $assets |
             all([$msi, $deb][]; . as $name |
               any($assets[]; .name == $name and .state == "uploaded" and .size > 0))

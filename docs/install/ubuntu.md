@@ -8,56 +8,25 @@ Java and Qt are included; no repository checkout is needed.
 
 ## Install and launch
 
-1. Ensure the download tools are installed (Java and Qt are already bundled):
+1. Open a terminal in the folder where you want to save the installer.
+2. Download and install the latest published release:
 
    ```bash
-   sudo apt install curl python3
+   curl -fL -o oscar-ui_amd64.deb \
+     https://github.com/mgarcia01752/oscar-ui/releases/latest/download/oscar-ui_amd64.deb
+
+   sudo apt install ./oscar-ui_amd64.deb
    ```
 
-2. Paste this block into a terminal. It finds the Ubuntu x64 DEB in GitHub's
-   **latest published release**, downloads it, and asks APT to install it. No tag,
-   filename, repository checkout, or GitHub account is needed. The temporary
-   download is removed afterward, including when installation fails.
+   Run the install command only after the download succeeds. If `curl` is
+   missing, install it with `sudo apt install curl` first. No tag or version
+   number is needed. APT reads the package version from inside the DEB.
+   The download remains in the current folder and can be deleted after installation.
 
-   ```bash
-   (
-     set -euo pipefail
-     if [[ "$(dpkg --print-architecture)" != amd64 ]]; then
-       echo "This installer requires Ubuntu x64 (amd64)." >&2
-       exit 1
-     fi
-     package_dir=$(mktemp -d /tmp/oscar-ui-install.XXXXXX)
-     trap 'rm -f -- "$package_dir/release.json" "$package_dir/oscar-ui.deb"; rmdir -- "$package_dir"' EXIT
-     chmod 755 "$package_dir"
-     echo "Checking the latest OSCAR-UI release..."
-     curl --fail --location --retry 3 --silent --show-error \
-       https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest \
-       -o "$package_dir/release.json"
-     package_url=$(python3 -c '
-   import json, re, sys
-   with open(sys.argv[1], encoding="utf-8") as source:
-       release = json.load(source)
-   assets = [asset for asset in release.get("assets", [])
-             if re.fullmatch(r"oscar-ui_[^/]+_amd64\.deb", asset["name"])]
-   if len(assets) != 1:
-       sys.exit("Expected one Ubuntu amd64 DEB in the latest release. Try again after its build finishes.")
-   url = assets[0]["browser_download_url"]
-   if not url.startswith("https://github.com/mgarcia01752/oscar-ui/releases/download/"):
-       sys.exit("Unexpected release download URL.")
-   print("Downloading " + assets[0]["name"], file=sys.stderr)
-   print(url)
-   ' "$package_dir/release.json")
-     curl --fail --location --retry 3 --show-error \
-       "$package_url" -o "$package_dir/oscar-ui.deb"
-     chmod 644 "$package_dir/oscar-ui.deb"
-     echo "Installing OSCAR-UI..."
-     sudo apt install "$package_dir/oscar-ui.deb"
-   )
-   ```
-
-   GitHub's latest-release endpoint selects a published non-prerelease. The
-   command stops if the release has no matching DEB, the API is unavailable or
-   rate-limited, or the download fails; it will not install an older local file.
+   The fixed download name is available starting with the next release containing
+   this change. For earlier releases, download the versioned DEB from
+   [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases) and pass
+   that filename to `sudo apt install ./<downloaded-filename>.deb`.
 
 3. Confirm installation:
 

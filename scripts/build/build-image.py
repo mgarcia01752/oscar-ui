@@ -72,7 +72,7 @@ def _plan(requested):
     if target == 'linux':
         command = ['bash', (ROOT / 'scripts/unix/linux-release.sh').as_posix()]
         directories = [ROOT / 'dist/linux/deb']
-        artifact = ROOT / f'dist/linux/release/oscar-ui_{version}_amd64.deb'
+        artifact = ROOT / 'dist/linux/release/oscar-ui_amd64.deb'
     else:
         command = ['pwsh', '-NoProfile', '-File', (ROOT / 'scripts/windows/windows-release.ps1').as_posix()]
         directories = [ROOT / 'dist/windows/app-image', ROOT / 'dist/windows/msi']

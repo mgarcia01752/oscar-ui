@@ -58,7 +58,7 @@ dependency sources, so network access and disk space are required.
 
 | Target | Local installer | Packaging helper |
 | --- | --- | --- |
-| Linux | `dist/linux/release/oscar-ui_<version>_amd64.deb` | `scripts/unix/linux-release.sh` |
+| Linux | `dist/linux/release/oscar-ui_amd64.deb` | `scripts/unix/linux-release.sh` |
 | Windows | `dist/windows/release/OSCAR-UI-<version>-windows-x64.msi` | `scripts/windows/windows-release.ps1` |
 
 The version comes from `pom.xml`. The wrapper refuses an existing destination
