@@ -150,3 +150,34 @@ all two-byte-length varbind values to ASCII hex while retaining their BER type.
   and valid Add/Edit replacement for each supported PacketCable header.
 - [ ] PacketCable SNMP binary import remains deferred under Binary export of
   SNMP configurations above. Header/version handling is a separate limitation.
+
+## TLV sibling reordering
+
+Status: deferred at the user's request (2026-10-19). UI implementation drafted;
+blocked by OSCAR 3.2.4 child ordering. Resume only when requested.
+Do not release the draft until source, binary, and tree order agree.
+
+The working tree contains unfinished UI/service changes and regression tests
+that currently fail against OSCAR 3.2.4. These are not release-ready; upstream
+OSCAR has not been modified.
+
+- [ ] Trace dictionary storage and assembler traversal in OSCAR. Determine
+  whether hash-based iteration loses insertion order or assembly follows
+  registry order. Dictionary hashing is a hypothesis, not a confirmed cause;
+  it is separate from MIC hashing. Do not assume all TLVs are numerically sorted.
+- [ ] Establish any protocol-required ordering before proposing a change.
+- [ ] Obtain approval for the upstream fix before modifying OSCAR.
+- [ ] Verify MIC generation against the final encoded configuration using the
+  applicable DOCSIS rules. Do not reorder signed bytes and retain old MICs;
+  test generated integrity fields and shared-secret validation after export.
+- [ ] Preserve child source order in OSCAR's text compiler. Synthetic reproducer:
+  `Docsis { DownstreamServiceFlow { MaxSubstainedTrafficRate 1000; ServiceFlowReference 1; } }`.
+  The current compiler emits child 25.1 before 25.8. The UI must continue to
+  display binary order rather than hide this with a tree-only reorder.
+- [ ] Finish Move Up/Move Down in Edit and tree context menus. Restrict moves
+  to siblings, move complete subtrees, protect generated MICs, refresh both
+  panels together, retain selection, and mark the document unsaved.
+- [ ] Pass service and native UI regression tests, including nested boundaries,
+  repeated instances, text and binary save/reopen, and masked values.
+- [ ] Document the completed behavior in the user guide, architecture, and
+  verification checklist after the upstream dependency is resolved.
