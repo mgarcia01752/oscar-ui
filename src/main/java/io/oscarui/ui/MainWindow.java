@@ -35,6 +35,8 @@ public final class MainWindow extends QMainWindow {
         return thread;
     });
 
+    private UpgradeChip upgradeChip;
+
     private final QLabel maskingLabel = new QLabel("Masked");
     private final QFrame maskingDivider = new QFrame();
     private final QLabel typeLabel = new QLabel();
@@ -186,6 +188,12 @@ public final class MainWindow extends QMainWindow {
                 showStatus("Could not read appearance settings; using System. Save a preference in Settings > Global to replace them.");
             }
         }
+        upgradeChip = new UpgradeChip(() -> showAbout(true));
+        menuBar().setCornerWidget(upgradeChip, Qt.Corner.TopRightCorner);
+        if (interactive) {
+            upgradeChip.check(() -> new ReleaseUpdateService().checkRelease(
+                    AboutDialog.loadBuildInfo().getProperty("ui.version", "unknown")));
+        }
         updateMaskingStatus();
         DesktopTheme.apply(appearance);
         systemAppearanceConnection = QApplication.styleHints().colorSchemeChanged.connect(
@@ -331,6 +339,7 @@ public final class MainWindow extends QMainWindow {
             pending.cancel(true);
         }
         worker.shutdownNow();
+        upgradeChip.stop();
         secrets.close();
         super.closeEvent(event);
     }
@@ -451,6 +460,7 @@ public final class MainWindow extends QMainWindow {
 
     private void showAbout(boolean checkUpdates) {
         var dialog = new AboutDialog(this);
+        dialog.onUpdateAvailability(upgradeChip::setAvailable);
         io.oscarui.service.UbuntuUpdateService.Installer installer;
         boolean uninstallRequested;
         try {

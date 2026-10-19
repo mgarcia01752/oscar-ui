@@ -567,3 +567,14 @@ one logical instance and binds it to one source node. `SelectedTlvHexService`
 retains all fragments in the selected row. Binary opening also groups contiguous CVC fragments for export while retaining
 physical-fragment byte comparisons on reimport. Other TLVs retain their existing
 instance handling. OSCAR 3.3.0 owns fragmentation and adjacent-CVC export.
+
+## Upgrade chip
+
+`UpgradeChip` owns a daemon worker and Qt polling timer for a single read-only
+startup release check in interactive windows. It is mounted in the menu bar's
+top-right corner, uses a green rounded button in both themes, and opens the
+existing About update flow. Noninteractive tests and captures do not query GitHub.
+`ReleaseCheck.updateAvailable` tracks version comparison independently of DEB
+availability. About's successful checks refresh the chip on the Qt thread and
+supersede an outstanding startup lookup. Closing the window cancels the worker.
+Failures are quiet and do not show an upgrade offer; manual retries remain in About.

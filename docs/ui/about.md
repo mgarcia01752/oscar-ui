@@ -70,3 +70,14 @@ when your installed version does not have the uninstall button.
 
 Open **Settings → Apps → Installed apps → OSCAR-UI → Uninstall**.
 See the [Windows installation guide](../install/windows.md) for more details.
+
+## Upgrade indicator
+
+When a newer stable release is available, a green **Upgrade** chip appears at
+the upper-right of the main window's menu bar. Click it to open the update
+dialog. Ubuntu uses the existing download/install flow; Windows users can
+open the release download link. Clicking the chip does not install anything.
+
+OSCAR-UI makes one background GitHub release check at startup. The chip stays
+hidden when up to date, running a newer development build, or offline.
+**About → Check for updates** retries the check and refreshes the indicator.

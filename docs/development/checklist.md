@@ -178,3 +178,12 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Run CertificateInputTest, DocumentEditingTest and opt-in MainWindowTest.
 - [ ] Verify native file selection on Ubuntu and Windows; synthetic byte tests
   do not establish certificate trust or modem interoperability.
+
+## Upgrade indicator
+
+- [ ] Newer stable release: show green Upgrade at the menu bar's upper-right.
+- [ ] Equal/newer installed version, missing release or failed startup lookup: hide it.
+- [ ] Show it for a newer release even without a DEB asset (including Windows).
+- [ ] Click to open update options without automatically downloading/installing.
+- [ ] Manual About checks refresh visibility; closing cancels pending checks.
+- [ ] Verify light/dark appearance and keyboard focus.

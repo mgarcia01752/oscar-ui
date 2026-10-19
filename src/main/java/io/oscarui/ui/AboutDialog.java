@@ -31,6 +31,8 @@ final class AboutDialog extends QDialog {
     private final String installedVersion;
     private final Callable<String> releaseCheck;
     private Future<String> pendingCheck;
+    private volatile Boolean updateAvailable;
+    private java.util.function.Consumer<Boolean> updateListener = available -> {};
 
     AboutDialog(QWidget parent) {
         this(parent, null);
@@ -44,6 +46,7 @@ final class AboutDialog extends QDialog {
                 ? () -> {
                     var result = new ReleaseUpdateService().checkRelease(installedVersion);
                     availableInstaller = result.installer();
+                    updateAvailable = result.updateAvailable();
                     return result.status();
                 } : releaseCheck;
         setObjectName("aboutDialog");
@@ -126,6 +129,10 @@ final class AboutDialog extends QDialog {
         finished.connect(ignored -> stopChecking());
     }
 
+    void onUpdateAvailability(java.util.function.Consumer<Boolean> listener) {
+        updateListener = listener;
+    }
+
     void checkUpdates() {
         if (pendingCheck != null || worker.isShutdown()) {
             return;
@@ -154,6 +161,18 @@ final class AboutDialog extends QDialog {
         worker.shutdownNow();
     }
 
+    static Properties loadBuildInfo() {
+        var build = new Properties();
+        try (var resource = AboutDialog.class.getResourceAsStream("/build-info.properties")) {
+            if (resource != null) {
+                build.load(resource);
+            }
+        } catch (IOException exception) {
+            // Missing metadata is displayed as unknown, never as a guessed release.
+        }
+        return build;
+    }
+
     private void finishCheck() {
         if (pendingCheck == null || !pendingCheck.isDone()) {
             return;
@@ -161,6 +180,9 @@ final class AboutDialog extends QDialog {
         pollTimer.stop();
         try {
             updateStatus.setText(pendingCheck.get());
+            if (updateAvailable != null) {
+                updateListener.accept(updateAvailable);
+            }
             updateButton.setEnabled(availableInstaller != null);
             if (availableInstaller != null) {
                 releaseNotes.setText("<a href=\"" + ReleaseUpdateService.UI_PROJECT + "/releases/tag/v"
@@ -193,17 +215,5 @@ final class AboutDialog extends QDialog {
         var label = new QLabel("<a href=\"" + address + "\">" + caption + "</a>");
         label.setOpenExternalLinks(true);
         return label;
-    }
-
-    private static Properties loadBuildInfo() {
-        var build = new Properties();
-        try (var resource = AboutDialog.class.getResourceAsStream("/build-info.properties")) {
-            if (resource != null) {
-                build.load(resource);
-            }
-        } catch (IOException exception) {
-            // Missing metadata is displayed as unknown, never as a guessed release.
-        }
-        return build;
     }
 }

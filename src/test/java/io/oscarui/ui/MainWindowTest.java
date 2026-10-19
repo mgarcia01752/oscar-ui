@@ -18,6 +18,37 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void upgradeChipOnlyAppearsForNewerReleasesAndOpensUpdates() throws Exception {
+        var clicked = new java.util.concurrent.atomic.AtomicBoolean();
+        var chip = new UpgradeChip(() -> clicked.set(true));
+        try {
+            assertTrue(chip.isHidden());
+            chip.check(() -> new io.oscarui.service.ReleaseUpdateService.ReleaseCheck("New release", null, true));
+            await(() -> !chip.isHidden());
+            chip.click();
+            assertTrue(clicked.get());
+            chip.setAvailable(false);
+            assertTrue(chip.isHidden());
+            chip.check(() -> { throw new java.io.IOException("offline"); });
+            await(() -> !chip.findChild(io.qt.core.QTimer.class).isActive());
+            assertTrue(chip.isHidden());
+            chip.check(() -> new io.oscarui.service.ReleaseUpdateService.ReleaseCheck("Current", null, false));
+            await(() -> !chip.findChild(io.qt.core.QTimer.class).isActive());
+            assertTrue(chip.isHidden());
+        } finally {
+            chip.stop();
+            chip.dispose();
+        }
+        var window = new MainWindow(false);
+        try {
+            assertNotNull(window.findChild(QPushButton.class, "upgradeChip"));
+            assertTrue(window.findChild(QPushButton.class, "upgradeChip").isHidden());
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void certificateAddAndEditUseMultilineValidatedInput() throws Exception {
         var service = new OscarDocumentService();
         var document = service.open(Files.writeString(temporary.resolve("cert.txt"), "Docsis { NetworkAccess 1; }"));

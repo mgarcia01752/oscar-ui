@@ -11,6 +11,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReleaseUpdateServiceTest {
     private final ReleaseUpdateService service = new ReleaseUpdateService();
 
+    @Test void reportsAvailabilityWithoutRequiringAnUbuntuAsset() throws Exception {
+        var newer = service.parseRelease("0.9.9", release("v0.10.0"));
+        assertTrue(newer.updateAvailable());
+        assertNull(newer.installer());
+        assertFalse(service.parseRelease("0.10.0", release("v0.10.0")).updateAvailable());
+        assertFalse(service.parseRelease("0.11.0", release("v0.10.0")).updateAvailable());
+    }
+
     @Test void comparesNumericVersionsAndDevelopmentBuilds() throws Exception {
         assertTrue(service.describe("0.9.9", release("v0.10.0")).startsWith("Update available"));
         assertTrue(service.describe("0.10.0", release("v0.10.0")).contains("up to date"));

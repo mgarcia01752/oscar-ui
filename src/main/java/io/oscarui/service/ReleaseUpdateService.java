@@ -11,7 +11,7 @@ import java.net.URI;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
 
-/** Manual, read-only lookup of the latest published stable OSCAR-UI release. */
+/** Read-only lookup of the latest published stable OSCAR-UI release. */
 public final class ReleaseUpdateService {
     public static final String UI_PROJECT = "https://github.com/mgarcia01752/oscar-ui";
     public static final String OSCAR_PROJECT = "https://github.com/Comcast/Oscar";
@@ -48,7 +48,7 @@ public final class ReleaseUpdateService {
         try {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                return new ReleaseCheck("No published release is available yet.", null);
+                return new ReleaseCheck("No published release is available yet.", null, false);
             }
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 throw new IOException("GitHub returned HTTP " + responseCode + ". Try again later.");
@@ -65,20 +65,25 @@ public final class ReleaseUpdateService {
         }
     }
 
-    /** Result of a release check; installer is null when unavailable or not newer. */
-    public record ReleaseCheck(String status, UbuntuUpdateService.Installer installer) {}
+    /**
+     * Result of a stable release lookup, independent of platform installer availability.
+     * @param status readable status text
+     * @param installer optional Ubuntu installer; null when unavailable or not newer
+     * @param updateAvailable true when the stable release is newer than the installed version
+     */
+    public record ReleaseCheck(String status, UbuntuUpdateService.Installer installer, boolean updateAvailable) {}
 
     ReleaseCheck parseRelease(String installedVersion, String responseJson) throws IOException {
         String status = describe(installedVersion, responseJson);
         var release = new ObjectMapper().readTree(responseJson);
         if (compareVersions(release.path("tag_name").asText(), installedVersion) <= 0) {
-            return new ReleaseCheck(status, null);
+            return new ReleaseCheck(status, null, false);
         }
         UbuntuUpdateService.Installer installer = null;
         for (var asset : release.path("assets")) {
             if (asset.path("name").asText().endsWith("_amd64.deb")) {
                 if (installer != null) {
-                    return new ReleaseCheck(status + " Use the downloads link to select a package.", null);
+                    return new ReleaseCheck(status + " Use the downloads link to select a package.", null, true);
                 }
                 try {
                     installer = new UbuntuUpdateService.Installer(
@@ -86,11 +91,11 @@ public final class ReleaseUpdateService {
                             URI.create(asset.path("browser_download_url").asText()),
                             asset.path("size").asLong(), asset.path("digest").asText());
                 } catch (IllegalArgumentException exception) {
-                    return new ReleaseCheck(status + " A verified Ubuntu download is unavailable; use the releases link.", null);
+                    return new ReleaseCheck(status + " A verified Ubuntu download is unavailable; use the releases link.", null, true);
                 }
             }
         }
-        return new ReleaseCheck(status, installer);
+        return new ReleaseCheck(status, installer, true);
     }
 
     String describe(String installedVersion, String responseJson) throws IOException {
