@@ -261,7 +261,45 @@ invalid metadata are reported as check failures, never as up-to-date results.
 The dialog uses a worker and UI-thread timer, disables duplicate requests, and
 cancels its work on close. Connections have finite timeouts and bounded response
 size. No document, secrets, or settings are sent. Checks are user initiated;
-updates are downloaded manually through the GitHub releases link.
+Ubuntu DEB installations offer an in-app update; other environments retain the
+manual GitHub releases link.
+
+### Ubuntu update handoff
+
+`ReleaseUpdateService` returns a typed installer candidate only for a newer stable
+release with one amd64 DEB, an exact-version project download URL, bounded size,
+and GitHub asset SHA-256 digest. Missing digests disable in-app installation.
+This trusts GitHub release metadata over HTTPS; the digest is an integrity check,
+not an independent publisher signature. The selected release stays pinned during
+download even if another release is published.
+
+`UbuntuUpdateService` enables installation only when running from the installed
+Ubuntu amd64 package with its helper, pkexec, and zenity available. Development
+runs and Windows retain manual downloads. `MainWindow` uses its existing
+Save/Discard/Cancel flow before opening `UbuntuUpdateDialog`. Canceling Save or a
+failed save prevents the update flow. The dialog downloads unprivileged into a
+private directory, shows progress, checks size and SHA-256, and allows cancellation.
+Network reads/connects have 15-second timeouts; streaming has a 15-minute deadline.
+Cancel may wait for the current network read to time out. Literal download URLs
+are passed as structured HTTP requests, never shell commands.
+
+After verification, **Close and install** starts the packaged Python helper and
+closes the UI. The helper waits up to two minutes for UI exit before requesting
+administrator approval through polkit (`pkexec`). It shows a separate progress
+window and continues independently of the Java process. It copies the DEB into
+root-owned temporary storage, rechecks SHA-256, package name, architecture, selected
+version, installed status, and strictly newer Debian version before invoking
+`apt-get install`. It waits up to 60 seconds for an APT lock, forbids removals,
+and does not run a general system upgrade. No password enters OSCAR-UI.
+
+The normal-user helper reports completion and offers to reopen the normal-user
+launcher. Authentication cancellation leaves installation unstarted. APT failures
+are logged beside the downloaded package; partial APT failures may require manual
+repair and are not automatically rolled back. Failed downloads and canceled
+verified downloads are deleted; failed installation downloads/logs remain for
+diagnosis. Successful installation removes the DEB and retains the log.
+The Debian package declares python3, pkexec, and zenity; no APT repository or
+background automatic update service is installed.
 
 Window captions use OSCAR-UI only for the main window. Dialogs use task titles
 such as Add TLV, Settings - Global, or About without an application suffix.

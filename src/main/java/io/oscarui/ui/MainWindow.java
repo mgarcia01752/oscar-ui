@@ -451,14 +451,38 @@ public final class MainWindow extends QMainWindow {
 
     private void showAbout(boolean checkUpdates) {
         var dialog = new AboutDialog(this);
+        io.oscarui.service.UbuntuUpdateService.Installer installer;
         try {
             if (checkUpdates) {
                 dialog.checkUpdates();
             }
             dialog.exec();
+            installer = dialog.requestedInstaller();
         } finally {
             dialog.stopChecking();
             dialog.dispose();
+        }
+        if (installer != null && pending == null) {
+            withDiscardPermission(() -> installUbuntuUpdate(installer));
+        }
+    }
+
+    private void installUbuntuUpdate(io.oscarui.service.UbuntuUpdateService.Installer installer) {
+        var service = new io.oscarui.service.UbuntuUpdateService();
+        var download = new UbuntuUpdateDialog(this, installer, service);
+        try {
+            if (download.exec() == QDialog.DialogCode.Accepted.value()) {
+                try {
+                    service.launch(installer, download.downloadedPackage());
+                    modified = false;
+                    close();
+                } catch (java.io.IOException exception) {
+                    service.discard(download.downloadedPackage());
+                    QMessageBox.warning(this, "Update could not start", exception.getMessage());
+                }
+            }
+        } finally {
+            download.dispose();
         }
     }
 

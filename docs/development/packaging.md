@@ -331,3 +331,14 @@ Keep source archive sizes distinct from runtime and total installed sizes in
 The uploaded Ubuntu asset uses the stable name `oscar-ui_amd64.deb` so GitHub’s
 `releases/latest/download/oscar-ui_amd64.deb` URL works without a tag lookup.
 The DEB retains its version internally; only the release filename is stable.
+
+### Ubuntu updater payload
+
+The DEB bundles `scripts/unix/ubuntu-update.py` at
+`/opt/oscar-ui/lib/app/ubuntu-update.py` and depends on python3, pkexec, and zenity.
+The extraction check verifies helper content. The Ubuntu install matrix also
+exercises a synthetic-version upgrade through its privileged install mode,
+rejects a repeat update, smoke-launches, and preserves user configuration.
+Interactive polkit authorization is a separate desktop check. Release assets
+without a GitHub SHA-256 digest remain manually downloadable but cannot use the
+in-app installer. The updater creates no extra release asset or APT repository.

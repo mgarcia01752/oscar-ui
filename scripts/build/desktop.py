@@ -56,6 +56,8 @@ def build():
     for name in ('LICENSE', 'NOTICE', 'THIRD-PARTY-NOTICES.md'):
         shutil.copy2(ROOT / name, app)
     shutil.copytree(ROOT / 'licenses', app / 'licenses', dirs_exist_ok=True)
+    if not WINDOWS:
+        shutil.copy2(ROOT / 'scripts/unix/ubuntu-update.py', app / 'ubuntu-update.py')
     # Keep the pinned original Oscar attribution alongside its unmodified library.
     upstream = ROOT / '.tools/oscar-3.2.5'
     if not (upstream / 'LICENSE').exists():
@@ -149,7 +151,7 @@ def package(kind):
                      '--install-dir', '/opt']
             if kind == 'deb':
                 args += ['--linux-package-deps',
-                         'libgl1, libegl1, libdbus-1-3, libfontconfig1, libfreetype6, '
+                         'python3, pkexec, zenity, libgl1, libegl1, libdbus-1-3, libfontconfig1, libfreetype6, '
                          'libx11-xcb1, libxkbcommon0, libxkbcommon-x11-0, libxcb1, '
                          'libxcb-cursor0, libxcb-icccm4, libxcb-image0, libxcb-keysyms1, '
                          'libxcb-render-util0, libxcb-shape0, libxcb-randr0, '

@@ -46,7 +46,22 @@ if it reports `install ok installed`, no reinstall is needed.
 
 ## Update
 
-Close OSCAR-UI and rerun the installation block above. It downloads the latest
+Install a release containing this feature manually once to enable future in-app
+updates. In those versions, open **About → Check for updates**.
+When a newer verified Ubuntu package is available, select **Update on Ubuntu**.
+Save your configuration or explicitly discard changes, then download the update.
+After verification, select **Close and install**. Ubuntu asks for administrator
+approval in its own dialog. The separate installer shows progress and offers to
+reopen OSCAR-UI when installation completes. No uninstall is needed.
+
+You can cancel before installation or decline administrator approval. If an
+installation fails, the error window points to its log. An interrupted APT
+operation may need repair; the updater does not automatically roll back.
+Updates require the installed Ubuntu x64 DEB, an active desktop authentication
+agent, and a release asset with SHA-256 metadata. If the Update button is missing,
+use the manual method below. Windows and development runs use manual downloads.
+
+For a manual update, close OSCAR-UI and rerun the installation block above. It downloads the latest
 published DEB and upgrades the installed package through APT. You do not need to
 uninstall first. Review the version and changes shown by APT before confirming.
 

@@ -76,3 +76,12 @@ updater lives in `tools/development/`.
 Before pushing, use the shared [local validation gate](../docs/development/pre-push-checks.md).
 The developer installer enables its Git hook; other checkouts can enable it
 with `python3 tools/git/install-hooks.py`.
+
+## Installed Ubuntu updater
+
+`unix/ubuntu-update.py` is bundled in the Ubuntu app as `ubuntu-update.py`.
+It is launched by the Update UI, waits for app exit, requests polkit approval,
+validates a root-owned copy of the DEB, and uses APT to upgrade only OSCAR-UI and
+required dependencies. It reports results through zenity and can reopen the app
+as the original user. It is not a developer release/push script. See the
+[architecture](../docs/development/ui-architecture.md#ubuntu-update-handoff).

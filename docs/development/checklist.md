@@ -125,3 +125,24 @@ and broader interoperability work is tracked in [TODO](TODO.md#verification-back
 - [ ] Verify first-error stopping, unknown entries, and candidate-family labeling;
   ensure reports omit payloads with obfuscation both enabled and disabled.
 - [ ] Confirm text syntax and file-read errors use their ordinary error flow.
+
+## Ubuntu in-app updates
+
+- [ ] Verify installed Ubuntu amd64 offers Update only after a newer stable
+  release has a unique DEB and usable SHA-256 metadata. Development/Windows,
+  equal/older releases, malformed metadata, and missing hashes must not offer it.
+- [ ] Verify the version, download size, and release link; changing latest during
+  download must not change the selected installer.
+- [ ] Exercise Save, Discard, Cancel, save failure, download cancellation, network
+  timeout, truncated/oversized/corrupt download, and closing the download dialog.
+- [ ] Verify administrator authentication is handled by Ubuntu, cancellation
+  does not install, the helper waits for UI exit, and restart runs as normal user.
+- [ ] Reject wrong package/architecture/version/hash, symlinks, and equal/older
+  versions before APT; inspect the root-owned copy rather than a mutable download.
+- [ ] Check APT lock timeout and installation failures show an actionable log
+  location; do not claim automatic rollback after a partial package failure.
+- [ ] Run Java service/native-dialog tests and `scripts/tests/test_ubuntu_update.py`.
+- [ ] In Ubuntu 22.04/24.04/26.04 CI, upgrade a synthetic predecessor through the
+  packaged installer helper, reject a repeat install, smoke-launch the result,
+  preserve user configurations, and uninstall cleanly. This does not substitute
+  for interactive polkit/cancellation testing on each desktop.

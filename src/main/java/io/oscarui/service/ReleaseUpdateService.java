@@ -27,6 +27,17 @@ public final class ReleaseUpdateService {
      * @throws IOException when GitHub is unavailable or returns invalid metadata
      */
     public String check(String installedVersion) throws IOException {
+        return checkRelease(installedVersion).status();
+    }
+
+    /**
+     * Fetches a stable release and its optional Ubuntu installer on a worker thread.
+     *
+     * @param installedVersion current application version
+     * @return status and a verified-metadata candidate, for example v0.4.0 plus its DEB
+     * @throws IOException if release metadata cannot be read or compared
+     */
+    public ReleaseCheck checkRelease(String installedVersion) throws IOException {
         var connection = (HttpURLConnection) URI.create(
                 "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest").toURL().openConnection();
         connection.setConnectTimeout(TIMEOUT_MILLIS);
@@ -37,7 +48,7 @@ public final class ReleaseUpdateService {
         try {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                return "No published release is available yet.";
+                return new ReleaseCheck("No published release is available yet.", null);
             }
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 throw new IOException("GitHub returned HTTP " + responseCode + ". Try again later.");
@@ -47,11 +58,39 @@ public final class ReleaseUpdateService {
                 if (payload.length > MAX_RESPONSE_BYTES) {
                     throw new IOException("GitHub returned an oversized response.");
                 }
-                return describe(installedVersion, new String(payload, java.nio.charset.StandardCharsets.UTF_8));
+                return parseRelease(installedVersion, new String(payload, java.nio.charset.StandardCharsets.UTF_8));
             }
         } finally {
             connection.disconnect();
         }
+    }
+
+    /** Result of a release check; installer is null when unavailable or not newer. */
+    public record ReleaseCheck(String status, UbuntuUpdateService.Installer installer) {}
+
+    ReleaseCheck parseRelease(String installedVersion, String responseJson) throws IOException {
+        String status = describe(installedVersion, responseJson);
+        var release = new ObjectMapper().readTree(responseJson);
+        if (compareVersions(release.path("tag_name").asText(), installedVersion) <= 0) {
+            return new ReleaseCheck(status, null);
+        }
+        UbuntuUpdateService.Installer installer = null;
+        for (var asset : release.path("assets")) {
+            if (asset.path("name").asText().endsWith("_amd64.deb")) {
+                if (installer != null) {
+                    return new ReleaseCheck(status + " Use the downloads link to select a package.", null);
+                }
+                try {
+                    installer = new UbuntuUpdateService.Installer(
+                            release.path("tag_name").asText().replaceFirst("^v", ""),
+                            URI.create(asset.path("browser_download_url").asText()),
+                            asset.path("size").asLong(), asset.path("digest").asText());
+                } catch (IllegalArgumentException exception) {
+                    return new ReleaseCheck(status + " A verified Ubuntu download is unavailable; use the releases link.", null);
+                }
+            }
+        }
+        return new ReleaseCheck(status, installer);
     }
 
     String describe(String installedVersion, String responseJson) throws IOException {

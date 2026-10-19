@@ -18,6 +18,49 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void ubuntuCancelWaitsForWorkerAndDiscardsCompletedDownload() throws Exception {
+        var installer = new io.oscarui.service.UbuntuUpdateService.Installer("0.4.0",
+                java.net.URI.create(io.oscarui.service.ReleaseUpdateService.UI_PROJECT
+                        + "/releases/download/v0.4.0/oscar-ui_amd64.deb"), 1, "sha256:" + "0".repeat(64));
+        Path download = Files.createTempDirectory(temporary, "canceled-").resolve("update.deb");
+        Files.write(download, new byte[]{1});
+        var releaseWorker = new java.util.concurrent.CountDownLatch(1);
+        var dialog = new UbuntuUpdateDialog(null, installer, new io.oscarui.service.UbuntuUpdateService(), () -> {
+            releaseWorker.await(5, java.util.concurrent.TimeUnit.SECONDS);
+            return download;
+        });
+        try {
+            dialog.show();
+            dialog.reject();
+            assertTrue(dialog.isVisible());
+            releaseWorker.countDown();
+            await(() -> !dialog.isVisible());
+            assertFalse(Files.exists(download));
+        } finally {
+            releaseWorker.countDown();
+            dialog.dispose();
+        }
+    }
+
+    @Test void ubuntuDownloadRequiresExplicitInstallAndCleansUpOnCancel() throws Exception {
+        var installer = new io.oscarui.service.UbuntuUpdateService.Installer("0.4.0",
+                java.net.URI.create(io.oscarui.service.ReleaseUpdateService.UI_PROJECT
+                        + "/releases/download/v0.4.0/oscar-ui_amd64.deb"), 1, "sha256:" + "0".repeat(64));
+        Path download = Files.createTempDirectory(temporary, "download-").resolve("update.deb");
+        Files.write(download, new byte[]{1});
+        var dialog = new UbuntuUpdateDialog(null, installer, new io.oscarui.service.UbuntuUpdateService(), () -> download);
+        try {
+            dialog.show();
+            await(() -> dialog.findChild(QPushButton.class, "installUbuntuUpdate").isEnabled());
+            assertEquals(download, dialog.downloadedPackage());
+            dialog.reject();
+            assertFalse(Files.exists(download));
+            assertEquals(QDialog.DialogCode.Rejected.value(), dialog.result());
+        } finally {
+            dialog.dispose();
+        }
+    }
+
     @Test void binaryFailureReportIsReadOnlyAndCopyable() {
         String report = "000000  45  9  Unknown [UNKNOWN_TYPE]";
         var dialog = new BinaryFailureDialog(null, report);

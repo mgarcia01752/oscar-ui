@@ -5,6 +5,7 @@
 package io.oscarui.ui;
 
 import io.oscarui.service.ReleaseUpdateService;
+import io.oscarui.service.UbuntuUpdateService;
 import io.qt.core.QTimer;
 import io.qt.core.Qt;
 import io.qt.widgets.*;
@@ -16,6 +17,10 @@ import java.util.concurrent.*;
 final class AboutDialog extends QDialog {
     private final QLabel updateStatus = new QLabel("Check GitHub for the latest stable OSCAR-UI release.");
     private final QPushButton checkButton = new QPushButton("Check for updates");
+    private final QPushButton updateButton = new QPushButton("Update on Ubuntu");
+    private volatile UbuntuUpdateService.Installer availableInstaller;
+    private UbuntuUpdateService.Installer requestedInstaller;
+    private final QLabel releaseNotes = link("View releases and downloads", ReleaseUpdateService.UI_PROJECT + "/releases/latest");
     private final QTimer pollTimer = new QTimer(this);
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
         var thread = new Thread(task, "oscar-ui-release-check");
@@ -35,7 +40,11 @@ final class AboutDialog extends QDialog {
         var build = loadBuildInfo();
         installedVersion = build.getProperty("ui.version", "unknown");
         this.releaseCheck = releaseCheck == null
-                ? () -> new ReleaseUpdateService().check(installedVersion) : releaseCheck;
+                ? () -> {
+                    var result = new ReleaseUpdateService().checkRelease(installedVersion);
+                    availableInstaller = result.installer();
+                    return result.status();
+                } : releaseCheck;
         setObjectName("aboutDialog");
         setWindowTitle("About");
         setMinimumWidth(480);
@@ -84,7 +93,15 @@ final class AboutDialog extends QDialog {
         checkButton.setObjectName("checkUpdatesButton");
         checkButton.clicked.connect(this::checkUpdates);
         updateLayout.addWidget(checkButton);
-        updateLayout.addWidget(link("View releases and downloads", ReleaseUpdateService.UI_PROJECT + "/releases/latest"));
+        updateButton.setObjectName("ubuntuUpdateButton");
+        updateButton.setVisible(new UbuntuUpdateService().supported());
+        updateButton.setEnabled(false);
+        updateButton.clicked.connect(() -> {
+            requestedInstaller = availableInstaller;
+            accept();
+        });
+        updateLayout.addWidget(updateButton);
+        updateLayout.addWidget(releaseNotes);
         String installGuide = System.getProperty("os.name", "").startsWith("Windows") ? "windows" : "ubuntu";
         var updateInstructions = link("How to update or uninstall OSCAR-UI",
                 ReleaseUpdateService.UI_PROJECT + "/blob/main/docs/install/" + installGuide + ".md#update");
@@ -104,10 +121,16 @@ final class AboutDialog extends QDialog {
         if (pendingCheck != null || worker.isShutdown()) {
             return;
         }
+        availableInstaller = null;
+        updateButton.setEnabled(false);
         updateStatus.setText("Checking GitHub…");
         checkButton.setEnabled(false);
         pendingCheck = worker.submit(releaseCheck);
         pollTimer.start();
+    }
+
+    UbuntuUpdateService.Installer requestedInstaller() {
+        return requestedInstaller;
     }
 
     void stopChecking() {
@@ -125,6 +148,13 @@ final class AboutDialog extends QDialog {
         pollTimer.stop();
         try {
             updateStatus.setText(pendingCheck.get());
+            updateButton.setEnabled(availableInstaller != null);
+            if (availableInstaller != null) {
+                releaseNotes.setText("<a href=\"" + ReleaseUpdateService.UI_PROJECT + "/releases/tag/v"
+                        + availableInstaller.version() + "\">View release notes and downloads</a>");
+                updateStatus.setText(updateStatus.text() + " Ubuntu download: "
+                        + String.format(java.util.Locale.ROOT, "%.1f MiB", availableInstaller.size() / 1048576.0));
+            }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             updateStatus.setText("Update check interrupted. Please try again.");

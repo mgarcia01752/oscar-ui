@@ -25,3 +25,15 @@ version is current; retry when GitHub is reachable.
 **About, package links, and release updates**
 
 ![About, package links, and release updates in OSCAR-UI dark mode](../images/user-guide/about-dark.png)
+
+## Install an Ubuntu update
+
+After **Check for updates** finds a newer verified Ubuntu release, click
+**Update on Ubuntu**. Save or discard unsaved work, wait for the download and
+verification, then choose **Close and install**. The app closes; Ubuntu requests
+administrator approval. A separate progress window reports the result and offers
+to reopen OSCAR-UI. Canceling before installation does not change the package.
+
+This is available for installed Ubuntu x64 DEB packages. Other platforms and
+development runs retain the release download link. See the
+[Ubuntu update instructions](../install/ubuntu.md#update) for fallback and failures.
