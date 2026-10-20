@@ -34,8 +34,7 @@ verification, then choose **Close and install**. The app closes; Ubuntu requests
 administrator approval. A separate progress window reports the result and offers
 to reopen OSCAR-UI. Canceling before installation does not change the package.
 
-This is available for installed Ubuntu x64 DEB packages. Other platforms and
-development runs retain the release download link. See the
+This is available for installed Ubuntu x64 DEB packages. Development runs retain the release download link. See the
 [Ubuntu update instructions](../install/ubuntu.md#update) for fallback and failures.
 
 ## Uninstall OSCAR-UI
@@ -75,13 +74,21 @@ See the [Windows installation guide](../install/windows.md) for more details.
 
 When a newer stable release is available, a green **Upgrade** chip appears at
 the upper-right of the main window's menu bar. Click it to open the update
-dialog. Ubuntu uses the existing download/install flow; Windows users can
-open the release download link. Clicking the chip does not install anything.
+dialog. Compatible installed packages offer their platform update action;
+other installations retain the download link. Clicking the chip installs nothing.
 
 OSCAR-UI makes one background GitHub release check at startup. The chip stays
 hidden when up to date, running a newer development build, or offline.
 **About → Check for updates** retries the check and refreshes the indicator.
 
-Windows patch updating is still under development. The current Windows **Upgrade**
-button opens release information; installing a new version still uses the full
-MSI. Prototype patch artifacts are not updates for your installed application.
+## Install a Windows update
+
+A compatible release enables **Update on Windows**. Save or discard changes,
+confirm closing the app, then follow the download and administrator prompts.
+The app restarts after success; a reboot requirement is reported separately.
+Cancel or failure offers to reopen it.
+
+This requires the new MSI baseline and the immediately previous compatible
+release. Existing installations through v0.4.5 need one full MSI installation
+first. Changed dependencies or skipped versions use the full installer instead.
+See [Windows update instructions](../install/windows.md#update).

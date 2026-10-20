@@ -28,6 +28,8 @@ def prepare(image, output):
     """
     image, output = Path(image).resolve(), Path(output).resolve()
     jars = list((image / 'app').glob('oscar-ui-*.jar'))
+    if not jars and (image / APP_JAR).is_file():
+        jars = [image / APP_JAR]
     if len(jars) != 1 or not (image / 'OSCAR-UI.exe').is_file():
         raise ValueError('Expected one versioned application JAR and the Windows launcher')
     if output == image or image in output.parents or output in image.parents:
@@ -43,7 +45,8 @@ def prepare(image, output):
         shutil.copytree(image, destination)
         copied_jar = destination / 'app' / jars[0].name
         stable_jar = destination / APP_JAR
-        copied_jar.rename(stable_jar)
+        if copied_jar != stable_jar:
+            copied_jar.rename(stable_jar)
         (destination / 'app/OSCAR-UI.cfg').write_text(
             launcher_text.replace(jars[0].name, 'oscar-ui.jar'), encoding='utf-8')
         _set_version(stable_jar, version)

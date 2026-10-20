@@ -31,7 +31,7 @@ public final class ReleaseUpdateService {
     }
 
     /**
-     * Fetches a stable release and its optional Ubuntu installer on a worker thread.
+     * Fetches a stable release and compatible platform installers on a worker thread.
      *
      * @param installedVersion current application version
      * @return status and a verified-metadata candidate, for example v0.4.0 plus its DEB
@@ -58,7 +58,18 @@ public final class ReleaseUpdateService {
                 if (payload.length > MAX_RESPONSE_BYTES) {
                     throw new IOException("GitHub returned an oversized response.");
                 }
-                return parseRelease(installedVersion, new String(payload, java.nio.charset.StandardCharsets.UTF_8));
+                String json = new String(payload, java.nio.charset.StandardCharsets.UTF_8);
+                ReleaseCheck result = parseRelease(installedVersion, json);
+                if (result.updateAvailable()) {
+                    try {
+                        var windows = new WindowsUpdateService().findInstaller(installedVersion, new ObjectMapper().readTree(json));
+                        return new ReleaseCheck(result.status(), result.installer(), true, windows);
+                    } catch (IOException exception) {
+                        return new ReleaseCheck(result.status() + " Windows patch unavailable; use the full MSI instructions.",
+                                result.installer(), true);
+                    }
+                }
+                return result;
             }
         } finally {
             connection.disconnect();
@@ -70,8 +81,20 @@ public final class ReleaseUpdateService {
      * @param status readable status text
      * @param installer optional Ubuntu installer; null when unavailable or not newer
      * @param updateAvailable true when the stable release is newer than the installed version
+     * @param windowsInstaller compatible Windows MSP or null
      */
-    public record ReleaseCheck(String status, UbuntuUpdateService.Installer installer, boolean updateAvailable) {}
+    public record ReleaseCheck(String status, UbuntuUpdateService.Installer installer, boolean updateAvailable,
+                               WindowsUpdateService.Installer windowsInstaller) {
+        /**
+         * Constructs a release result without a compatible Windows patch.
+         * @param status readable status
+         * @param installer optional Ubuntu package
+         * @param updateAvailable whether a newer release exists
+         */
+        public ReleaseCheck(String status, UbuntuUpdateService.Installer installer, boolean updateAvailable) {
+            this(status, installer, updateAvailable, null);
+        }
+    }
 
     ReleaseCheck parseRelease(String installedVersion, String responseJson) throws IOException {
         String status = describe(installedVersion, responseJson);

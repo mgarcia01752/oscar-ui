@@ -20,6 +20,9 @@ final class AboutDialog extends QDialog {
     private final QPushButton updateButton = new QPushButton("Update on Ubuntu");
     private volatile UbuntuUpdateService.Installer availableInstaller;
     private UbuntuUpdateService.Installer requestedInstaller;
+    private final QPushButton windowsUpdateButton = new QPushButton("Update on Windows");
+    private volatile io.oscarui.service.WindowsUpdateService.Installer availableWindowsInstaller;
+    private io.oscarui.service.WindowsUpdateService.Installer requestedWindowsInstaller;
     private boolean uninstallRequested;
     private final QLabel releaseNotes = link("View releases and downloads", ReleaseUpdateService.UI_PROJECT + "/releases/latest");
     private final QTimer pollTimer = new QTimer(this);
@@ -46,6 +49,7 @@ final class AboutDialog extends QDialog {
                 ? () -> {
                     var result = new ReleaseUpdateService().checkRelease(installedVersion);
                     availableInstaller = result.installer();
+                    availableWindowsInstaller = result.windowsInstaller();
                     updateAvailable = result.updateAvailable();
                     return result.status();
                 } : releaseCheck;
@@ -105,6 +109,11 @@ final class AboutDialog extends QDialog {
             accept();
         });
         updateLayout.addWidget(updateButton);
+        windowsUpdateButton.setObjectName("windowsUpdateButton");
+        windowsUpdateButton.setVisible(new io.oscarui.service.WindowsUpdateService().supported());
+        windowsUpdateButton.setEnabled(false);
+        windowsUpdateButton.clicked.connect(this::requestWindowsUpdate);
+        updateLayout.addWidget(windowsUpdateButton);
         updateLayout.addWidget(releaseNotes);
         String installGuide = System.getProperty("os.name", "").startsWith("Windows") ? "windows" : "ubuntu";
         var updateInstructions = link("How to update or uninstall OSCAR-UI",
@@ -138,6 +147,8 @@ final class AboutDialog extends QDialog {
             return;
         }
         availableInstaller = null;
+        availableWindowsInstaller = null;
+        windowsUpdateButton.setEnabled(false);
         updateButton.setEnabled(false);
         updateStatus.setText("Checking GitHub…");
         checkButton.setEnabled(false);
@@ -147,6 +158,10 @@ final class AboutDialog extends QDialog {
 
     UbuntuUpdateService.Installer requestedInstaller() {
         return requestedInstaller;
+    }
+
+    io.oscarui.service.WindowsUpdateService.Installer requestedWindowsInstaller() {
+        return requestedWindowsInstaller;
     }
 
     boolean uninstallRequested() {
@@ -173,6 +188,11 @@ final class AboutDialog extends QDialog {
         return build;
     }
 
+    private void requestWindowsUpdate() {
+        requestedWindowsInstaller = availableWindowsInstaller;
+        accept();
+    }
+
     private void finishCheck() {
         if (pendingCheck == null || !pendingCheck.isDone()) {
             return;
@@ -184,7 +204,14 @@ final class AboutDialog extends QDialog {
                 updateListener.accept(updateAvailable);
             }
             updateButton.setEnabled(availableInstaller != null);
-            if (availableInstaller != null) {
+            windowsUpdateButton.setEnabled(availableWindowsInstaller != null);
+            if (availableWindowsInstaller != null) {
+                updateStatus.setText(updateStatus.text() + " Windows patch: "
+                        + String.format(java.util.Locale.ROOT, "%.1f MiB", availableWindowsInstaller.size() / 1048576.0));
+            } else if (new io.oscarui.service.WindowsUpdateService().supported() && Boolean.TRUE.equals(updateAvailable)) {
+                updateStatus.setText(updateStatus.text() + " Full MSI installation required; see the update instructions.");
+            }
+            if (availableInstaller != null && new UbuntuUpdateService().supported()) {
                 releaseNotes.setText("<a href=\"" + ReleaseUpdateService.UI_PROJECT + "/releases/tag/v"
                         + availableInstaller.version() + "\">View release notes and downloads</a>");
                 updateStatus.setText(updateStatus.text() + " Ubuntu download: "

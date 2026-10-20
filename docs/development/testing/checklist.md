@@ -189,13 +189,19 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 - [ ] Manual About checks refresh visibility; closing cancels pending checks.
 - [ ] Verify light/dark appearance and keyboard focus.
 
-## Windows patch prototype (pending)
+## Windows MSP updates
 
-- [ ] Run the read-only MSI baseline comparison on Windows; retain JSON evidence.
-- [ ] Complete the [Windows update phase 1 checks](../architecture/windows-updates.md#1-prove-installer-compatibility-first) before enabling MSP updates.
+- [x] Isolated synthetic prototype passed hosted run `39350060186`.
+- [ ] Pass production MSI install/launch/uninstall with branding and shortcuts.
+- [ ] Pass real previous-release MSP, repeat application, normal/forced repair,
+  exact file/version verification and uninstall in Windows CI.
+- [ ] Pass original-baseline plus successive patch-chain lifecycle checks.
+- [ ] On Windows 11, check Upgrade → About → Update on Windows, save/discard/cancel,
+  download cancellation, UAC acceptance/cancellation and normal-user restart.
+- [ ] Check network/hash failure, changed dependencies, unsupported/skipped versions,
+  installer failure/rollback, locked files and reboot-required behavior.
+- [ ] Confirm full-MSI fallback for v0.4.5 and older installations.
+- [ ] Confirm metadata/MSP mismatch blocks release publication; compact inputs
+  contain no duplicate runtimes and required earlier assets remain available.
 
-- [ ] Run **Windows patch prototype** manually and retain its evidence artifact.
-- [ ] Verify missing-product rejection, repeated patch, both repairs, patch removal/reapply and uninstall.
-- [ ] Require exact payload hashes and matching About resource/Installed apps versions at every stage.
-- [ ] Confirm native launch after every stage and unchanged external user files.
-- [ ] Complete production baseline, interrupted rollback, downgrade and Windows 11 checks before release use.
+See [Windows update architecture](../architecture/windows-updates.md).

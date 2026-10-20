@@ -28,6 +28,9 @@ jobs:
       - name: Test Windows packaging helpers
         shell: pwsh
         run: python -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s scripts/tests -p 'test_windows_*.py'
+      - name: Test installed Windows updater validation
+        shell: powershell
+        run: ./scripts/windows/test-windows-update-helper.ps1
       - name: Configure WiX 3 tools
         shell: pwsh
         run: |
@@ -75,7 +78,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: dist/windows/release/*.msi
+          path: dist/windows/release/*
           if-no-files-found: error
   publish:
     if: ${{ !inputs.patch_prototype && startsWith(github.ref, 'refs/tags/') }}
@@ -103,7 +106,10 @@ jobs:
               --title "OSCAR-UI $RELEASE_TAG" \
               --notes-file packaging/release-notes.md
           fi
-          assets=(release/*.msi)
-          test "${#assets[@]}" -eq 1
-          test -f "${assets[0]}"
-          gh release upload "$RELEASE_TAG" "${assets[0]}" --clobber
+          shopt -s nullglob
+          installers=(release/*.msi)
+          test "${#installers[@]}" -eq 1
+          test -s release/windows-update.json
+          test -s release/windows-patch-inputs.zip
+          assets=(release/*.msi release/*.msp release/windows-update.json release/windows-patch-inputs.zip)
+          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber

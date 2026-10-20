@@ -79,3 +79,12 @@ current shell is already in the correct project. Use `cd /absolute/repo &&`
 as the first line so a failed directory change prevents the following command.
 Provide push/release commands for the user to execute unless explicitly asked
 to execute them.
+
+## Windows MSP releases
+
+Check `docs/development/architecture/windows-updates.md` before changing Windows
+packaging. Retain compact patch inputs and earlier baseline-family assets.
+Require exact previous-version and dependency compatibility; never substitute
+unmanaged JAR replacement. Publish MSP metadata only after native production
+patch, repair and uninstall checks pass. Report interactive UAC/Windows 11
+validation separately from mocked helper checks or the isolated prototype.

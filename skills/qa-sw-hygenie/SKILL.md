@@ -88,7 +88,8 @@ Read `docs/development/build/packaging.md` and the affected workflow/helper. Con
   not need the repository or a separately installed Java development kit.
 - Verify install, launch, and uninstall in both platform workflows, including
   shortcut cleanup and preservation of user configurations outside install paths.
-- Only those two application assets are uploaded. Dependency sources, notices,
+- Verify the MSI, DEB, Windows update manifest and compact patch inputs; an MSP
+  requires the production patch/repair/uninstall CI gate. Dependency sources, notices,
   and checksums remain inside packages and match the bundled dependencies.
 - Ubuntu install checks cover 22.04, 24.04, and 26.04. macOS Java CI is not evidence of
   a working macOS desktop package.

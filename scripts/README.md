@@ -54,7 +54,7 @@ for disposable Windows CI runners, not routine checks on a developer machine.
 
 `compare-msi-baselines.ps1 -Baseline PATH -Target PATH` reads two MSI databases
 without installing them and reports identity/layout blockers. It is a prototype
-audit, not a patch builder; see the [Windows update plan](../docs/development/architecture/windows-updates.md#phase-1-findings-and-reproducible-audit).
+audit, not a patch builder; see the [Windows update plan](../docs/development/architecture/windows-updates.md#running-the-isolated-prototype).
 
 `test-windows-patch.ps1` builds and tests isolated synthetic baseline/target MSIs
 and an MSP after the normal Windows build. It runs only on hosted Windows CI.
@@ -105,3 +105,17 @@ Ubuntu 26.04 to select its own GLib dependencies. See the
 It waits for the UI to exit, requests authorization for APT removal, and reports
 the result without deleting external configurations or restarting the app.
 Tests mock all removal processes; no real package removal is performed locally.
+
+## Windows production updates
+
+- `build/windows-installer.py`: author stable MSI/MSP inputs; retain compact
+  previous payload/symbols; verify installed hashes.
+- `windows/windows-msi.ps1`: build MSI and compatible MSP from verified release
+  inputs, then run hosted production lifecycle checks.
+- `windows/windows-update.ps1`: installed, user-confirmed MSP download/UAC/install
+  helper with integrity and installed-baseline checks.
+- `windows/test-windows-update-helper.ps1`: mocked compatibility/hash checks.
+- `windows/test-production-patch.ps1`: hosted-only install/patch/repair/uninstall.
+- `build/verify-windows-release.py`: publication gate for manifest/asset consistency.
+
+See [Windows update architecture](../docs/development/architecture/windows-updates.md).

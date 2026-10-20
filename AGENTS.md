@@ -113,7 +113,8 @@ Use [build-images](skills/build-images/SKILL.md) for local installer builds.
 The shared `scripts/build/build-image.py` wraps native packaging; `--all`
 means current-host targets only. Keep local builds separate from release pushes.
 
-- Preserve the two uploaded application assets: Windows MSI and Ubuntu DEB.
+- Preserve the full Windows MSI and Ubuntu DEB assets. Windows also publishes
+  update metadata, compact patch inputs and an optional compatible MSP.
   Keep corresponding dependency sources and checksums inside packages.
   GitHub's automatic source archives are separate from these uploaded assets.
 - Keep Ubuntu and Windows workflows compatible with the shared release draft.

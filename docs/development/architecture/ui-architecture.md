@@ -583,12 +583,14 @@ The Upgrade chip retains its update callback for the widget lifetime and connect
 clicks through a widget-owned method, so collection of a temporary callback
 receiver cannot disconnect the update action.
 
-### Planned Windows update handoff
+### Windows update handoff
 
-The [Windows update plan](windows-updates.md) includes an isolated CI prototype
-(manual **Windows patch prototype** workflow) for installer-managed MSP
-patches for compatible application-only updates and a user-driven full
-uninstall/reinstall when dependencies or installation layout change. Direct
-JAR replacement is not the proposed path because MSI repair could restore old
-files. This plan awaits review and an MSI/MSP feasibility prototype; Windows
-currently retains manual release downloads.
+`WindowsUpdateService` verifies release metadata and offers the installed helper
+only for an exact previous-version/baseline match. About enables **Update on
+Windows** for compatible MSPs; MainWindow uses its existing unsaved-work guard
+before closing and handing off. The helper validates actual installed dependency
+hashes and Windows Installer registration again before elevation/install.
+The original user process restarts OSCAR-UI after success; reboot-required
+results are reported separately. Unsupported states keep the full-MSI guide.
+See [Windows updates](windows-updates.md) for migration, trust, retention and
+pending native acceptance checks. Ubuntu updating remains independent.

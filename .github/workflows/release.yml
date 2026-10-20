@@ -32,6 +32,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - name: Verify both installers and publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -40,11 +41,14 @@ jobs:
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
-          gh release view "$RELEASE_TAG" --json assets > release-assets.json
+          gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" > release-assets.json
           jq -e --arg msi "OSCAR-UI-${version}-windows-x64.msi" \
             --arg deb "oscar-ui_amd64.deb" '
             .assets as $assets |
             all([$msi, $deb][]; . as $name |
               any($assets[]; .name == $name and .state == "uploaded" and .size > 0))
           ' release-assets.json
+          gh release download "$RELEASE_TAG" --pattern windows-update.json --dir windows-metadata
+          python3 scripts/build/verify-windows-release.py --version "$version" \
+            --assets release-assets.json --manifest windows-metadata/windows-update.json
           gh release edit "$RELEASE_TAG" --draft=false

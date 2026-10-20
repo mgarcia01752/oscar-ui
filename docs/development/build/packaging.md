@@ -1,6 +1,6 @@
 # Desktop releases
 
-Each version has two uploaded application assets:
+Each version retains two full installation assets:
 
 - `OSCAR-UI-<version>-windows-x64.msi`: run the installer and launch
   OSCAR-UI from the Start menu.
@@ -195,10 +195,8 @@ header. Both are 24-bit RGB bitmaps composed from the existing light icon.
 Keep the dialog's area to the right of pixel 164 white and the banner's left
 area white so native installer text stays readable. Refresh these assets
 along with the ICO when changing the logo; normal builds need no image tools.
-The release script extracts the build JDK's `main.wxs`, adds the two WiX
-bitmap variables, and supplies it through `--resource-dir`. It rejects an
-unexpected template structure, preserving the JDK's installation logic
-without maintaining a copied WiX template. Check both graphics interactively
+The production `windows-installer.py` authors the MSI with stable component
+identities and WiX UI bitmap variables; jpackage builds the application image. Check both graphics interactively
 on Windows; silent CI installation does not validate wizard appearance.
 
 The window and About dialog use the supplied light/dark square PNG icons from
@@ -377,5 +375,16 @@ handoff require the separate checks in the verification checklist.
 
 Use the manual **Windows patch prototype** Actions workflow to evaluate the
 prospective stable MSI layout with the real application image. It produces CI
-artifacts only and does not change the two-asset release policy. See the
+artifacts only and cannot publish a release. See the
 [prototype procedure and limitations](../architecture/windows-updates.md#running-the-isolated-prototype).
+
+## Production Windows patches
+
+Windows publishes `windows-update.json` and compact `windows-patch-inputs.zip`
+alongside the full MSI; a compatible immediate-previous release also gets an MSP.
+The shared coordinator validates these assets before publishing. End users use
+the MSI or in-app updater; the ZIP is retained build input, not a portable app.
+Java/Qt and source archives are not duplicated in the ZIP. Preserve earlier
+baseline-family MSI/MSPs for mandatory chained repair tests.
+See [Windows updates](../architecture/windows-updates.md) for compatibility,
+first-baseline migration and native validation still required.

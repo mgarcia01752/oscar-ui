@@ -70,50 +70,5 @@ try {
     $env:QT_QPA_PLATFORM = $OriginalPlatform
     Remove-Item $Probe -Recurse -Force
 }
-$Output = "$Root/dist/windows/release"
-New-Item -ItemType Directory -Force $Output | Out-Null
-# Package the prepared image so Qt and Visual C++ DLLs stay in the installer.
-$InstallerOutput = "$Root/dist/windows/msi"
-if (Test-Path $InstallerOutput) { throw "Output already exists: $InstallerOutput" }
-# Show package contents before the unchanged license in the MSI license dialog.
-$InstallerInformation = "$Root/target/windows-installer-information.txt"
-$PackageInformation = Get-Content "$Root/packaging/windows/install-information.txt" -Raw
-$ApplicationLicense = Get-Content "$Root/LICENSE" -Raw
-[IO.File]::WriteAllText($InstallerInformation, "$PackageInformation`r`n$ApplicationLicense")
-$JPackage = if ($env:JAVA_HOME) { "$env:JAVA_HOME/bin/jpackage.exe" } else { 'jpackage.exe' }
-# Customize the current JDK template, retaining its installation behavior.
-$InstallerResources = "$Root/target/windows-installer-resources"
-New-Item -ItemType Directory -Force $InstallerResources | Out-Null
-$JdkHome = Split-Path -Parent (Split-Path -Parent (Get-Command $JPackage).Source)
-$TemplateEntry = 'classes/jdk/jpackage/internal/resources/main.wxs'
-Push-Location $InstallerResources
-try {
-    & "$JdkHome/bin/jmod.exe" extract --dir extracted "$JdkHome/jmods/jdk.jpackage.jmod"
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Unable to extract the JDK installer template'
-    }
-    $Template = Get-Content "extracted/$TemplateEntry" -Raw
-    if ([regex]::Matches($Template, '</Product>').Count -ne 1) {
-        throw 'Unexpected JDK installer template: expected one Product closing tag'
-    }
-    $Branding = @'
-    <WixVariable Id="WixUIDialogBmp" Value="$(var.JpConfigDir)/dialog.bmp" />
-    <WixVariable Id="WixUIBannerBmp" Value="$(var.JpConfigDir)/banner.bmp" />
-'@
-    # Absolute resource paths avoid relying on jpackage copying extra files.
-    $Branding = $Branding.Replace('$(var.JpConfigDir)', [System.Security.SecurityElement]::Escape($InstallerResources))
-    [IO.File]::WriteAllText("$InstallerResources/main.wxs", $Template.Replace('</Product>', "$Branding`n</Product>"))
-    Copy-Item "$Root/packaging/windows/dialog.bmp", "$Root/packaging/windows/banner.bmp" $InstallerResources
-} finally {
-    Pop-Location
-}
-& $JPackage --type msi --name OSCAR-UI --app-version $Version `
-    --resource-dir $InstallerResources `
-    --vendor 'OSCAR-UI contributors' --app-image $Image --dest $InstallerOutput `
-    --install-dir OSCAR-UI --license-file $InstallerInformation `
-    --win-menu --win-menu-group OSCAR-UI --win-shortcut --win-shortcut-prompt `
-    --win-dir-chooser --win-upgrade-uuid '80186748-531f-4a39-a6da-f5c81a1f0730'
-if ($LASTEXITCODE -ne 0) { throw 'MSI packaging failed' }
-$Installers = @(Get-ChildItem "$InstallerOutput/*.msi")
-if ($Installers.Count -ne 1) { throw 'Expected exactly one MSI' }
-Copy-Item $Installers[0].FullName "$Output/OSCAR-UI-$Version-windows-x64.msi"
+& "$Root/scripts/windows/windows-msi.ps1"
+if ($LASTEXITCODE -ne 0) { throw 'Production Windows packaging failed' }

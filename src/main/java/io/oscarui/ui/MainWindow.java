@@ -462,6 +462,7 @@ public final class MainWindow extends QMainWindow {
         var dialog = new AboutDialog(this);
         dialog.onUpdateAvailability(upgradeChip::setAvailable);
         io.oscarui.service.UbuntuUpdateService.Installer installer;
+        io.oscarui.service.WindowsUpdateService.Installer windowsInstaller;
         boolean uninstallRequested;
         try {
             if (checkUpdates) {
@@ -469,6 +470,7 @@ public final class MainWindow extends QMainWindow {
             }
             dialog.exec();
             installer = dialog.requestedInstaller();
+            windowsInstaller = dialog.requestedWindowsInstaller();
             uninstallRequested = dialog.uninstallRequested();
         } finally {
             dialog.stopChecking();
@@ -476,6 +478,8 @@ public final class MainWindow extends QMainWindow {
         }
         if (uninstallRequested && pending == null) {
             confirmUninstall();
+        } else if (windowsInstaller != null && pending == null) {
+            withDiscardPermission(() -> installWindowsUpdate(windowsInstaller));
         } else if (installer != null && pending == null) {
             withDiscardPermission(() -> installUbuntuUpdate(installer));
         }
@@ -500,6 +504,23 @@ public final class MainWindow extends QMainWindow {
                 QMessageBox.warning(this, "Uninstall could not start", exception.getMessage());
             }
         });
+    }
+
+    private void installWindowsUpdate(io.oscarui.service.WindowsUpdateService.Installer installer) {
+        if (QMessageBox.question(this, "Update OSCAR-UI",
+                "Close OSCAR-UI to download and install version " + installer.version()
+                        + "? Windows will request administrator approval. The app reopens after a successful update.",
+                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
+                QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
+            return;
+        }
+        try {
+            new io.oscarui.service.WindowsUpdateService().launch(installer);
+            modified = false;
+            close();
+        } catch (java.io.IOException exception) {
+            QMessageBox.warning(this, "Update could not start", exception.getMessage());
+        }
     }
 
     private void installUbuntuUpdate(io.oscarui.service.UbuntuUpdateService.Installer installer) {

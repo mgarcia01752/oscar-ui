@@ -106,11 +106,25 @@ for the component breakdown.
 
 ## Update
 
-Close OSCAR-UI and download the newer Windows MSI from
-[GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
-Run the new installer and follow its prompts, then launch OSCAR-UI from the
-Start menu. To remove the installed version manually, use the Uninstall steps
-below.
+Use **About → Check for updates**. When **Update on Windows** is enabled, click
+it, save or discard edits, and confirm closing the app. The helper downloads a
+smaller MSP patch, asks to install, and requests administrator approval. It
+restarts OSCAR-UI after success or reports if Windows needs a reboot.
+
+Existing installations through v0.4.5 require one full MSI installation to
+establish the new patch baseline. A skipped release, changed bundled dependency,
+or incompatible installation also requires the full MSI:
+
+1. Download the newer MSI from [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
+2. Close OSCAR-UI and uninstall the old version using Installed apps.
+3. Install the downloaded MSI and launch from the Start menu.
+
+Keep configurations outside the installation directory. Do not replace the JAR
+manually: Windows Installer must track the update for repair and uninstall.
+On patch failure, reopen the installed app or follow the full-MSI steps above.
+Installer logs are under `%SystemRoot%\Temp\OSCAR-UI-update-*`.
+The update checks release hashes over HTTPS; it does not bypass Windows security
+prompts or provide Authenticode publisher signing.
 
 ## Uninstall
 

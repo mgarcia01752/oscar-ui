@@ -191,17 +191,15 @@ git apply --check docs/development/todo/deferred-tlv-reordering.patch
 
 ## Windows updates
 
-Status: phase 1 prototype tooling ready; hosted Windows validation pending. See the
-[Windows update plan](../architecture/windows-updates.md) for requirements,
-repair concerns, compatibility rules and phased acceptance checks.
+Production MSP packaging/helper/UI are implemented; see
+[Windows updates](../architecture/windows-updates.md). The isolated prototype
+passed hosted run `39350060186`.
 
-- [x] Approve the MSP patch / full-reinstall split.
-- [x] Add isolated stable-layout MSI/MSP prototype and manual Windows workflow.
-- [ ] Validate the prototype on Windows and establish a production baseline.
-- [ ] Prove patch, repair, rollback and uninstall with our generated MSI on Windows.
-- [ ] Agree signing, baseline support and any required packaging changes.
-- [ ] Implement the approved helper and UI handoff, then add Windows CI coverage.
-- [ ] Publish updated user instructions only when the feature is available.
+- [ ] Pass production baseline installation and subsequent real-code MSP CI.
+- [ ] Validate Windows 11 UAC approval/cancellation, download cancellation,
+  installer failure/rollback, reboot handling and normal-user restart.
+- [ ] Verify patched repair/uninstall and successive patch chains on Windows.
+- [ ] Measure actual MSP size and document Windows 11 results.
 
-The cross-platform Upgrade chip is implemented; Windows automatic installation
-is not. Do not replace MSI-managed JARs directly as an interim workaround.
+Existing v0.4.5 installations need a full MSI baseline first. Only the immediately
+previous compatible release is supported by the initial updater.
