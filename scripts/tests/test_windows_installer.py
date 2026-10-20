@@ -248,6 +248,55 @@ Invoke-Expression $Prompt.Extent.Text
         self.assertEqual('Install OSCAR-UI 1.2.3? Windows will request administrator approval.',
                          result.stdout.strip())
 
+    def test_deleted_baseline_requires_full_msi(self):
+        """Treat removed baselines differently from authentication/server failures."""
+        repository = Path(__file__).resolve().parents[2]
+        local = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local) if local.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        harness = self.root / 'baseline.ps1'
+        harness.write_text("""param($Source)
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$Tokens = $null; $Errors = $null
+$Ast = [Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+$Function = $Ast.Find({ param($Node)
+    $Node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+    $Node.Name -eq 'Test-PatchBaselineAvailable'
+}, $true)
+Invoke-Expression $Function.Extent.Text
+Add-Type 'public class BaselineTestException : System.Exception {
+    public System.Net.HttpStatusCode StatusCode;
+    public BaselineTestException Response { get { return this; } }
+}'
+function Get-ReleaseMetadata($Path) {
+    if ($Path -ne 'tags/v1.0.0') { throw 'Unexpected baseline path' }
+    if ($script:Status -ne 200) {
+        $Failure = [BaselineTestException]::new()
+        $Failure.StatusCode = $script:Status
+        throw $Failure
+    }
+    return @{draft=$false; prerelease=$false; assets=$script:Assets}
+}
+$script:Assets = @(@{name='OSCAR-UI-1.0.0-windows-x64.msi'})
+$script:Status = 200
+if (!(Test-PatchBaselineAvailable '1.0.0')) { throw 'Available baseline rejected' }
+$script:Assets = @()
+if (Test-PatchBaselineAvailable '1.0.0') { throw 'Missing MSI accepted' }
+$script:Status = 404
+if (Test-PatchBaselineAvailable '1.0.0') { throw 'Removed baseline accepted' }
+foreach ($Status in @(401, 403, 500)) {
+    $script:Status = $Status
+    $Rejected = $false
+    try { Test-PatchBaselineAvailable '1.0.0' } catch { $Rejected = $true }
+    if (!$Rejected) { throw 'API failure silently changed baseline' }
+}
+""", encoding='utf-8')
+        subprocess.run([powershell, '-NoProfile', '-File', str(harness),
+                        str(repository / 'scripts/windows/windows-msi.ps1')],
+                       capture_output=True, text=True, encoding='utf-8', check=True)
+
     def test_production_ui_owns_maintenance_property(self):
         """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""
         image = self.image('1.0.0')

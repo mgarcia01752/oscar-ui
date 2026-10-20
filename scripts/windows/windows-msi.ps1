@@ -87,6 +87,22 @@ function Get-ReleaseMetadata([string]$ReleasePath) {
     Invoke-RestMethod -Uri "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/$ReleasePath" -Headers $Headers
 }
 
+# A deliberately deleted baseline ends the patch family. Other API failures
+# must fail the build instead of silently changing installer identity.
+function Test-PatchBaselineAvailable([string]$BaselineVersion) {
+    try {
+        $BaselineRelease = Get-ReleaseMetadata "tags/v$BaselineVersion"
+    } catch {
+        $Response = $_.Exception.PSObject.Properties['Response']
+        if ($Response -and $Response.Value -and [int]$Response.Value.StatusCode -eq 404) {
+            return $false
+        }
+        throw
+    }
+    $Msi = @($BaselineRelease.assets | Where-Object name -eq "OSCAR-UI-$BaselineVersion-windows-x64.msi")
+    return (!$BaselineRelease.draft -and !$BaselineRelease.prerelease -and $Msi.Count -eq 1)
+}
+
 $Previous = $null
 $Latest = $null
 try {
@@ -125,6 +141,13 @@ if ($Latest -and !$Latest.draft -and !$Latest.prerelease) {
     }
 }
 $Arguments = @($Builder, 'prepare', '--image', $Image, '--version', $Version, '--output', $Output)
+if ($Previous) {
+    $PriorInputs = Get-Content "$Previous/inputs.json" -Raw | ConvertFrom-Json
+    if (!(Test-PatchBaselineAvailable $PriorInputs.baselineVersion)) {
+        Write-Host '[Windows MSI] Previous baseline was removed; creating a full-MSI baseline.'
+        $Previous = $null
+    }
+}
 if ($Previous) {
     $Arguments += @('--previous', $Previous)
 }

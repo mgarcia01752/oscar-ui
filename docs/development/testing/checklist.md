@@ -191,6 +191,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] After release cleanup, verify a missing baseline starts a full-MSI family;
+  authentication, rate-limit and server failures must still fail the build.
 - [ ] Evaluate the real version confirmation prompt under strict PowerShell,
   including Windows PowerShell 5.1; manually verify confirmation and elevation.
 - [ ] Verify Torch uses its build-local temporary-file compatibility setting,
@@ -221,10 +223,10 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 - [x] Isolated synthetic prototype passed hosted run `39350060186`.
 - [x] Pass production MSI install/launch/uninstall with branding and shortcuts
-  ([run 39370659706](https://github.com/mgarcia01752/oscar-ui/actions/runs/39370659706)).
+  (run 39370659706 (historical run; deleted during cleanup)).
 - [x] Pass real previous-release MSP, repeat application, normal/forced repair,
   exact file/version verification and uninstall in Windows CI
-  ([run 39368677913](https://github.com/mgarcia01752/oscar-ui/actions/runs/39368677913)).
+  (run 39368677913 (historical run; deleted during cleanup)).
 - [ ] Pass original-baseline plus successive patch-chain lifecycle checks.
 - [x] User confirmed a successful automatic Windows update from v0.4.13 to v0.4.14.
 - [ ] On Windows 11, check Upgrade → About → Update on Windows, save/discard/cancel,

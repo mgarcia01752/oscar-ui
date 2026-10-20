@@ -119,6 +119,9 @@ a skipped release, or a bundled dependency change:
 2. Close OSCAR-UI and uninstall the old version using Installed apps.
 3. Install the downloaded MSI and launch from the Start menu.
 
+Removal of older release assets can also require a new full-MSI baseline. The
+next release after the v0.5.0 history cleanup requires these full-MSI steps.
+
 Keep configurations outside the installation directory. Do not replace the JAR
 manually: Windows Installer must track the update for repair and uninstall.
 On patch failure, reopen the installed app or follow the full-MSI steps above.

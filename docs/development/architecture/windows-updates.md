@@ -193,7 +193,7 @@ existing configuration and uses the copied Torch explicitly. No machine registry
 installed WiX files, application payload, or baseline identity changes.
 
 Portable tests verify scope, preserved configuration and tool bytes.
-[Windows run 39368677913](https://github.com/mgarcia01752/oscar-ui/actions/runs/39368677913)
+Windows run 39368677913 (historical run; deleted during cleanup)
 passed native MSP generation, patch application, repeat application, normal and
 forced repair, file verification, and uninstall. This proves the installer
 lifecycle, not the interactive updater flow.
@@ -212,9 +212,24 @@ helper cannot repair it through this application-only MSP path. Do not edit
 installed helper files or bypass baseline integrity checks. Install the corrected
 full MSI, then test a subsequent compatible release through the interactive flow.
 
-[Windows run 39370659706](https://github.com/mgarcia01752/oscar-ui/actions/runs/39370659706)
+Windows run 39370659706 (historical run; deleted during cleanup)
 passed the corrected helper validation and full MSI build/install/launch/uninstall.
 The user confirmed installation of the v0.4.13 baseline and subsequently reported
 a successful automatic update to v0.4.14 on their Windows PC. This establishes
 the interactive success path for that release pair. Cancellation, failure recovery,
 and reboot-required scenarios remain separate pending checks.
+
+## Pre-release history cleanup
+
+After the user confirmed v0.5.0 installation, releases older than v0.5.0 and
+their completed workflow history were selected for deletion. v0.5.0 assets and
+its workflow runs are retained; Git tags and commits remain. Historical run
+identifiers above record earlier verification, but their logs are no longer
+available on GitHub.
+
+The v0.5.0 patch family originally depended on older baseline assets. Before
+preparing another patch, the build now checks that the original baseline release
+and its MSI still exist. A missing baseline (HTTP 404) or removed MSI starts a
+new full-MSI family. Authentication, rate-limit and server failures still stop
+the build. The next release after this cleanup requires full-MSI installation;
+later compatible releases can patch from that new baseline.
