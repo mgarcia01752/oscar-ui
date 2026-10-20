@@ -168,8 +168,6 @@ public final class OscarDocumentService {
     }
 
     // Current UI editing scope; these bounds are not protocol capability limits.
-    private static final int DEFERRED_DOCSIS40_TLV_MIN = 201;
-    private static final int DEFERRED_DOCSIS40_TLV_MAX = 231;
     private Map<RegistryFamily, Catalog> catalogsByFamily;
 
     private List<FileType> types;
@@ -351,14 +349,13 @@ public final class OscarDocumentService {
         }
         if (configurationType.family().equals("docsis40")) {
             int rootTlvTypeCode = definition.path().get(0);
-            if (rootTlvTypeCode == L2VPN_MAC_AGING_ENC
-                    || rootTlvTypeCode >= DEFERRED_DOCSIS40_TLV_MIN && rootTlvTypeCode <= DEFERRED_DOCSIS40_TLV_MAX) {
+            if (rootTlvTypeCode == L2VPN_MAC_AGING_ENC) {
                 return "Deferred editing scope";
             }
             for (int size = 1; size <= definition.path().size(); size++) {
                 var ancestor = registry.find(definition.path().subList(0, size));
                 String name = ancestor == null ? "" : ancestor.name().toLowerCase(Locale.ROOT);
-                if (name.contains("l2vpn") || name.contains("esafe") || name.contains("edocsis")) {
+                if (name.contains("l2vpn")) {
                     return "Deferred editing scope";
                 }
             }

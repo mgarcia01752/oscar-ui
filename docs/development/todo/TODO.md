@@ -268,3 +268,15 @@ Status: completed and validated by the v0.5.1 release workflow.
 This changes the actions' execution runtime, not OSCAR-UI's Java version or
 bundled dependencies. See [CI runtime](../build/packaging.md#github-actions-runtime)
 for upstream references.
+
+## Embedded parent instance limits
+
+OSCAR 3.4.0 declares `maxInstances: 1` for regular DOCSIS eRouter (202)
+and eSTB (217). Add consequently hides these parents once a reference template
+already contains them. DOCSIS 4.0 eRouter declares unlimited instances.
+The eRouter specification's repeated-container behavior warrants an upstream
+metadata review; do not override upstream limits in the UI.
+
+- [ ] Review parent multiplicity against the applicable eRouter/eDOCSIS and
+  OpenCable specifications in OSCAR, then update the dependency if corrected.
+- [ ] Verify Add and Duplicate against the resulting upstream instance limits.

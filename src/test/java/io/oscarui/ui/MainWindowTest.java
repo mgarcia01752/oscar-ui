@@ -918,6 +918,27 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
+    @Test void embeddedParentsAppearInAddForTheirSupportedFamilies() throws Exception {
+        var service = new OscarDocumentService();
+        for (String header : java.util.List.of("Docsis", "Docsis-4.0")) {
+            var type = service.types().stream().filter(entry -> entry.header().equals(header)).findFirst().orElseThrow();
+            var document = service.create(type, false);
+            var dialog = new TlvEditorDialog(null, service, document, document.root(), service.choices(document, document.root()));
+            try {
+                dialog.show();
+                var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
+                var names = java.util.stream.IntStream.range(0, table.topLevelItemCount())
+                        .mapToObj(i -> table.topLevelItem(i).text(1)).toList();
+                assertTrue(names.contains("eRouterConfig"), header);
+                assertEquals(header.equals("Docsis"), names.contains("eSTBConfig"));
+                assertNotNull(dialog.findChild(QLabel.class, "tlvAvailabilityHint"));
+            } finally {
+                dialog.close();
+                dialog.dispose();
+            }
+        }
+    }
+
     @Test void tlvColumnsSortNumericallyAndAlphabeticallyWithoutChangingSelection() throws Exception {
         var service = new OscarDocumentService();
         var configurationType = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();

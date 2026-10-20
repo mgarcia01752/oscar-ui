@@ -90,6 +90,12 @@ final class TlvEditorDialog extends QDialog {
         search.setObjectName("tlvSearch");
         search.setPlaceholderText("Search TLVs");
         layout.addWidget(search);
+        if (editing == null) {
+            var availability = new QLabel("TLVs at their instance limit are hidden. Edit existing entries in the tree.");
+            availability.setObjectName("tlvAvailabilityHint");
+            availability.setWordWrap(true);
+            layout.addWidget(availability);
+        }
         list.setObjectName("tlvChoices");
         list.setHeaderLabels(List.of("TLV", "Name"));
         list.setRootIsDecorated(false);

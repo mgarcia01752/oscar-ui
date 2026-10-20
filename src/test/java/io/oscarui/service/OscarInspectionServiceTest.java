@@ -58,6 +58,32 @@ class OscarInspectionServiceTest {
         }
     }
 
+    @Test void docsisEmbeddedParentsAreAvailableUntilTheirInstanceLimit() throws Exception {
+        var type = documents.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+        var empty = documents.create(type, false);
+        var reference = documents.create(type, true);
+        for (String name : java.util.List.of("eRouterConfig", "eSTBConfig")) {
+            assertTrue(documents.choices(empty, empty.root()).stream().anyMatch(entry -> entry.name().equals(name)), name);
+            var parent = reference.root().childTlvs().stream().filter(node -> node.tlvName().equals(name)).findFirst().orElseThrow();
+            assertEquals("", documents.editingIssue(type, documents.definition(reference, parent)));
+            assertFalse(documents.choices(reference, reference.root()).stream().anyMatch(entry -> entry.name().equals(name)), name);
+        }
+    }
+
+    @Test void erouterChildrenCanBeAddedAndEditedInBothDocsisFamilies() throws Exception {
+        for (String header : java.util.List.of("Docsis", "Docsis-4.0")) {
+            var document = documents.open(input(header + " { eRouterConfig; }"));
+            var parent = document.root().childTlvs().getFirst();
+            var child = documents.choices(document, parent).stream()
+                    .filter(entry -> entry.name().equals("InitializationMode")).findFirst().orElseThrow();
+            var inserted = documents.insert(document, parent, child, "3");
+            var node = inserted.root().childTlvs().getFirst().childTlvs().getFirst();
+            assertTrue(documents.canEdit(inserted, node), header);
+            var edited = documents.replaceValue(inserted, node, "1");
+            assertEquals("1", edited.root().childTlvs().getFirst().childTlvs().getFirst().encodedValueText());
+        }
+    }
+
     @Test void resolvesEmbeddedServicesThroughDocsis() throws Exception {
         String text = "Docsis { eRouterConfig { InitializationMode 3; } "
                 + "eSTBConfig { VendorSpecificInformation { VendorID 001122; } } "

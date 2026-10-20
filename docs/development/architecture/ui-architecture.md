@@ -603,3 +603,10 @@ OpenCable are embedded services, not independent configuration-file families.
 OSCAR resolves their parent references through the base-family `TlvRegistry`.
 The UI uses those composed definitions without merging JSON catalogs itself.
 Opaque eSAFE fields use the upstream byte-array metadata and hex validation.
+
+Add and Edit share the registry-based editing policy. DOCSIS 4.0 no longer
+blanket-blocks eSAFE type numbers: the upstream registry controls which services
+exist (currently eRouter only). The independent L2VPN editing restriction remains.
+Add still enforces upstream instance limits and explains hidden entries in the
+dialog. Reference templates can therefore omit already-present singleton parents
+from Add while allowing their existing children to be edited.

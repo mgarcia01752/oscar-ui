@@ -252,3 +252,8 @@ See [Windows update architecture](../architecture/windows-updates.md).
   eRouter or OpenCable catalogs as standalone families.
 - [ ] Open a DOCSIS configuration containing eRouter, nested eSTB VendorID,
   and an opaque eMTA payload; preserve the source and resolve tree entries.
+
+- [ ] In an empty DOCSIS Add dialog, find eRouter and eSTB; in DOCSIS 4.0,
+  find eRouter only. Verify eRouter child Add/Edit updates the text in both.
+- [ ] In a regular DOCSIS reference template, confirm existing singleton parents
+  are excluded from Add and the dialog explains instance-limit filtering.

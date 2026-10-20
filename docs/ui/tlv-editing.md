@@ -20,6 +20,11 @@ from the tree's right-click menu. Search the catalog and choose an available ent
 The chooser has **TLV** and **Name** columns. Click a column heading to toggle
 numeric path order or alphabetical name order. Paths use dots without brackets.
 
+Add hides TLVs already at the instance limit declared by OSCAR. A reference
+template already contains eRouter and eSTB in regular DOCSIS; select those
+existing parents in the tree to work with their children. An empty DOCSIS draft
+offers both parents. DOCSIS 4.0 offers eRouter, but not eSTB.
+
 Adding a Parent TLV creates its immediate children as blank placeholders.
 Nested parents stay empty until explicitly populated. Placeholders are not
 recommended values or deployment defaults. Delete unwanted children and enter
