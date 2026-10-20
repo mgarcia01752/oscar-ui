@@ -73,9 +73,15 @@ Get-MsiPackageArgument $Package
                 result = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
                                          str(package_path)], capture_output=True, text=True,
                                         encoding='utf-8', check=True)
-                # Get-Item.FullName preserves directory aliases; resolve() does not.
-                expected = '"' + str(package_path.absolute()).replace('/', '\\') + '"'
-                self.assertEqual(expected, result.stdout.strip())
+                argument = result.stdout.strip()
+                self.assertTrue(argument.startswith('"') and argument.endswith('"'), argument)
+                self.assertNotIn('/', argument)
+                normalized_path = argument[1:-1]
+                if os.name != 'nt':
+                    normalized_path = normalized_path.replace('\\', '/')
+                # PowerShell may expand Windows 8.3 names or preserve Unix aliases.
+                # Require the same file, not the same spelling of its directory.
+                self.assertTrue(os.path.samefile(package_path, normalized_path), argument)
         package.unlink()
         missing = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
                                   str(package)], capture_output=True, text=True, encoding='utf-8')
