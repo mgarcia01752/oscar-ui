@@ -187,7 +187,7 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 - [ ] Click to open update options without automatically downloading/installing.
 - [ ] Verify the Upgrade callback survives garbage collection and full-suite execution.
 - [ ] Manual About checks refresh visibility; closing cancels pending checks.
-- [ ] Verify light/dark appearance and keyboard focus.
+- [ ] Verify the green rounded-rectangle shape in light/dark themes and keyboard focus.
 
 ## Windows MSP updates
 

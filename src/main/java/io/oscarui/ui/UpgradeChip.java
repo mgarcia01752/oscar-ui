@@ -27,7 +27,7 @@ final class UpgradeChip extends QPushButton {
         setAccessibleName("Upgrade OSCAR-UI");
         setToolTip("A newer OSCAR-UI release is available. View upgrade options.");
         setStyleSheet("QPushButton { background: #238636; color: white; border: 1px solid #2ea043;"
-                + " border-radius: 10px; padding: 3px 12px; font-weight: bold; }"
+                + " border-radius: 4px; padding: 3px 12px; font-weight: bold; }"
                 + " QPushButton:hover { background: #2ea043; }"
                 + " QPushButton:focus { border: 2px solid white; }");
         hide();

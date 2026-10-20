@@ -572,7 +572,8 @@ instance handling. OSCAR 3.3.0 owns fragmentation and adjacent-CVC export.
 
 `UpgradeChip` owns a daemon worker and Qt polling timer for a single read-only
 startup release check in interactive windows. It is mounted in the menu bar's
-top-right corner, uses a green rounded button in both themes, and opens the
+top-right corner, uses a green rectangular button with 4 px rounded corners
+in both themes, and opens the
 existing About update flow. Noninteractive tests and captures do not query GitHub.
 `ReleaseCheck.updateAvailable` tracks version comparison independently of DEB
 availability. About's successful checks refresh the chip on the Qt thread and
