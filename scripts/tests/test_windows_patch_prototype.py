@@ -96,6 +96,19 @@ Get-MsiPackageArgument $Package
         self.assertEqual([PATCH._identifier('C', PATCH.APP_JAR)],
                          [item.get('Id') for item in patch.findall('.//w:ComponentRef', NS)])
 
+    def test_patch_preserves_product_version_change(self):
+        """Keep the MSI version update when WiX filters the patch transform."""
+        PATCH.prepare(self.image, self.output)
+        patch = ET.parse(self.output / 'patch.wxs')
+        family = patch.find('w:Patch/w:PatchFamily', NS)
+        self.assertIsNotNone(family)
+        self.assertEqual(['ProductVersion'],
+                         [item.get('Id') for item in family.findall('w:PropertyRef', NS)])
+        baseline = ET.parse(self.output / 'baseline/product.wxs').find('w:Product', NS)
+        target = ET.parse(self.output / 'target/product.wxs').find('w:Product', NS)
+        self.assertEqual(baseline.get('Id'), target.get('Id'))
+        self.assertNotEqual(baseline.get('Version'), target.get('Version'))
+
     def test_changed_dependency_is_rejected(self):
         """A runtime mutation must fail installed payload verification."""
         PATCH.prepare(self.image, self.output)

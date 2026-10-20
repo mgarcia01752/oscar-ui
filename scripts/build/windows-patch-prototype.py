@@ -61,6 +61,8 @@ def prepare(image, output):
     _element('PatchBaseline', media, Id='Baseline')
     family = _element('PatchFamily', patch, Id='Prototype', Version='0.0.2.0', Supersede='yes')
     _element('ComponentRef', family, Id=_identifier('C', APP_JAR))
+    # Patch families filter changes; keep registration in step with the JAR.
+    _element('PropertyRef', family, Id='ProductVersion')
     _write_xml(wix, output / 'patch.wxs')
     manifest = {'productCode': PRODUCT_CODE, 'versions': {'baseline': '0.0.1', 'target': '0.0.2'},
                 'hashes': snapshots, 'changedFiles': changes,

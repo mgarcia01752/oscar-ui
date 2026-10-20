@@ -255,3 +255,17 @@ the MSI log identified a mixed-separator package path (error 1324). Package
 arguments now resolve existing files, normalize backslashes and quote paths
 before invoking Windows Installer. A PowerShell regression test covers spaces
 and missing files. The complete patch lifecycle still requires a new hosted run.
+
+### Second hosted run
+
+Run `39348328672` installed and launched the baseline, applied the patch, and
+verified all target payload hashes and the About version resource. It stopped
+because Installed apps retained the baseline version. The patch family now
+explicitly retains `ProductVersion` alongside the application component when
+filtering the MSI transform. The version assertion remains mandatory and logs
+both actual and expected versions. Repair and patch removal are still pending
+a successful hosted run.
+
+WiX documents [PropertyRef](https://docs.firegiant.com/wix3/xsd/wix/propertyref/)
+as a supported patch-family child; retaining this property makes the intended
+minor-upgrade version change part of the patch.

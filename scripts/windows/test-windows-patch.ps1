@@ -60,8 +60,10 @@ function Invoke-Installer([string]$Label, [string[]]$Arguments, [int]$Expected =
 function Test-InstalledStage([string]$Stage, [string]$Version) {
     Invoke-Checked $Python @($Helper, 'verify', '--image', $InstallDirectory,
         '--evidence', "$Output/evidence.json", '--stage', $Stage)
-    if ((Get-ItemProperty $Registration).DisplayVersion -ne $Version) {
-        throw "Installed apps version differs from $Version"
+    $RegisteredVersion = (Get-ItemProperty $Registration).DisplayVersion
+    Write-Host "[Patch prototype] $Stage registered version: $RegisteredVersion; expected: $Version"
+    if ($RegisteredVersion -ne $Version) {
+        throw "Installed apps version is $RegisteredVersion; expected $Version"
     }
     $SavedEnvironment = @{}
     foreach ($Name in @('PATH', 'JAVA_HOME', 'QT_PLUGIN_PATH', 'QT_QPA_PLATFORM')) {
