@@ -245,3 +245,10 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
   contain no duplicate runtimes and required earlier assets remain available.
 
 See [Windows update architecture](../architecture/windows-updates.md).
+
+### Embedded catalog discovery
+
+- [ ] With the pinned OSCAR JAR, discover base document types without treating
+  eRouter or OpenCable catalogs as standalone families.
+- [ ] Open a DOCSIS configuration containing eRouter, nested eSTB VendorID,
+  and an opaque eMTA payload; preserve the source and resolve tree entries.

@@ -505,7 +505,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.3.0 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.4.0 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -595,3 +595,11 @@ The original user process restarts OSCAR-UI after success; reboot-required
 results are reported separately. Unsupported states keep the full-MSI guide.
 See [Windows updates](windows-updates.md) for migration, trust, retention and
 pending native acceptance checks. Ubuntu updating remains independent.
+
+### Embedded OSCAR service catalogs
+
+Document-type discovery skips catalogs declaring `parentPath`: eRouter and
+OpenCable are embedded services, not independent configuration-file families.
+OSCAR resolves their parent references through the base-family `TlvRegistry`.
+The UI uses those composed definitions without merging JSON catalogs itself.
+Opaque eSAFE fields use the upstream byte-array metadata and hex validation.

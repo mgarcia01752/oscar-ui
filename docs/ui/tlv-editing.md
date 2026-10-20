@@ -2,6 +2,17 @@
 
 [User guide](README.md)
 
+## Embedded services
+
+In DOCSIS configurations, add eRouter settings under **eRouterConfig** and
+OpenCable settings under **eSTBConfig**. These are parent TLVs, not separate
+file types. DOCSIS 4.0 exposes the supported eRouter settings only.
+
+The ePS, eMTAConfig, eTEAConfig, eDVAConfig, and eSGConfig entries accept opaque
+hexadecimal payloads in regular DOCSIS files. Enter payload bytes only, without
+the outer type and length. OSCAR validates hex syntax and the 254-byte maximum;
+it does not interpret the embedded service contents.
+
 ## Add
 
 Select the parent or document root, then choose **Edit → Add TLV** or **Add TLV**

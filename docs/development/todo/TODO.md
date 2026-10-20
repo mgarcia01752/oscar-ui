@@ -4,12 +4,12 @@
 
 ## Upstream status review
 
-OSCAR-UI currently pins OSCAR 3.3.0. Several deferred investigations below were
+The current OSCAR pin is recorded in `pom.xml`. Several deferred investigations below were
 recorded against older releases; their historical failures are not proof of a
 current defect.
 
 - [ ] Re-test indexed SNMP names, Counter64, PacketCable SNMP binary import and
-  child TLV ordering against OSCAR 3.3.0 before resuming upstream fixes.
+  child TLV ordering against the pinned OSCAR release before resuming upstream fixes.
 
 ## VACM and SNMPv3 symbolic configuration
 
@@ -149,7 +149,7 @@ it; OSCAR-UI does not remove it from the upstream list or bypass compilation.
 
 ## PacketCable Snmp64 value export
 
-Resolved by OSCAR 3.2.1 and included in the currently pinned OSCAR 3.3.0. The previous exporter converted
+Resolved by OSCAR 3.2.1 and included in the current OSCAR dependency. The previous exporter converted
 all two-byte-length varbind values to ASCII hex while retaining their BER type.
 
 - [x] Remove the upstream length-dependent conversion. Upstream regressions

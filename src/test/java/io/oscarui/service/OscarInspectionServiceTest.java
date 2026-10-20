@@ -49,12 +49,23 @@ class OscarInspectionServiceTest {
         assertTrue(types.stream().anyMatch(configurationType -> configurationType.header().equals("Docsis") && configurationType.family().equals("docsis")));
         assertTrue(types.stream().anyMatch(configurationType -> configurationType.header().equals("Docsis-4.0") && configurationType.family().equals("docsis40")));
         assertTrue(types.stream().anyMatch(configurationType -> configurationType.header().equals("DPoE")));
+        assertFalse(types.stream().anyMatch(type -> java.util.Set.of("erouter", "opencable").contains(type.family())));
         for (var configurationType : types) {
             var created = documents.create(configurationType, false);
             assertEquals(configurationType, created.configurationType());
             assertTrue(created.root().childTlvs().isEmpty());
             assertNull(created.path());
         }
+    }
+
+    @Test void resolvesEmbeddedServicesThroughDocsis() throws Exception {
+        String text = "Docsis { eRouterConfig { InitializationMode 3; } "
+                + "eSTBConfig { VendorSpecificInformation { VendorID 001122; } } "
+                + "eMTAConfig 0102aaff; }";
+        var document = documents.open(input(text));
+        assertEquals(java.util.List.of("eRouterConfig", "eSTBConfig", "eMTAConfig"),
+                document.root().childTlvs().stream().map(OscarDocumentService.Node::tlvName).toList());
+        assertEquals(text, document.text());
     }
 
     @Test void preservesSourceOrderCommentsAndRepeatedEntries() throws Exception {

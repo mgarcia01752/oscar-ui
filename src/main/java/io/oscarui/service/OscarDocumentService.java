@@ -867,6 +867,10 @@ public final class OscarDocumentService {
         for (String name : names) {
             try (var input = TlvRegistry.class.getResourceAsStream("/" + name)) {
                 var metadata = mapper.readTree(input);
+                // Embedded service catalogs are resolved by OSCAR through their base family.
+                if (metadata.has("parentPath")) {
+                    continue;
+                }
                 String family = metadata.get("family").asText();
                 result.put(new RegistryFamily(family), new Catalog(family, metadata.get("edition").asText(), TlvRegistry.forFamily(family)));
             }
