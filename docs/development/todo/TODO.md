@@ -207,25 +207,28 @@ see [the correction](../architecture/windows-updates.md#launcher-version-compati
 Only the immediately
 previous compatible release is supported by the initial updater.
 
-## GitHub Actions Node.js 24 migration (deferred)
+## GitHub Actions Node.js 24 migration
 
-Resume after the Windows installer and MSP update path are working and validated.
-Do not change action versions while troubleshooting that release flow.
+Status: workflow references updated; hosted validation pending.
 
-- [ ] Recheck upstream compatibility and replace these action references across
-  `.github/workflows/` with explicit Node.js 24 versions:
+- [x] Verify explicit Node.js 24 runtimes and update all workflow references:
 
-  | Action | Current | Proposed |
+  | Action | Previous | Updated |
   | --- | --- | --- |
   | `actions/checkout` | `v4` | `v5` |
   | `actions/setup-python` | `v5` | `v6` |
   | `actions/upload-artifact` | `v4` | `v6` |
   | `actions/download-artifact` | `v4` | `v7` |
 
-- [ ] Check runner requirements and artifact upload/download compatibility;
-  retain existing artifact names, paths, retention and release gates.
-- [ ] Run workflow lint and local checks, then verify OSCAR-UI CI and both platform
-  installer workflows. Confirm the Node.js 20 deprecation warning disappears.
+  `actions/setup-java@v5` already uses Node.js 24.
 
-This updates the actions' execution runtime, not OSCAR-UI's Java version or
-bundled application dependencies. Reverify proposed versions when resuming.
+- [x] Review runner requirements and artifact compatibility. Node.js 24 actions
+  require Actions Runner 2.327.1 or newer. Workflows use GitHub-hosted runners.
+  Downloads select artifacts by name; their destination behavior is unchanged.
+  Artifact names, paths, retention and release gates remain unchanged.
+- [ ] Verify OSCAR-UI CI and both installer workflows on GitHub, including artifact
+  transfer and release gating. Confirm Node.js 20 deprecation warnings disappear.
+
+This changes the actions' execution runtime, not OSCAR-UI's Java version or
+bundled dependencies. See [CI runtime](../build/packaging.md#github-actions-runtime)
+for upstream references.

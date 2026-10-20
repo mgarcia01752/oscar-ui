@@ -189,6 +189,13 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 - [ ] Manual About checks refresh visibility; closing cancels pending checks.
 - [ ] Verify the green rounded-rectangle shape in light/dark themes and keyboard focus.
 
+## GitHub Actions runtime
+
+- [ ] Run OSCAR-UI CI and Windows/Ubuntu packaging with the Node.js 24 action
+  versions; verify named artifact transfers and absence of Node.js 20 warnings.
+- [ ] Verify tagged releases still require successful CI and package checks
+  before publication.
+
 ## Windows MSP updates
 
 - [ ] After release cleanup, verify a missing baseline starts a full-MSI family;

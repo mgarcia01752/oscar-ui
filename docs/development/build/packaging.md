@@ -369,6 +369,22 @@ after the UI exits. It uses the existing python3/pkexec/zenity dependencies.
 The install matrix checks package removal; interactive authorization and About
 handoff require the separate checks in the verification checklist.
 
+## GitHub Actions runtime
+
+Workflows use explicit Node.js 24 actions: checkout v5, setup-python v6,
+setup-java v5, upload-artifact v6 and download-artifact v7. These run on
+GitHub-hosted runners; self-hosted adoption would require runner 2.327.1 or newer.
+Application Java and bundled runtime versions are independent of this change.
+
+The existing named artifact uploads/downloads retain their names, destination
+paths, retention settings and release gates. Download-by-ID changes do not
+apply to these workflows. Upstream references:
+[checkout](https://github.com/actions/checkout/tree/v5),
+[setup-python](https://github.com/actions/setup-python/tree/v6),
+[setup-java](https://github.com/actions/setup-java/tree/v5),
+[upload-artifact](https://github.com/actions/upload-artifact/tree/v6),
+[download-artifact](https://github.com/actions/download-artifact/tree/v7).
+
 ## Production Windows patches
 
 Windows publishes `windows-update.json` and compact `windows-patch-inputs.zip`
