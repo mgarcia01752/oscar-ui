@@ -3,6 +3,7 @@
 """Portable tests for Windows patch input authoring; no MSI installation."""
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -61,9 +62,20 @@ $Function = $Ast.Find({ param($Node)
 Invoke-Expression $Function.Extent.Text
 Get-MsiPackageArgument $Package
 """, encoding='utf-8')
-        result = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
-                                 str(package)], capture_output=True, text=True, encoding='utf-8', check=True)
-        self.assertEqual('"' + str(package.resolve()).replace('/', '\\') + '"', result.stdout.strip())
+        package_paths = [package]
+        if os.name != 'nt':
+            # Reproduce macOS /var -> /private/var on any Unix test host.
+            alias = self.root / 'directory alias'
+            alias.symlink_to(self.root, target_is_directory=True)
+            package_paths.append(alias / package.name)
+        for package_path in package_paths:
+            with self.subTest(package_path=package_path):
+                result = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
+                                         str(package_path)], capture_output=True, text=True,
+                                        encoding='utf-8', check=True)
+                # Get-Item.FullName preserves directory aliases; resolve() does not.
+                expected = '"' + str(package_path.absolute()).replace('/', '\\') + '"'
+                self.assertEqual(expected, result.stdout.strip())
         package.unlink()
         missing = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
                                   str(package)], capture_output=True, text=True, encoding='utf-8')
