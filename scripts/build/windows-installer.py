@@ -42,6 +42,10 @@ def prepare(image, version, output, previous=None):
     text = config.read_text(encoding='utf-8')
     if jars[0].name not in text:
         raise ValueError('Launcher does not reference application JAR')
+    # jpackage injects the release number here, but OSCAR-UI reads its version
+    # from the JAR. This redundant property must not change dependency identity.
+    text = ''.join(line for line in text.splitlines(keepends=True)
+                   if not line.startswith('java-options=-Djpackage.app-version='))
     config.write_text(text.replace(jars[0].name, 'oscar-ui.jar'), encoding='utf-8')
     jars[0].rename(image / MUTABLE[1])
     # jpackage build metadata is not an installed runtime dependency.

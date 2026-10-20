@@ -111,9 +111,9 @@ it, save or discard edits, and confirm closing the app. The helper downloads a
 smaller MSP patch, asks to install, and requests administrator approval. It
 restarts OSCAR-UI after success or reports if Windows needs a reboot.
 
-Existing installations through v0.4.5 require one full MSI installation to
-establish the new patch baseline. A skipped release, changed bundled dependency,
-or incompatible installation also requires the full MSI:
+If About requests a **Full MSI installation**, the installed baseline is not
+compatible with the available patch. This can happen after a baseline correction,
+a skipped release, or a bundled dependency change:
 
 1. Download the newer MSI from [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
 2. Close OSCAR-UI and uninstall the old version using Installed apps.

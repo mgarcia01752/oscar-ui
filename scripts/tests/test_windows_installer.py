@@ -47,7 +47,11 @@ class WindowsInstallerTest(unittest.TestCase):
         (image / 'runtime').mkdir()
         (image / 'OSCAR-UI.exe').write_bytes(version.encode())
         (image / 'runtime/release').write_bytes(runtime)
-        (image / 'app/OSCAR-UI.cfg').write_text('app.classpath=$APPDIR\\oscar-ui-' + version + '.jar', encoding='utf-8')
+        launcher = ('[Application]\r\napp.classpath=$APPDIR\\oscar-ui-' + version + '.jar\r\n'
+                    '[JavaOptions]\r\njava-options=-Djpackage.app-version=' + version + '\r\n'
+                    'java-options=-Djava.library.path=$APPDIR/..\r\n'
+                    'java-options=-Dio.qt.pluginpath=$APPDIR/qt/plugins\r\n')
+        (image / 'app/OSCAR-UI.cfg').write_bytes(launcher.encode('utf-8'))
         with zipfile.ZipFile(image / f'app/oscar-ui-{version}.jar', 'w') as jar:
             jar.writestr('build-info.properties', 'ui.version=' + version)
         return image
@@ -111,6 +115,23 @@ class WindowsInstallerTest(unittest.TestCase):
                          (output / 'previous-image/app/oscar-ui.jar').read_bytes())
         self.assertNotEqual((image / 'app/oscar-ui.jar').read_bytes(),
                             (output / 'previous-image/app/oscar-ui.jar').read_bytes())
+
+    def test_real_launcher_option_change_requires_new_baseline(self):
+        """Keep runtime options in the fingerprint after removing version metadata."""
+        baseline, previous = self.baseline()
+        image = self.image('1.0.1')
+        config = image / 'app/OSCAR-UI.cfg'
+        with config.open('ab') as stream:
+            stream.write(b'java-options=-Xmx512m\r\n')
+        target = INSTALLER.prepare(image, '1.0.1', self.root / 'updated', previous)
+        self.assertNotEqual(baseline['productCode'], target['productCode'])
+        self.assertIsNone(target['fromVersion'])
+        content = config.read_text(encoding='utf-8')
+        self.assertIn('java-options=-Xmx512m', content)
+        self.assertIn('java-options=-Dio.qt.pluginpath=$APPDIR/qt/plugins', content)
+        self.assertNotIn('jpackage.app-version', content)
+        with zipfile.ZipFile(image / 'app/oscar-ui.jar') as jar:
+            self.assertEqual(b'ui.version=1.0.1', jar.read('build-info.properties'))
 
     def test_dependency_change_requires_new_baseline(self):
         """Reject an MSP when runtime bytes change, even across a patch version."""

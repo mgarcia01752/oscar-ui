@@ -89,6 +89,6 @@ The app restarts after success; a reboot requirement is reported separately.
 Cancel or failure offers to reopen it.
 
 This requires the new MSI baseline and the immediately previous compatible
-release. Existing installations through v0.4.5 need one full MSI installation
-first. Changed dependencies or skipped versions use the full installer instead.
+release. If About requests a full MSI, install that baseline before trying later
+patches. Changed dependencies or skipped versions also use the full installer.
 See [Windows update instructions](../install/windows.md#update).

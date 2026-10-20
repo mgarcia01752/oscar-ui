@@ -191,6 +191,11 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Build successive versions with real jpackage launcher configurations;
+  require a compatible MSP, not just successful standalone MSI builds.
+- [ ] Check version-only launcher metadata is normalized while real Java/Qt
+  option changes still require a new baseline; About reports the target JAR version.
+
 - [ ] Verify publication resolves drafts through the authenticated release list
   and numeric ID; missing/ambiguous releases must fail before publication.
 
@@ -212,7 +217,7 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
   download cancellation, UAC acceptance/cancellation and normal-user restart.
 - [ ] Check network/hash failure, changed dependencies, unsupported/skipped versions,
   installer failure/rollback, locked files and reboot-required behavior.
-- [ ] Confirm full-MSI fallback for v0.4.5 and older installations.
+- [ ] Confirm full-MSI fallback for incompatible installed baselines.
 - [ ] Confirm metadata/MSP mismatch blocks release publication; compact inputs
   contain no duplicate runtimes and required earlier assets remain available.
 

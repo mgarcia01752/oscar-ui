@@ -84,7 +84,7 @@ not runnable applications.
 
 The MSI establishes a patch baseline. Compatible subsequent releases can offer
 **Update on Windows** in About for the immediately previous version. Older
-installations (including v0.4.5), skipped versions and dependency changes require
+installations without a compatible baseline, skipped versions and dependency changes require
 the full MSI. `windows-update.json` and `windows-patch-inputs.zip` support update
 and build automation; they are not standalone applications. An MSP appears only
 when compatibility and native patch lifecycle checks pass.

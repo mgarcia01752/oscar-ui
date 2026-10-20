@@ -201,5 +201,8 @@ passed hosted run `39350060186`.
 - [ ] Verify patched repair/uninstall and successive patch chains on Windows.
 - [ ] Measure actual MSP size and document Windows 11 results.
 
-Existing v0.4.5 installations need a full MSI baseline first. Only the immediately
+Existing installations through v0.4.9 need the corrected launcher baseline MSI.
+The v0.4.8 → v0.4.9 test exposed version-only configuration fingerprint drift;
+see [the correction](../architecture/windows-updates.md#launcher-version-compatibility-correction).
+Only the immediately
 previous compatible release is supported by the initial updater.

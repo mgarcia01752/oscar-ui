@@ -10,8 +10,8 @@ not the new production installer or UAC handoff.
 
 ## Compatibility and migration
 
-Existing releases through v0.4.5 need one full MSI installation to establish the
-new baseline. jpackage's old version-dependent ProductCode and JAR filename do
+Installations without a compatible baseline need one full MSI installation
+before subsequent compatible patches can be applied. jpackage's old version-dependent ProductCode and JAR filename do
 not support this patch family. We still use jpackage for the application image;
 explicit WiX authoring now owns the MSI, stable component identities, branded
 wizard and shortcuts. The installed JAR is `app/oscar-ui.jar`.
@@ -129,3 +129,30 @@ gh workflow run windows-release.yml --ref main
 
 A passing native build/install/launch/uninstall job is required before claiming
 this fix is Windows-validated. Dispatching on `main` does not bump the version.
+
+## Launcher version compatibility correction
+
+The published v0.4.8 and v0.4.9 installers belong to different baseline families;
+v0.4.9 has no MSP. The generated launcher configuration contained
+`java-options=-Djpackage.app-version=<release>`, which incorrectly changed the
+dependency fingerprint for every release. Comparing retained WiX file hashes
+identified the configuration change. Replacing only this property in the actual
+v0.4.8 MSI configuration reproduces the v0.4.9 configuration's MSI file hash.
+
+Preparation now removes that redundant property before hashing. The application
+and About still read their version from `build-info.properties` inside the JAR.
+All other launcher options remain fingerprinted. Tests use realistic CRLF
+jpackage configurations and prove version-only compatibility while rejecting
+actual runtime-option changes.
+
+This authoring correction requires a new full-MSI baseline; v0.4.8/v0.4.9 cannot
+be used to test the corrected patch family. Do not label a subsequent release
+patch-compatible until its manifest contains an MSP and its production patch
+lifecycle has passed Windows CI. The earlier synthetic fixture omitted the
+injected version property, so its passing test did not catch this build defect.
+
+UI release versions have one source: `pom.xml`. Packaging reads that value;
+Maven filters it into `build-info.properties` for About and update discovery.
+Release compatibility comes from generated manifest data, not hard-coded release
+cutoffs. Version numbers above record the investigated releases only; synthetic
+test versions exercise the general normalization rule.
