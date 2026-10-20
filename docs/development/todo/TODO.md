@@ -206,3 +206,26 @@ The v0.4.8 → v0.4.9 test exposed version-only configuration fingerprint drift;
 see [the correction](../architecture/windows-updates.md#launcher-version-compatibility-correction).
 Only the immediately
 previous compatible release is supported by the initial updater.
+
+## GitHub Actions Node.js 24 migration (deferred)
+
+Resume after the Windows installer and MSP update path are working and validated.
+Do not change action versions while troubleshooting that release flow.
+
+- [ ] Recheck upstream compatibility and replace these action references across
+  `.github/workflows/` with explicit Node.js 24 versions:
+
+  | Action | Current | Proposed |
+  | --- | --- | --- |
+  | `actions/checkout` | `v4` | `v5` |
+  | `actions/setup-python` | `v5` | `v6` |
+  | `actions/upload-artifact` | `v4` | `v6` |
+  | `actions/download-artifact` | `v4` | `v7` |
+
+- [ ] Check runner requirements and artifact upload/download compatibility;
+  retain existing artifact names, paths, retention and release gates.
+- [ ] Run workflow lint and local checks, then verify Java CI and both platform
+  installer workflows. Confirm the Node.js 20 deprecation warning disappears.
+
+This updates the actions' execution runtime, not OSCAR-UI's Java version or
+bundled application dependencies. Reverify proposed versions when resuming.
