@@ -192,8 +192,11 @@ copy's `torch.exe.config`, using a .NET application runtime switch. It preserves
 existing configuration and uses the copied Torch explicitly. No machine registry,
 installed WiX files, application payload, or baseline identity changes.
 
-Portable tests verify scope, preserved configuration and tool bytes. Windows CI
-must still prove Torch transformation and the complete MSP lifecycle succeed.
+Portable tests verify scope, preserved configuration and tool bytes.
+[Windows run 39368677913](https://github.com/mgarcia01752/oscar-ui/actions/runs/39368677913)
+passed native MSP generation, patch application, repeat application, normal and
+forced repair, file verification, and uninstall. This proves the installer
+lifecycle, not the interactive updater flow.
 
 ## Interactive confirmation correction
 
@@ -208,3 +211,9 @@ requires a new full-MSI baseline. Existing installations containing the broken
 helper cannot repair it through this application-only MSP path. Do not edit
 installed helper files or bypass baseline integrity checks. Install the corrected
 full MSI, then test a subsequent compatible release through the interactive flow.
+
+[Windows run 39370659706](https://github.com/mgarcia01752/oscar-ui/actions/runs/39370659706)
+passed the corrected helper validation and full MSI build/install/launch/uninstall.
+The user confirmed installation of the v0.4.13 baseline on Windows. The next
+compatible release is intended to exercise the interactive update from that
+baseline; confirmation, elevation and restart on the user's PC remain pending.

@@ -220,9 +220,11 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
   successful native WiX link before claiming installer validation.
 
 - [x] Isolated synthetic prototype passed hosted run `39350060186`.
-- [ ] Pass production MSI install/launch/uninstall with branding and shortcuts.
-- [ ] Pass real previous-release MSP, repeat application, normal/forced repair,
-  exact file/version verification and uninstall in Windows CI.
+- [x] Pass production MSI install/launch/uninstall with branding and shortcuts
+  ([run 39370659706](https://github.com/mgarcia01752/oscar-ui/actions/runs/39370659706)).
+- [x] Pass real previous-release MSP, repeat application, normal/forced repair,
+  exact file/version verification and uninstall in Windows CI
+  ([run 39368677913](https://github.com/mgarcia01752/oscar-ui/actions/runs/39368677913)).
 - [ ] Pass original-baseline plus successive patch-chain lifecycle checks.
 - [ ] On Windows 11, check Upgrade → About → Update on Windows, save/discard/cancel,
   download cancellation, UAC acceptance/cancellation and normal-user restart.
