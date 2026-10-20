@@ -2,6 +2,15 @@
 
 [Development guide](../README.md) · [Architecture](../architecture/ui-architecture.md) · [Verification checklist](../testing/checklist.md)
 
+## Upstream status review
+
+OSCAR-UI currently pins OSCAR 3.3.0. Several deferred investigations below were
+recorded against older releases; their historical failures are not proof of a
+current defect.
+
+- [ ] Re-test indexed SNMP names, Counter64, PacketCable SNMP binary import and
+  child TLV ordering against OSCAR 3.3.0 before resuming upstream fixes.
+
 ## VACM and SNMPv3 symbolic configuration
 
 Status: deferred at the user's request. The investigation below was recorded
@@ -140,7 +149,7 @@ it; OSCAR-UI does not remove it from the upstream list or bypass compilation.
 
 ## PacketCable Snmp64 value export
 
-Resolved by OSCAR 3.2.1, now pinned in OSCAR-UI. The previous exporter converted
+Resolved by OSCAR 3.2.1 and included in the currently pinned OSCAR 3.3.0. The previous exporter converted
 all two-byte-length varbind values to ASCII hex while retaining their BER type.
 
 - [x] Remove the upstream length-dependent conversion. Upstream regressions
@@ -191,21 +200,41 @@ git apply --check docs/development/todo/deferred-tlv-reordering.patch
 
 ## Windows updates
 
-Production MSP packaging/helper/UI are implemented; see
-[Windows updates](../architecture/windows-updates.md). The isolated prototype
-passed hosted run `39350060186`.
+Status: production packaging and the interactive update success path are verified.
+See [Windows updates](../architecture/windows-updates.md). Historical CI run IDs
+below record evidence collected before workflow-history cleanup; those logs
+were deliberately deleted.
 
-- [ ] Pass production baseline installation and subsequent real-code MSP CI.
-- [ ] Validate Windows 11 UAC approval/cancellation, download cancellation,
-  installer failure/rollback, reboot handling and normal-user restart.
-- [ ] Verify patched repair/uninstall and successive patch chains on Windows.
-- [ ] Measure actual MSP size and document Windows 11 results.
+- [x] Pass production baseline installation and real-code MSP CI. Run
+  `39368677913` generated and applied the patch; run `39370659706` validated
+  the corrected helper and MSI install/launch/uninstall.
+- [x] Verify repeated patch application, normal/forced repair, file verification
+  and uninstall in Windows CI (`39368677913`).
+- [x] Record the user's successful automatic update from v0.4.13 to v0.4.14
+  on their Windows PC. This establishes the interactive success path, not all
+  cancellation and recovery cases.
+- [ ] Validate Windows 11 UAC cancellation, download cancellation, unsaved-edit
+  choices, installer failure/rollback, reboot handling and normal-user restart.
+- [ ] Verify longer successive patch chains from the original baseline.
+- [ ] Measure actual MSP size and document detailed Windows 11 results.
+- [ ] Validate the next full-MSI baseline and a later compatible update after
+  the v0.5.0 history cleanup. The cleanup removed the older baseline assets.
 
-Existing installations through v0.4.9 need the corrected launcher baseline MSI.
-The v0.4.8 → v0.4.9 test exposed version-only configuration fingerprint drift;
-see [the correction](../architecture/windows-updates.md#launcher-version-compatibility-correction).
-Only the immediately
-previous compatible release is supported by the initial updater.
+Only the immediately previous compatible release is supported by the updater.
+Changes to the installed helper or dependencies require a full MSI. The v0.5.0
+installation remains usable, but the next release after cleanup must establish
+and install a new full-MSI baseline before further automatic updates.
+
+## GitHub workflow and release cleanup
+
+- [x] Delete 11 releases older than v0.5.0 and 157 completed workflow runs;
+  preserve v0.5.0 assets/runs, Git tags and source history.
+- [x] Add and locally test full-MSI fallback when an old baseline release or MSI
+  was removed; authentication, rate-limit and server failures still fail builds.
+- [x] Retire the standalone Windows patch prototype workflow and its options;
+  retain production patch validation and shared authoring helpers.
+- [x] Rename Java CI to OSCAR-UI CI (`oscar-ui-ci.yml`) and update release calls,
+  badges and documentation.
 
 ## GitHub Actions Node.js 24 migration
 
@@ -226,6 +255,7 @@ Status: workflow references updated; hosted validation pending.
   require Actions Runner 2.327.1 or newer. Workflows use GitHub-hosted runners.
   Downloads select artifacts by name; their destination behavior is unchanged.
   Artifact names, paths, retention and release gates remain unchanged.
+- [x] Pass all required local checks, including workflow lint and documentation.
 - [ ] Verify OSCAR-UI CI and both installer workflows on GitHub, including artifact
   transfer and release gating. Confirm Node.js 20 deprecation warnings disappear.
 
