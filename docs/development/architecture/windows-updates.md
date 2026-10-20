@@ -1,6 +1,6 @@
 # Windows update plan
 
-**Status: approach approved; phase 1 investigation. Windows updater and MSP packaging are not implemented.**
+**Status: phase 1 prototype implemented; Windows execution pending. Production MSP packaging and the Windows updater remain disabled.**
 
 [Development guide](../README.md) · [UI architecture](ui-architecture.md#upgrade-chip) ·
 [Packaging](../build/packaging.md#uninstall-and-upgrade-behavior) · [Deferred work](../todo/TODO.md#windows-updates)
@@ -184,12 +184,65 @@ identities, file names, directory layout and feature membership. Exit 2 means a
 prerequisite failed; other errors abort the audit. Layout equality is deliberately
 conservative. Exit 0 does not establish payload compatibility or safe repair.
 
-Next prototype: author a new full-MSI baseline with stable application JAR and
-launcher paths and a ProductCode retained only within its supported patch family.
-Retain baseline authoring inputs and symbols; generate a candidate MSP and run
-the phase 1 lifecycle tests before enabling any updater. Do not change existing
-release identities or distribute this proposed baseline before those tests.
+## Running the isolated prototype
 
-Windows MSI execution, patch generation, repair/rollback and signing selection
-remain pending. The development host used for this investigation has neither
-Windows Installer nor PowerShell; the audit has not been executed on Windows.
+The **Windows patch prototype** Actions workflow is manually triggered. It reuses
+the normal Windows build and MSI lifecycle checks, then invokes
+`scripts/windows/test-windows-patch.ps1` on Windows Server 2022 x64. It cannot
+publish a release, even when dispatched on a tag. Run it after committing and
+pushing the workflow to the default branch:
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+gh workflow run windows-patch-prototype.yml --ref main
+```
+
+Watch it in GitHub Actions. Download the `windows-patch-prototype-NOT-FOR-RELEASE`
+artifact for logs, hash evidence, package sizes, WiX authoring, symbols, input
+images, two MSIs and the MSP. Evidence is retained for seven days; preserve a
+successful run separately before considering it a supported baseline. These
+packages are synthetic test artifacts, not upgrades for installed releases.
+
+The Python fixture builder copies the real runtime-complete app image and
+normalizes its launcher to `app/oscar-ui.jar`. Only the JAR's `ui.version` resource
+changes between synthetic versions 0.0.1 and 0.0.2. Java, Qt, OSCAR, native DLLs,
+source archives and application classes are unchanged. Input images are never
+modified and existing output is never overwritten.
+
+The prototype uses explicit WiX authoring with a separate ProductCode,
+UpgradeCode, component GUID namespace and installation directory. This proves
+whether a prospective stable layout can support patching; it does **not** prove
+that current jpackage release MSIs can be patched. Shortcuts and the production
+installer wizard are not part of this prototype authoring. No production MSI
+identity, installation path, version or launcher is changed by this work.
+
+The automated sequence builds both MSIs and a WiX MSP, rejects patch application
+without the prototype product, installs to a custom path containing spaces,
+applies and repeats the patch, runs normal and forced repair, removes the patch,
+reapplies it, and uninstalls. Each installed stage checks every payload file hash,
+the version resource consumed by About, Installed apps registration, and native
+launch with developer runtime settings removed. External synthetic user files
+must survive uninstall. A reboot-required result fails the prototype instead of
+being counted as a successful launch. Failures retain logs; cleanup is attempted
+in a finally block. The scripts refuse lifecycle execution outside a hosted runner.
+
+The build follows WiX's [Torch/Pyro patch workflow](https://docs.firegiant.com/wix3/patching/wix_patching/).
+Local portable tests cover stable identities, JAR-only differences, source
+preservation, dependency tampering, incorrect versions and output safety. Local
+PowerShell parsing is not evidence of Windows Installer execution.
+
+## Remaining before production
+
+- Obtain a passing hosted Windows run and measure actual MSP size.
+- Validate real application code changes across two independently built versions;
+  changing only the version resource does not establish broader compatibility.
+- Add interrupted-install rollback, cancellation, downgrade and unsupported
+  installed-baseline tests; patch removal is not an interrupted-install rollback.
+- Integrate a production baseline with shortcuts, branding and installer UI, then
+  repeat lifecycle checks and Windows 11 x64 validation.
+- Select signing and supported baseline retention/sequencing policy.
+- Only then implement the helper/UI handoff and change published release assets.
+
+Windows execution remains pending. Existing installations, including v0.4.3,
+continue to use the normal full-MSI flow; this prototype does not grandfather
+them into a patch family.

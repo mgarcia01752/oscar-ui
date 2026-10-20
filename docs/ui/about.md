@@ -81,3 +81,7 @@ open the release download link. Clicking the chip does not install anything.
 OSCAR-UI makes one background GitHub release check at startup. The chip stays
 hidden when up to date, running a newer development build, or offline.
 **About → Check for updates** retries the check and refreshes the indicator.
+
+Windows patch updating is still under development. The current Windows **Upgrade**
+button opens release information; installing a new version still uses the full
+MSI. Prototype patch artifacts are not updates for your installed application.

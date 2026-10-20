@@ -193,3 +193,9 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 - [ ] Run the read-only MSI baseline comparison on Windows; retain JSON evidence.
 - [ ] Complete the [Windows update phase 1 checks](../architecture/windows-updates.md#1-prove-installer-compatibility-first) before enabling MSP updates.
+
+- [ ] Run **Windows patch prototype** manually and retain its evidence artifact.
+- [ ] Verify missing-product rejection, repeated patch, both repairs, patch removal/reapply and uninstall.
+- [ ] Require exact payload hashes and matching About resource/Installed apps versions at every stage.
+- [ ] Confirm native launch after every stage and unchanged external user files.
+- [ ] Complete production baseline, interrupted rollback, downgrade and Windows 11 checks before release use.

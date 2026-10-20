@@ -585,7 +585,8 @@ receiver cannot disconnect the update action.
 
 ### Planned Windows update handoff
 
-The [Windows update plan](windows-updates.md) proposes installer-managed MSP
+The [Windows update plan](windows-updates.md) includes an isolated CI prototype
+(manual **Windows patch prototype** workflow) for installer-managed MSP
 patches for compatible application-only updates and a user-driven full
 uninstall/reinstall when dependencies or installation layout change. Direct
 JAR replacement is not the proposed path because MSI repair could restore old
