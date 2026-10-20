@@ -156,3 +156,19 @@ Maven filters it into `build-info.properties` for About and update discovery.
 Release compatibility comes from generated manifest data, not hard-coded release
 cutoffs. Version numbers above record the investigated releases only; synthetic
 test versions exercise the general normalization rule.
+
+## Read-only launcher during patch preparation
+
+Release run `39366072052` reached the compatible patch path but failed while
+overwriting `previous-image/OSCAR-UI.exe` with the retained prior launcher.
+[OpenJDK's Windows app-image builder](https://github.com/openjdk/jdk21u/blob/master/src/jdk.jpackage/windows/classes/jdk/jpackage/internal/WindowsAppImageBuilder.java)
+marks the generated launcher read-only; Python's image copy retains that flag.
+The Windows packaging wrapper now clears only that generated launcher's read-only
+attribute before preparation. It does not change file bytes, fingerprint inputs,
+installer authoring, or the installed baseline.
+
+The regression starts with a read-only launcher, executes the actual PowerShell
+normalization function, then prepares a compatible update and verifies the old
+launcher bytes, unchanged target bytes, fingerprint and ProductCode. Native
+Windows MSP generation and lifecycle validation remain required; local tests
+alone do not establish update success.

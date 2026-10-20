@@ -191,6 +191,9 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Start with a read-only jpackage launcher; clear its build-image flag before
+  preparing the previous image, preserving bytes, fingerprint and ProductCode.
+  Require native Windows MSP generation and lifecycle checks afterward.
 - [ ] Build successive versions with real jpackage launcher configurations;
   require a compatible MSP, not just successful standalone MSI builds.
 - [ ] Check version-only launcher metadata is normalized while real Java/Qt

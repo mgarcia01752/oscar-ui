@@ -4,6 +4,9 @@
 import importlib.util
 import json
 from pathlib import Path
+import shutil
+import stat
+import subprocess
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -69,6 +72,55 @@ class WindowsInstallerTest(unittest.TestCase):
             self.assertEqual({'inputs.json', 'product.wixpdb', 'OSCAR-UI.exe', 'app/oscar-ui.jar'}, set(archive.namelist()))
             archive.extractall(previous)
         return metadata, previous
+
+    def test_readonly_launcher_can_prepare_previous_image(self):
+        """Normalize real launcher attributes without changing patch identity."""
+        repository = Path(__file__).resolve().parents[2]
+        local = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local) if local.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        baseline, previous = self.baseline()
+        image = self.image('1.0.1')
+        launcher = image / 'OSCAR-UI.exe'
+        original = launcher.read_bytes()
+        launcher.chmod(stat.S_IREAD)
+        # Cleanup must also work if the assertion fails on Windows.
+        self.addCleanup(lambda: launcher.chmod(stat.S_IREAD | stat.S_IWRITE))
+        harness = self.root / 'launcher-attributes.ps1'
+        harness.write_text("""param($Source, $Image)
+$ErrorActionPreference = 'Stop'
+$Tokens = $null; $Errors = $null
+$Ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+if ($Errors.Count) { throw 'Invalid script syntax' }
+$Function = $Ast.Find({ param($Node)
+    $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $Node.Name -eq 'Initialize-PatchLauncher'
+}, $true)
+Invoke-Expression $Function.Extent.Text
+if (!(Get-Item (Join-Path $Image 'OSCAR-UI.exe')).IsReadOnly) {
+    throw 'Fixture must start read-only'
+}
+Initialize-PatchLauncher $Image
+if ((Get-Item (Join-Path $Image 'OSCAR-UI.exe')).IsReadOnly) {
+    throw 'Launcher remains read-only'
+}
+""", encoding='utf-8')
+        script = repository / 'scripts/windows/windows-msi.ps1'
+        subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script), str(image)],
+                       capture_output=True, text=True, check=True)
+        self.assertEqual(original, launcher.read_bytes())
+        output = self.root / 'updated'
+        metadata = INSTALLER.prepare(image, '1.0.1', output, previous)
+        self.assertEqual(baseline['productCode'], metadata['productCode'])
+        self.assertEqual(baseline['fingerprint'], metadata['fingerprint'])
+        self.assertEqual('1.0.0', metadata['fromVersion'])
+        self.assertEqual((previous / 'OSCAR-UI.exe').read_bytes(),
+                         (output / 'previous-image/OSCAR-UI.exe').read_bytes())
+        self.assertEqual(original, launcher.read_bytes())
+        source = script.read_text(encoding='utf-8')
+        self.assertLess(source.index('Initialize-PatchLauncher $Image'),
+                        source.index('Invoke-Build python $Arguments'))
 
     def test_production_ui_owns_maintenance_property(self):
         """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""

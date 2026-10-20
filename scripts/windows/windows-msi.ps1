@@ -27,6 +27,14 @@ function Invoke-Build([string]$Tool, [string[]]$Arguments) {
     }
 }
 
+# Make the generated launcher replaceable in the copied previous-version image.
+# jpackage marks it read-only. Change only that attribute, never its bytes.
+function Initialize-PatchLauncher([string]$ImagePath) {
+    $Launcher = Get-Item -LiteralPath (Join-Path $ImagePath 'OSCAR-UI.exe')
+    $Launcher.IsReadOnly = $false
+    Write-Host '[Windows MSI] Prepared launcher attributes for patch image copying.'
+}
+
 # Download an exact GitHub release asset and verify its API-reported digest.
 function Get-VerifiedAsset($Asset, [string]$Destination, [string]$Tag) {
     if (!$Asset.digest -or $Asset.digest -notmatch '^sha256:[a-fA-F0-9]{64}$' -or
@@ -81,6 +89,7 @@ $Arguments = @($Builder, 'prepare', '--image', $Image, '--version', $Version, '-
 if ($Previous) {
     $Arguments += @('--previous', $Previous)
 }
+Initialize-PatchLauncher $Image
 Invoke-Build python $Arguments
 Invoke-Build candle.exe @('-nologo', '-arch', 'x64', '-out', "$Output/product.wixobj", "$Output/product.wxs")
 Invoke-Build light.exe @('-nologo', '-ext', 'WixUIExtension', '-b', "payload=$Image", '-out', "$Output/product.msi", "$Output/product.wixobj")
