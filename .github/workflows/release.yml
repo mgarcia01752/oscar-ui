@@ -41,7 +41,11 @@ jobs:
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
-          gh api "repos/$GH_REPO/releases/tags/$RELEASE_TAG" > release-assets.json
+          # The tag endpoint does not resolve drafts. Find the draft's numeric ID.
+          release_id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$RELEASE_TAG\") | .id")
+          [[ "$release_id" =~ ^[0-9]+$ ]] || { echo "Expected one release for $RELEASE_TAG" >&2; exit 1; }
+          gh api "repos/$GH_REPO/releases/$release_id" > release-assets.json
           jq -e --arg msi "OSCAR-UI-${version}-windows-x64.msi" \
             --arg deb "oscar-ui_amd64.deb" '
             .assets as $assets |

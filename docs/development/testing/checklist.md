@@ -191,6 +191,9 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Verify publication resolves drafts through the authenticated release list
+  and numeric ID; missing/ambiguous releases must fail before publication.
+
 - [ ] Verify non-advertised Start menu/Desktop shortcuts have an HKCU registry
   key path and uninstall cleanup while the MSI remains per-machine.
 - [ ] Run **Windows release** manually on `main` before tagging packaging fixes;

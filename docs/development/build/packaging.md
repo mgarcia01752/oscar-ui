@@ -392,3 +392,12 @@ first-baseline migration and native validation still required.
 For packaging fixes, manually run **Windows release** on `main` to validate the
 normal MSI before creating a new tag. This dispatch does not publish a release;
 see [pre-release validation](../architecture/windows-updates.md#shortcut-validation-and-pre-release-build).
+
+### Draft publication lookup
+
+The final publication job lists authenticated releases, selects the exact tag,
+and reads its assets by numeric release ID. The REST tag lookup returned 404 for
+the v0.4.8 draft in run `39358420041`, despite successful installer uploads.
+Require exactly one numeric ID and keep all installer/manifest gates before
+changing `draft` to false. Shell regression tests simulate this draft-only case
+and reject missing or ambiguous release identities without publishing.
