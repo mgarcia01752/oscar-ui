@@ -214,6 +214,7 @@ full MSI, then test a subsequent compatible release through the interactive flow
 
 [Windows run 39370659706](https://github.com/mgarcia01752/oscar-ui/actions/runs/39370659706)
 passed the corrected helper validation and full MSI build/install/launch/uninstall.
-The user confirmed installation of the v0.4.13 baseline on Windows. The next
-compatible release is intended to exercise the interactive update from that
-baseline; confirmation, elevation and restart on the user's PC remain pending.
+The user confirmed installation of the v0.4.13 baseline and subsequently reported
+a successful automatic update to v0.4.14 on their Windows PC. This establishes
+the interactive success path for that release pair. Cancellation, failure recovery,
+and reboot-required scenarios remain separate pending checks.

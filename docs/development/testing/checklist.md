@@ -226,6 +226,7 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
   exact file/version verification and uninstall in Windows CI
   ([run 39368677913](https://github.com/mgarcia01752/oscar-ui/actions/runs/39368677913)).
 - [ ] Pass original-baseline plus successive patch-chain lifecycle checks.
+- [x] User confirmed a successful automatic Windows update from v0.4.13 to v0.4.14.
 - [ ] On Windows 11, check Upgrade → About → Update on Windows, save/discard/cancel,
   download cancellation, UAC acceptance/cancellation and normal-user restart.
 - [ ] Check network/hash failure, changed dependencies, unsupported/skipped versions,
