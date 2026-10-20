@@ -29,6 +29,13 @@ validation step.
   report unsupported cases without silently changing upstream behavior.
   README-only changes need link and content checks, not an application rebuild.
 
+## Version ownership
+
+Apply [single-source versioning](../qa-sw-hygenie/SKILL.md#single-source-for-versioning)
+before approving version or packaging changes. The root POM owns the UI version;
+source code and release artifacts must derive it rather than duplicate literals.
+Check generated package versions and tag agreement, not just matching source text.
+
 ## Release descriptions
 
 Confirm `packaging/release-notes.md` and installer information describe the

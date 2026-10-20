@@ -18,6 +18,31 @@ constants. Search Oscar for existing definitions before accepting duplicated
 codec lists or mappings; distinguish UI editing restrictions from registry
 support.
 
+## Single source for versioning
+
+- The OSCAR-UI release version is owned by the root `pom.xml` project version.
+  Do not copy a release number into Java, Python, PowerShell, shell scripts,
+  workflow defaults, or installer templates.
+- Application code reads `ui.version` from Maven-filtered
+  `src/main/resources/build-info.properties` (`${project.version}`). Packaging
+  and release tooling read the POM or receive a value derived from it. Generated
+  manifests and installer metadata are outputs, not additional editable sources.
+- Verify the complete path from the POM to About, update discovery, package
+  version, asset names and release tag. Tags must match the POM; they must not
+  silently override it. Changing the canonical version should require no edits
+  to consuming source files.
+- Compatibility decisions use installed/generated metadata, never hard-coded
+  release cutoffs or a frozen version substituted to force an MSP match.
+- Keep independently versioned dependencies separate from the UI version. Each
+  dependency should have an identified canonical pin and derived consumers;
+  flag manually duplicated pins during review instead of adding more copies.
+- Literal versions are permitted in clearly synthetic tests and historical
+  investigation notes. User instructions should be version-independent unless
+  a specific historical version is essential to the explanation.
+- For versioning changes, test at least two synthetic release versions and verify
+  propagation and compatibility behavior. A source-text search alone does not
+  establish that generated packages use the correct version.
+
 ## Source license headers
 
 Run `python3 tools/development/check-license-headers.py` for project-owned source.
