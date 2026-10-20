@@ -191,6 +191,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Verify Torch uses its build-local temporary-file compatibility setting,
+  preserving installed tools and runtime options; pass native MSP generation.
 - [ ] Verify the build step supplies `GH_TOKEN` for release metadata and patch
   chains; test authenticated/anonymous lookup without sending tokens to assets.
 - [ ] Run Windows packaging tests with implicit-encoding warnings treated as

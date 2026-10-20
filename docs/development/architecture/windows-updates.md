@@ -179,3 +179,18 @@ repository's GitHub API endpoint. Public asset downloads do not receive the
 authorization header. Local builds can supply `GH_TOKEN` or use anonymous access.
 Run `39367334003` exhausted the hosted runner's anonymous API quota before
 MSI preparation; authenticated metadata lookup avoids relying on that quota.
+
+## Torch temporary-directory compatibility
+
+Run `39367955169` built the MSI and prepared compatible inputs, then failed in
+Torch's `Pdb.Load` with `TRCH0001` and a missing temporary CAB directory.
+This matches [WiX issue 5778](https://github.com/wixtoolset/issues/issues/5778):
+disposing its temporary-file collection removes the directory before CAB creation.
+The production wrapper copies WiX into `target/windows-production/torch-tools`
+and enables `Switch.System.DisableTempFileCollectionDirectoryFeature` in that
+copy's `torch.exe.config`, using a .NET application runtime switch. It preserves
+existing configuration and uses the copied Torch explicitly. No machine registry,
+installed WiX files, application payload, or baseline identity changes.
+
+Portable tests verify scope, preserved configuration and tool bytes. Windows CI
+must still prove Torch transformation and the complete MSP lifecycle succeed.

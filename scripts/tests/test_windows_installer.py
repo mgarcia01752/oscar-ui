@@ -171,6 +171,55 @@ if (!$Rejected) { throw 'External metadata path was accepted' }
         build_step = workflow.split('- name: Build MSI and test application image', 1)[1].split('- name:', 1)[0]
         self.assertIn('GH_TOKEN: ${{ github.token }}', build_step)
 
+    def test_torch_compatibility_is_scoped_to_build_copy(self):
+        """Preserve installed tools and settings while configuring local Torch."""
+        repository = Path(__file__).resolve().parents[2]
+        local = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local) if local.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        wix = self.root / 'installed wix'
+        wix.mkdir()
+        (wix / 'torch.exe').write_bytes(b'synthetic executable')
+        (wix / 'wix.dll').write_bytes(b'synthetic dependency')
+        switch = 'Switch.System.DisableTempFileCollectionDirectoryFeature'
+        harness = self.root / 'torch-config.ps1'
+        harness.write_text("""param($Source, $Wix, $Destination)
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$Tokens = $null; $Errors = $null
+$Ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+if ($Errors.Count) { throw 'Invalid script syntax' }
+$Function = $Ast.Find({ param($Node)
+    $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $Node.Name -eq 'Initialize-PatchTorch'
+}, $true)
+Invoke-Expression $Function.Extent.Text
+$Executable = Initialize-PatchTorch $Wix $Destination
+if (!(Test-Path -LiteralPath $Executable)) { throw 'Missing local Torch' }
+$Rejected = $false
+try { Initialize-PatchTorch $Wix $Destination } catch { $Rejected = $true }
+if (!$Rejected) { throw 'Existing output was overwritten' }
+""", encoding='utf-8')
+        for index, runtime in enumerate(['', '<runtime><AppContextSwitchOverrides value="Other=true;'
+                                         + switch + '=false" /></runtime>']):
+            config = '<configuration><startup><supportedRuntime version="v4.0" /></startup>' + runtime + '</configuration>'
+            (wix / 'torch.exe.config').write_text(config, encoding='utf-8')
+            output = self.root / f'local tools {index}'
+            subprocess.run([powershell, '-NoProfile', '-File', str(harness),
+                            str(repository / 'scripts/windows/windows-msi.ps1'), str(wix), str(output)],
+                           capture_output=True, text=True, encoding='utf-8', check=True)
+            self.assertEqual(config, (wix / 'torch.exe.config').read_text(encoding='utf-8'))
+            tree = ET.parse(output / 'torch.exe.config')
+            self.assertEqual('v4.0', tree.find('startup/supportedRuntime').get('version'))
+            values = tree.find('runtime/AppContextSwitchOverrides').get('value').split(';')
+            self.assertEqual(1, values.count(switch + '=true'))
+            self.assertNotIn(switch + '=false', values)
+            if runtime:
+                self.assertIn('Other=true', values)
+            for name in ('torch.exe', 'wix.dll'):
+                self.assertEqual((wix / name).read_bytes(), (output / name).read_bytes())
+
     def test_production_ui_owns_maintenance_property(self):
         """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""
         image = self.image('1.0.0')

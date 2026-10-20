@@ -35,6 +35,32 @@ function Initialize-PatchLauncher([string]$ImagePath) {
     Write-Host '[Windows MSI] Prepared launcher attributes for patch image copying.'
 }
 
+# Return a build-local Torch executable with the WiX #5778 compatibility switch.
+# Preserve installed WiX and other runtime settings; never modify the registry.
+function Initialize-PatchTorch([string]$WixDirectory, [string]$Destination) {
+    if (Test-Path -LiteralPath $Destination) {
+        throw 'Local Torch directory already exists'
+    }
+    Copy-Item -LiteralPath $WixDirectory -Destination $Destination -Recurse
+    $ConfigPath = Join-Path $Destination 'torch.exe.config'
+    $Config = [xml](Get-Content -LiteralPath $ConfigPath -Raw)
+    $Runtime = $Config.SelectSingleNode('/configuration/runtime')
+    if (!$Runtime) {
+        $Runtime = $Config.configuration.AppendChild($Config.CreateElement('runtime'))
+    }
+    $Overrides = $Runtime.SelectSingleNode('AppContextSwitchOverrides')
+    if (!$Overrides) {
+        $Overrides = $Runtime.AppendChild($Config.CreateElement('AppContextSwitchOverrides'))
+    }
+    $Switch = 'Switch.System.DisableTempFileCollectionDirectoryFeature'
+    $Values = @($Overrides.GetAttribute('value').Split(';') |
+        Where-Object { $_ -and !$_.StartsWith("$Switch=") })
+    $Overrides.SetAttribute('value', (($Values + "$Switch=true") -join ';'))
+    $Config.Save($ConfigPath)
+    Write-Host '[Windows MSI] Prepared build-local Torch temporary-file compatibility.'
+    return Join-Path $Destination 'torch.exe'
+}
+
 # Download an exact GitHub release asset and verify its API-reported digest.
 function Get-VerifiedAsset($Asset, [string]$Destination, [string]$Tag) {
     if (!$Asset.digest -or $Asset.digest -notmatch '^sha256:[a-fA-F0-9]{64}$' -or
@@ -118,7 +144,9 @@ if ($Metadata.fromVersion) {
     if ($Latest.tag_name -ne "v$($Metadata.fromVersion)") {
         throw 'Previous release identity mismatch'
     }
-    Invoke-Build torch.exe @('-p', '-xi', "$Output/previous.wixpdb", "$Output/product.wixpdb", '-out', "$Output/patch.wixmst")
+    $WixDirectory = Split-Path (Get-Command torch.exe -CommandType Application).Source
+    $Torch = Initialize-PatchTorch $WixDirectory "$Output/torch-tools"
+    Invoke-Build $Torch @('-p', '-xi', "$Output/previous.wixpdb", "$Output/product.wixpdb", '-out', "$Output/patch.wixmst")
     Invoke-Build candle.exe @('-nologo', '-out', "$Output/patch.wixobj", "$Output/patch.wxs")
     Invoke-Build light.exe @('-nologo', '-out', "$Output/patch.wixmsp", "$Output/patch.wixobj")
     $PatchName = "OSCAR-UI-$Version-windows-x64.msp"
