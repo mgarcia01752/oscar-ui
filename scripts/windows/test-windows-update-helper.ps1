@@ -27,6 +27,14 @@ $InstallRoot = Join-Path $env:ProgramFiles 'OSCAR-UI'
 $Project = 'https://github.com/mgarcia01752/oscar-ui'
 $Api = 'https://api.github.com/repos/mgarcia01752/oscar-ui'
 $Version = '1.0.1'
+$Prompt = $Ast.Find({ param($Node)
+    $Node -is [Management.Automation.Language.ExpandableStringExpressionAst] -and
+    $Node.Value.StartsWith('Install OSCAR-UI ')
+}, $true)
+if (!$Prompt -or (Invoke-Expression $Prompt.Extent.Text) -ne
+    "Install OSCAR-UI ${Version}? Windows will request administrator approval.") {
+    throw 'Update confirmation prompt failed'
+}
 $RegisteredVersion = '1.0.0'
 $FakeHash = 'a' * 64
 

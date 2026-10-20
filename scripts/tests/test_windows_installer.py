@@ -220,6 +220,34 @@ if (!$Rejected) { throw 'Existing output was overwritten' }
             for name in ('torch.exe', 'wix.dll'):
                 self.assertEqual((wix / name).read_bytes(), (output / name).read_bytes())
 
+    def test_updater_confirmation_expands_version_under_strict_mode(self):
+        """Evaluate the real prompt without showing UI or starting an installer."""
+        repository = Path(__file__).resolve().parents[2]
+        local = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local) if local.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        harness = self.root / 'prompt.ps1'
+        harness.write_text("""param($Source)
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$Tokens = $null; $Errors = $null
+$Ast = [Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+if ($Errors.Count) { throw 'Invalid script syntax' }
+$Prompt = $Ast.Find({ param($Node)
+    $Node -is [Management.Automation.Language.ExpandableStringExpressionAst] -and
+    $Node.Value.StartsWith('Install OSCAR-UI ')
+}, $true)
+$Version = '1.2.3'
+if (!$Prompt) { throw 'Missing confirmation prompt' }
+Invoke-Expression $Prompt.Extent.Text
+""", encoding='utf-8')
+        result = subprocess.run([powershell, '-NoProfile', '-File', str(harness),
+                                 str(repository / 'scripts/windows/windows-update.ps1')],
+                                capture_output=True, text=True, encoding='utf-8', check=True)
+        self.assertEqual('Install OSCAR-UI 1.2.3? Windows will request administrator approval.',
+                         result.stdout.strip())
+
     def test_production_ui_owns_maintenance_property(self):
         """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""
         image = self.image('1.0.0')

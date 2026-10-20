@@ -122,6 +122,10 @@ a skipped release, or a bundled dependency change:
 Keep configurations outside the installation directory. Do not replace the JAR
 manually: Windows Installer must track the update for repair and uninstall.
 On patch failure, reopen the installed app or follow the full-MSI steps above.
+If the updater reports that variable `$Version?` has not been set, its confirmation
+prompt failed before installation. Reopen OSCAR-UI; recovery requires a full MSI
+containing the corrected updater. Repeating the same update cannot fix the
+installed helper.
 Installer logs are under `%SystemRoot%\Temp\OSCAR-UI-update-*`.
 The update checks release hashes over HTTPS; it does not bypass Windows security
 prompts or provide Authenticode publisher signing.

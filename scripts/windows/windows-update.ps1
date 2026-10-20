@@ -228,7 +228,7 @@ try {
             throw 'OSCAR-UI is still running; nothing was installed'
         }
     }
-    $Choice = [Windows.Forms.MessageBox]::Show("Install OSCAR-UI $Version? Windows will request administrator approval.",
+    $Choice = [Windows.Forms.MessageBox]::Show("Install OSCAR-UI ${Version}? Windows will request administrator approval.",
         'Update OSCAR-UI', 'OKCancel', 'Information')
     if ($Choice -ne 'OK') {
         throw 'Update canceled; nothing was installed'

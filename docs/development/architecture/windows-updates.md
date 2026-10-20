@@ -194,3 +194,17 @@ installed WiX files, application payload, or baseline identity changes.
 
 Portable tests verify scope, preserved configuration and tool bytes. Windows CI
 must still prove Torch transformation and the complete MSP lifecycle succeed.
+
+## Interactive confirmation correction
+
+The first manual Windows update test stopped before elevation because PowerShell
+parsed `$Version?` in the confirmation string as a variable named `Version?`.
+The prompt now uses `${Version}?`. Both local packaging tests and the Windows
+PowerShell 5.1 helper test evaluate the actual prompt under strict mode without
+opening a dialog. The previous MSI/MSP lifecycle tests did not exercise this UI.
+
+Changing the installed updater helper changes the dependency fingerprint and
+requires a new full-MSI baseline. Existing installations containing the broken
+helper cannot repair it through this application-only MSP path. Do not edit
+installed helper files or bypass baseline integrity checks. Install the corrected
+full MSI, then test a subsequent compatible release through the interactive flow.

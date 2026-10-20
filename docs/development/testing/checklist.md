@@ -191,6 +191,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Evaluate the real version confirmation prompt under strict PowerShell,
+  including Windows PowerShell 5.1; manually verify confirmation and elevation.
 - [ ] Verify Torch uses its build-local temporary-file compatibility setting,
   preserving installed tools and runtime options; pass native MSP generation.
 - [ ] Verify the build step supplies `GH_TOKEN` for release metadata and patch
