@@ -94,7 +94,7 @@ No validator downloads or elevated installations are performed automatically.
 | Documentation | Local links/anchors and configuration-example catalog coverage |
 | Dependency pins | Linux/Windows OSCAR pins and current-version references agree |
 | Python suites | Git/release helpers, dependency updater and gate, source bundling, DEB scripts |
-| Encoding regression | Development tooling tests reject implicit text encodings |
+| Encoding regression | Development tooling and Windows packaging tests reject implicit text encodings, matching Windows CI |
 | Shell | Bash syntax plus mocked Ubuntu developer-installer checks |
 | PowerShell | Parse every platform script without running installer operations |
 | Workflows | `actionlint` with optional ShellCheck/Pyflakes integration disabled |

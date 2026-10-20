@@ -191,6 +191,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Run Windows packaging tests with implicit-encoding warnings treated as
+  errors locally, matching the Windows workflow before installer generation.
 - [ ] Start with a read-only jpackage launcher; clear its build-image flag before
   preparing the previous image, preserving bytes, fingerprint and ProductCode.
   Require native Windows MSP generation and lifecycle checks afterward.

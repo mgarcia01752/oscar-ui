@@ -108,7 +108,7 @@ if ((Get-Item (Join-Path $Image 'OSCAR-UI.exe')).IsReadOnly) {
 """, encoding='utf-8')
         script = repository / 'scripts/windows/windows-msi.ps1'
         subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script), str(image)],
-                       capture_output=True, text=True, check=True)
+                       capture_output=True, text=True, encoding='utf-8', check=True)
         self.assertEqual(original, launcher.read_bytes())
         output = self.root / 'updated'
         metadata = INSTALLER.prepare(image, '1.0.1', output, previous)

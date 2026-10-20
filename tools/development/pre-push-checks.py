@@ -119,6 +119,9 @@ def _checks():
     for suite in ('tools/git', 'tools/development', 'scripts/tests'):
         options = ['-X', 'warn_default_encoding', '-W', 'error::EncodingWarning'] if suite == 'tools/development' else []
         _run(f'Python tests: {suite}', [sys.executable, *options, '-m', 'unittest', 'discover', '-s', suite, '-p', 'test_*.py'])
+    _run('Windows packaging encoding checks',
+         [sys.executable, '-X', 'warn_default_encoding', '-W', 'error::EncodingWarning',
+          '-m', 'unittest', 'discover', '-s', 'scripts/tests', '-p', 'test_windows_*.py'])
     for path in files:
         if path.suffix == '.sh' or path == ROOT / 'tools/git/hooks/pre-push':
             _run(f'Shell syntax: {path.relative_to(ROOT)}', [bash, '-n', path])
