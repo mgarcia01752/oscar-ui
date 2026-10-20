@@ -191,6 +191,10 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Check production UI property ownership: `WixUI_InstallDir` supplies
+  `ARPNOMODIFY`; the standalone prototype retains its own copy. Require a
+  successful native WiX link before claiming installer validation.
+
 - [x] Isolated synthetic prototype passed hosted run `39350060186`.
 - [ ] Pass production MSI install/launch/uninstall with branding and shortcuts.
 - [ ] Pass real previous-release MSP, repeat application, normal/forced repair,

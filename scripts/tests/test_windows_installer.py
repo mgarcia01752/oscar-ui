@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 import zipfile
 from unittest.mock import patch
 
@@ -64,6 +65,21 @@ class WindowsInstallerTest(unittest.TestCase):
             self.assertEqual({'inputs.json', 'product.wixpdb', 'OSCAR-UI.exe', 'app/oscar-ui.jar'}, set(archive.namelist()))
             archive.extractall(previous)
         return metadata, previous
+
+    def test_production_ui_owns_maintenance_property(self):
+        """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""
+        image = self.image('1.0.0')
+        output = self.root / 'production'
+        INSTALLER.prepare(image, '1.0.0', output)
+        namespace = {'w': INSTALLER.WIX.NAMESPACE}
+        product = ET.parse(output / 'product.wxs').find('w:Product', namespace)
+        self.assertIsNotNone(product.find("w:UIRef[@Id='WixUI_InstallDir']", namespace))
+        self.assertIsNone(product.find("w:Property[@Id='ARPNOMODIFY']", namespace))
+        # The independent prototype has no UI extension to supply this property.
+        prototype = self.root / 'prototype.wxs'
+        INSTALLER.WIX._product(image, '1.0.0', prototype)
+        standalone = ET.parse(prototype).find('w:Product', namespace)
+        self.assertEqual('1', standalone.find("w:Property[@Id='ARPNOMODIFY']", namespace).get('Value'))
 
     def test_application_change_keeps_baseline_identity(self):
         """A new JAR and launcher are patchable with unchanged dependencies."""

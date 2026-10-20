@@ -98,3 +98,11 @@ mandatory lifecycle checks. Do not bypass failures to publish an MSP.
 
 The read-only `scripts/windows/compare-msi-baselines.ps1` can compare two actual
 MSI databases; it installs nothing and is not evidence of successful repair.
+
+## Installer UI property ownership
+
+The standalone prototype sets `ARPNOMODIFY` itself. Production links
+`WixUI_InstallDir`, which supplies that property, so production authoring removes
+the prototype copy before linking. Run `39355755009` exposed the duplicate as
+WiX LGHT0091/LGHT0092 before an MSI was produced. Generated-authoring tests cover
+this boundary; only a native Windows link/install run validates the full package.

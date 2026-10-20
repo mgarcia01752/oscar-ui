@@ -129,6 +129,10 @@ def _product(image, version, product_code, destination):
     feature.set('Title', 'OSCAR-UI')
     element = WIX._element
     element('Property', product, Id='WIXUI_INSTALLDIR', Value='INSTALLDIR')
+    # WixUI_InstallDir owns ARPNOMODIFY; the standalone prototype defines its
+    # own copy. Keeping both causes WiX linker errors LGHT0091/LGHT0092.
+    for property_element in product.findall("w:Property[@Id='ARPNOMODIFY']", namespace):
+        product.remove(property_element)
     element('UIRef', product, Id='WixUI_InstallDir')
     element('WixVariable', product, Id='WixUILicenseRtf', Value=str(ROOT / 'target/windows-license.rtf'))
     for identifier, filename in [('WixUIDialogBmp', 'dialog.bmp'), ('WixUIBannerBmp', 'banner.bmp')]:
