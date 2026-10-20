@@ -54,13 +54,13 @@ for disposable Windows CI runners, not routine checks on a developer machine.
 
 `compare-msi-baselines.ps1 -Baseline PATH -Target PATH` reads two MSI databases
 without installing them and reports identity/layout blockers. It is a prototype
-audit, not a patch builder; see the [Windows update plan](../docs/development/architecture/windows-updates.md#running-the-isolated-prototype).
+audit, not a patch builder; see the [Windows update plan](../docs/development/architecture/windows-updates.md#production-patch-validation).
 
 `test-windows-patch.ps1` builds and tests isolated synthetic baseline/target MSIs
 and an MSP after the normal Windows build. It runs only on hosted Windows CI.
 `build/windows-patch-prototype.py` prepares stable WiX inputs and verifies payload
 hashes and application versions. Neither helper publishes or patches a production
-installation. See the [prototype workflow](../docs/development/architecture/windows-updates.md#running-the-isolated-prototype).
+installation. The standalone workflow is retired; see [production validation](../docs/development/architecture/windows-updates.md#production-patch-validation).
 
 ## Shared implementation and tests
 

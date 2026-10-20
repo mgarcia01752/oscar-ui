@@ -117,9 +117,7 @@ It first calls `java-ci.yml` for the exact tagged commit, running the full
 Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, and macOS 15 matrix. Both platform jobs declare
 `needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
 A passing branch build or an older tag does not satisfy this gate.
-Release publishing remains gated by the coordinator. The separate manual
-Windows patch prototype reuses Windows packaging with publishing disabled; it
-cannot bypass the release gate. Manual runs on branches
+Release publishing remains gated by the coordinator. Manual runs on branches
 skip release jobs; choose the release tag when rerunning through Actions.
 
 They upload only
@@ -370,13 +368,6 @@ tracked source. About starts it unprivileged and it invokes pkexec for APT only
 after the UI exits. It uses the existing python3/pkexec/zenity dependencies.
 The install matrix checks package removal; interactive authorization and About
 handoff require the separate checks in the verification checklist.
-
-## Windows patch prototype
-
-Use the manual **Windows patch prototype** Actions workflow to evaluate the
-prospective stable MSI layout with the real application image. It produces CI
-artifacts only and cannot publish a release. See the
-[prototype procedure and limitations](../architecture/windows-updates.md#running-the-isolated-prototype).
 
 ## Production Windows patches
 

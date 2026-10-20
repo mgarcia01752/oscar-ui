@@ -84,19 +84,12 @@ validation harness uses mocked registry/release data and never installs anything
 These checks do not prove UAC, interrupted-install rollback or Windows 11 behavior.
 Keep those interactive cases pending in the checklist until actually exercised.
 
-## Running the isolated prototype
+## Production patch validation
 
-The manual workflow remains useful for independent stable-layout regression:
-
-```bash
-cd /home/dev01/Projects/oscar-ui &&
-gh workflow run windows-patch-prototype.yml --ref main
-```
-
-It uses synthetic versions and a separate product identity. Its test artifacts
-are not updates for installed applications and cannot publish a release.
-The normal release workflow builds the production baseline/patch and runs its
-mandatory lifecycle checks. Do not bypass failures to publish an MSP.
+The standalone prototype workflow has been retired. The normal Windows release
+workflow builds the production baseline/patch and runs its mandatory lifecycle
+checks. Do not bypass failures to publish an MSP. Shared WiX authoring helpers
+and their portable tests remain in use by production packaging.
 
 The read-only `scripts/windows/compare-msi-baselines.ps1` can compare two actual
 MSI databases; it installs nothing and is not evidence of successful repair.

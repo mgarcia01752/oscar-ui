@@ -2,11 +2,6 @@ name: Windows release
 on:
   workflow_dispatch:
   workflow_call:
-    inputs:
-      patch_prototype:
-        type: boolean
-        default: false
-        description: Run isolated synthetic patch tests; never publish this build
 permissions:
   contents: read
 jobs:
@@ -58,19 +53,6 @@ jobs:
       - name: Verify MSI install, launch, and uninstall
         shell: pwsh
         run: ./scripts/windows/test-windows-install.ps1
-      - name: Test isolated Windows patch prototype
-        if: inputs.patch_prototype
-        shell: pwsh
-        run: ./scripts/windows/test-windows-patch.ps1
-      - name: Retain patch prototype evidence
-        if: always() && inputs.patch_prototype
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-patch-prototype-NOT-FOR-RELEASE
-          path: dist/windows/patch-prototype/
-          retention-days: 7
-          if-no-files-found: warn
-          include-hidden-files: true
       - name: Upload installer logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,7 +66,7 @@ jobs:
           path: dist/windows/release/*
           if-no-files-found: error
   publish:
-    if: ${{ !inputs.patch_prototype && startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
     needs: windows
     runs-on: ubuntu-latest
     concurrency:
