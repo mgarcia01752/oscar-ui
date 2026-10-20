@@ -48,10 +48,23 @@ function Get-VerifiedAsset($Asset, [string]$Destination, [string]$Tag) {
     }
 }
 
+# Authenticate only fixed-repository API metadata requests, never asset URLs.
+# Local builds may use public API access when GH_TOKEN is not supplied.
+function Get-ReleaseMetadata([string]$ReleasePath) {
+    if ($ReleasePath -notmatch '^(latest|tags/v[0-9]+\.[0-9]+\.[0-9]+)$') {
+        throw 'Invalid release metadata path'
+    }
+    $Headers = @{ Accept = 'application/vnd.github+json' }
+    if ($env:GH_TOKEN) {
+        $Headers.Authorization = "Bearer $env:GH_TOKEN"
+    }
+    Invoke-RestMethod -Uri "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/$ReleasePath" -Headers $Headers
+}
+
 $Previous = $null
 $Latest = $null
 try {
-    $Latest = Invoke-RestMethod 'https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest'
+    $Latest = Get-ReleaseMetadata 'latest'
 } catch {
     if (!$_.Exception.Response -or [int]$_.Exception.Response.StatusCode -ne 404) {
         throw
@@ -126,7 +139,7 @@ if ($Metadata.fromVersion) {
         if ($Chain.Count -ge 20) {
             throw 'Patch chain exceeds supported test limit; establish a new baseline'
         }
-        $PriorRelease = Invoke-RestMethod "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/tags/v$Cursor"
+        $PriorRelease = Get-ReleaseMetadata "tags/v$Cursor"
         $PriorManifestAsset = @($PriorRelease.assets | Where-Object name -eq 'windows-update.json')
         if ($PriorManifestAsset.Count -ne 1) {
             throw 'Missing patch-chain metadata'
@@ -145,7 +158,7 @@ if ($Metadata.fromVersion) {
         $Cursor = $PriorManifest.fromVersion
     }
     if ($Chain.Count -gt 0) {
-        $BaselineRelease = Invoke-RestMethod "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/tags/v$Cursor"
+        $BaselineRelease = Get-ReleaseMetadata "tags/v$Cursor"
         $BaselineAsset = @($BaselineRelease.assets | Where-Object name -eq "OSCAR-UI-$Cursor-windows-x64.msi")
         if ($BaselineAsset.Count -ne 1) {
             throw 'Missing original baseline MSI'

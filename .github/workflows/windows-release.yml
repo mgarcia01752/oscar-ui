@@ -52,6 +52,8 @@ jobs:
         run: ./scripts/windows/setup-qt.ps1
       - name: Build MSI and test application image
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/windows/windows-release.ps1
       - name: Verify MSI install, launch, and uninstall
         shell: pwsh

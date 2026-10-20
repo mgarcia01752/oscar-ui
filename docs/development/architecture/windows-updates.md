@@ -172,3 +172,10 @@ normalization function, then prepares a compatible update and verifies the old
 launcher bytes, unchanged target bytes, fingerprint and ProductCode. Native
 Windows MSP generation and lifecycle validation remain required; local tests
 alone do not establish update success.
+
+The Windows build step supplies its read-only `github.token` as `GH_TOKEN`.
+Previous-release and patch-chain metadata requests use it only on the fixed
+repository's GitHub API endpoint. Public asset downloads do not receive the
+authorization header. Local builds can supply `GH_TOKEN` or use anonymous access.
+Run `39367334003` exhausted the hosted runner's anonymous API quota before
+MSI preparation; authenticated metadata lookup avoids relying on that quota.

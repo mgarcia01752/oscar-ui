@@ -122,6 +122,55 @@ if ((Get-Item (Join-Path $Image 'OSCAR-UI.exe')).IsReadOnly) {
         self.assertLess(source.index('Initialize-PatchLauncher $Image'),
                         source.index('Invoke-Build python $Arguments'))
 
+    def test_release_metadata_authentication_stays_on_github_api(self):
+        """Exercise authenticated and anonymous requests without network access."""
+        repository = Path(__file__).resolve().parents[2]
+        local = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local) if local.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        harness = self.root / 'metadata.ps1'
+        harness.write_text("""param($Source)
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$Tokens = $null; $Errors = $null
+$Ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+if ($Errors.Count) { throw 'Invalid script syntax' }
+$Function = $Ast.Find({ param($Node)
+    $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $Node.Name -eq 'Get-ReleaseMetadata'
+}, $true)
+Invoke-Expression $Function.Extent.Text
+function Invoke-RestMethod($Uri, $Headers) {
+    if ($Uri -ne "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/$script:ExpectedPath") {
+        throw 'Unexpected metadata host or path'
+    }
+    if ($Headers.Accept -ne 'application/vnd.github+json') { throw 'Missing API accept header' }
+    if ($env:GH_TOKEN) {
+        if ($Headers.Authorization -ne "Bearer $env:GH_TOKEN") { throw 'Missing authentication' }
+    } elseif ($Headers.ContainsKey('Authorization')) { throw 'Unexpected anonymous authorization' }
+    return 'metadata'
+}
+foreach ($Token in @('synthetic-test-token', '')) {
+    $env:GH_TOKEN = $Token
+    foreach ($Path in @('latest', 'tags/v1.2.3')) {
+        $script:ExpectedPath = $Path
+        if ((Get-ReleaseMetadata $Path) -ne 'metadata') { throw 'Lost response' }
+    }
+}
+$Rejected = $false
+try { Get-ReleaseMetadata 'https://example.invalid/asset' } catch { $Rejected = $true }
+if (!$Rejected) { throw 'External metadata path was accepted' }
+""", encoding='utf-8')
+        script = repository / 'scripts/windows/windows-msi.ps1'
+        subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script)],
+                       capture_output=True, text=True, encoding='utf-8', check=True)
+        source = script.read_text(encoding='utf-8')
+        self.assertEqual(1, source.count('Invoke-RestMethod'))
+        workflow = (repository / '.github/workflows/windows-release.yml').read_text(encoding='utf-8')
+        build_step = workflow.split('- name: Build MSI and test application image', 1)[1].split('- name:', 1)[0]
+        self.assertIn('GH_TOKEN: ${{ github.token }}', build_step)
+
     def test_production_ui_owns_maintenance_property(self):
         """Avoid the duplicate ARPNOMODIFY symbol supplied by WixUI_InstallDir."""
         image = self.image('1.0.0')
