@@ -1,5 +1,6 @@
 name: Windows release
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       patch_prototype:

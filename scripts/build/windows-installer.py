@@ -150,7 +150,9 @@ def _product(image, version, product_code, destination):
         element('Shortcut', shortcuts, Id=identifier, Directory=directory, Name='OSCAR-UI',
                 Target='[INSTALLDIR]OSCAR-UI.exe', WorkingDirectory='INSTALLDIR', Icon='ApplicationIcon')
     element('RemoveFolder', shortcuts, Id='RemoveApplicationMenu', Directory='ApplicationMenu', On='uninstall')
-    element('RegistryValue', shortcuts, Root='HKLM', Key='Software\\OSCAR-UI', Name='Installed',
+    # Non-advertised shell shortcuts require an HKCU registry key path
+    # (ICE38/ICE43/ICE57), even when the MSI installs per-machine.
+    element('RegistryValue', shortcuts, Root='HKCU', Key='Software\\OSCAR-UI', Name='Installed',
             Type='integer', Value='1', KeyPath='yes')
     element('ComponentRef', feature, Id='ApplicationShortcuts')
     upgrade = element('Upgrade', product, Id=UPGRADE)

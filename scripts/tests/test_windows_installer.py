@@ -81,6 +81,23 @@ class WindowsInstallerTest(unittest.TestCase):
         standalone = ET.parse(prototype).find('w:Product', namespace)
         self.assertEqual('1', standalone.find("w:Property[@Id='ARPNOMODIFY']", namespace).get('Value'))
 
+    def test_shortcuts_use_current_user_registry_keypath(self):
+        """Keep non-advertised shortcuts compatible with ICE38/ICE43/ICE57."""
+        output = self.root / 'production'
+        INSTALLER.prepare(self.image('1.0.0'), '1.0.0', output)
+        namespace = {'w': INSTALLER.WIX.NAMESPACE}
+        product = ET.parse(output / 'product.wxs').find('w:Product', namespace)
+        self.assertEqual('perMachine', product.find('w:Package', namespace).get('InstallScope'))
+        component = product.find(".//w:Component[@Id='ApplicationShortcuts']", namespace)
+        keypaths = component.findall("w:RegistryValue[@KeyPath='yes']", namespace)
+        self.assertEqual(1, len(keypaths))
+        self.assertEqual('HKCU', keypaths[0].get('Root'))
+        shortcuts = component.findall('w:Shortcut', namespace)
+        self.assertEqual({'ApplicationMenu', 'DesktopFolder'}, {item.get('Directory') for item in shortcuts})
+        self.assertTrue(all(item.get('Target') == '[INSTALLDIR]OSCAR-UI.exe' for item in shortcuts))
+        cleanup = component.find("w:RemoveFolder[@Directory='ApplicationMenu']", namespace)
+        self.assertEqual('uninstall', cleanup.get('On'))
+
     def test_application_change_keeps_baseline_identity(self):
         """A new JAR and launcher are patchable with unchanged dependencies."""
         baseline, previous = self.baseline()

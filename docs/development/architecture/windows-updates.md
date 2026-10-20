@@ -106,3 +106,24 @@ The standalone prototype sets `ARPNOMODIFY` itself. Production links
 the prototype copy before linking. Run `39355755009` exposed the duplicate as
 WiX LGHT0091/LGHT0092 before an MSI was produced. Generated-authoring tests cover
 this boundary; only a native Windows link/install run validates the full package.
+
+## Shortcut validation and pre-release build
+
+Run `39356912700` passed the duplicate-property link check, then failed MSI
+validation ICE38/ICE43/ICE57: the non-advertised shortcut component used an HKLM
+key path. Its registry key path now uses HKCU, as required for this shortcut
+type; the package remains per-machine and retains Start menu/Desktop shortcuts
+and uninstall cleanup. See Microsoft's [ICE43](https://learn.microsoft.com/en-us/windows/win32/msi/ice43).
+Portable authoring tests cover this contract; they do not execute MSI validation.
+
+Run the normal **Windows release** workflow on `main` before creating another
+release tag. It builds and tests the production MSI, without publishing a release
+or running the additional synthetic patch prototype:
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+gh workflow run windows-release.yml --ref main
+```
+
+A passing native build/install/launch/uninstall job is required before claiming
+this fix is Windows-validated. Dispatching on `main` does not bump the version.

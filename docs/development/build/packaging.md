@@ -388,3 +388,7 @@ Java/Qt and source archives are not duplicated in the ZIP. Preserve earlier
 baseline-family MSI/MSPs for mandatory chained repair tests.
 See [Windows updates](../architecture/windows-updates.md) for compatibility,
 first-baseline migration and native validation still required.
+
+For packaging fixes, manually run **Windows release** on `main` to validate the
+normal MSI before creating a new tag. This dispatch does not publish a release;
+see [pre-release validation](../architecture/windows-updates.md#shortcut-validation-and-pre-release-build).

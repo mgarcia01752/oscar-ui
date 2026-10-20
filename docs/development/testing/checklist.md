@@ -191,6 +191,11 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 ## Windows MSP updates
 
+- [ ] Verify non-advertised Start menu/Desktop shortcuts have an HKCU registry
+  key path and uninstall cleanup while the MSI remains per-machine.
+- [ ] Run **Windows release** manually on `main` before tagging packaging fixes;
+  require native WiX validation and MSI install/launch/uninstall to pass.
+
 - [ ] Check production UI property ownership: `WixUI_InstallDir` supplies
   `ARPNOMODIFY`; the standalone prototype retains its own copy. Require a
   successful native WiX link before claiming installer validation.
