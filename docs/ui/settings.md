@@ -23,12 +23,18 @@ TLV-comment visibility are session choices.
 
 Open **Settings → Global → User Defined Common TLVs**.
 
-1. Select a **File type**. The list shows every top-level TLV in its OSCAR registry.
+1. Check the **File type**. It starts with the open document's type, or Docsis
+   when no document is open. The list shows every top-level TLV in that registry.
 2. Required user-entered settings start checked and cannot be unchecked.
    Other entries start unchecked; select the ones you want in **Common TLVs**.
 3. Search by TLV number or name as needed. Switching file types retains your
    unsaved selections so you can configure several types at once.
 4. Choose **Save** to apply all selections, or **Cancel** to discard them.
+
+Changes apply immediately to the next Add dialog for the **same file type**.
+DPoE selections do not affect Docsis, and Docsis selections do not affect
+Docsis-4.0. If an entry appears missing, check that you saved it for the type
+shown in Add's title.
 
 Save in this dialog is independent of the Global dialog's OK/Cancel buttons.
 Your selections are saved per user, persist after restarting, and survive normal

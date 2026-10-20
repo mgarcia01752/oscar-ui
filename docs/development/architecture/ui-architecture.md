@@ -642,7 +642,10 @@ compiling with OSCAR; validating a nested statement at the root is incorrect.
 ## User-defined Common TLVs and upgrade persistence
 
 `Settings → Global → User Defined Common TLVs` opens a dedicated registry-backed
-checkbox dialog. It lists top-level definitions for each UI file type. The
+checkbox dialog. MainWindow passes its active document type through Global
+settings to initialize the selector; with no active document, Docsis is the
+default. Never silently use the alphabetically first family. It lists top-level
+definitions for each UI file type. The
 required user-entered minimum is checked and locked for DOCSIS and DPoG using
 upstream named type constants (NetworkAccess and both service flows). No DPoE or
 PacketCable minimum is inferred. Entries identified by the existing generated-field

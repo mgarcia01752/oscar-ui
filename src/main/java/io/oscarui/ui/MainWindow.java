@@ -409,7 +409,8 @@ public final class MainWindow extends QMainWindow {
         showMicTlvs.setCheckable(true);
         showMicTlvs.toggled.connect(checked -> updateMicVisibility());
         global.triggered.connect(() -> {
-            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance, documentService);
+            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance, documentService,
+                    document == null ? null : document.configurationType());
             try {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                     try {

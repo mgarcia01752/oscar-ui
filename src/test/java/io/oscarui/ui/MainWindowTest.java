@@ -922,6 +922,55 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
+    @Test void commonSettingsFollowActiveDocumentAndRefreshNextAddDialog() throws Exception {
+        var service = new OscarDocumentService();
+        for (String header : java.util.List.of("Docsis", "Docsis-4.0", "DPoE")) {
+            var type = service.types().stream().filter(t -> t.header().equals(header)).findFirst().orElseThrow();
+            var empty = service.create(type, false);
+            String optionalName = service.choices(empty, empty.root()).stream()
+                    .filter(entry -> !service.commonTlvs().isRequired(type, entry))
+                    .findFirst().orElseThrow().name();
+            var window = new MainWindow(false);
+            window.show();
+            try {
+                window.createDocument(type, false);
+                await(() -> window.completed() && window.currentDocument() != null);
+                for (boolean enabled : new boolean[]{true, false}) {
+                    respond(window, global -> {
+                        respond(window, common -> {
+                            var fileType = common.findChild(QComboBox.class, "commonTlvFileType");
+                            assertEquals(header, fileType.currentText());
+                            fileType.setCurrentText(header.equals("DPoE") ? "Docsis" : "DPoE");
+                            fileType.setCurrentText(header);
+                            var tree = common.findChild(QTreeWidget.class, "commonTlvCheckboxes");
+                            var row = java.util.stream.IntStream.range(0, tree.topLevelItemCount()).mapToObj(tree::topLevelItem)
+                                    .filter(item -> item.text(1).equals(optionalName)).findFirst().orElseThrow();
+                            row.setCheckState(0, enabled ? Qt.CheckState.Checked : Qt.CheckState.Unchecked);
+                            common.findChild(QPushButton.class, "saveCommonTlvs").click();
+                        });
+                        global.findChild(QPushButton.class, "userDefinedCommonTlvs").click();
+                        global.accept();
+                    });
+                    action(window, "globalSettings").trigger();
+                    assertCallback();
+                    respond(window, add -> {
+                        assertTrue(add.findChild(QRadioButton.class, "commonTlvs").isChecked());
+                        var tree = add.findChild(QTreeWidget.class, "tlvChoices");
+                        assertEquals(enabled, java.util.stream.IntStream.range(0, tree.topLevelItemCount())
+                                .mapToObj(tree::topLevelItem).anyMatch(row -> row.text(1).equals(optionalName)));
+                        add.reject();
+                    });
+                    action(window, "addTlv").trigger();
+                    await(window::completed);
+                    assertCallback();
+                }
+            } finally {
+                window.close();
+                window.dispose();
+            }
+        }
+    }
+
     @Test void commonSettingsSaveAcrossFileTypesAndCancelDoesNotApply() throws Exception {
         var service = new OscarDocumentService();
         Path settings = temporary.resolve("common-tlvs.json");

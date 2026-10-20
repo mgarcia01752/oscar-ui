@@ -290,3 +290,10 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [x] Capture the real dark-mode settings dialog for the user guide.
 - [x] Linux offscreen suite: 139 tests, no failures/errors, three opt-in capture tests skipped;
   dedicated Common/Global/Add screenshot capture passed separately.
+
+### Common TLV settings context regression
+
+- [x] Reproduce the original wrong-family default (Docsis active, DPoE selected).
+- [x] Exercise Global → Common settings → Save → Add through MainWindow,
+  confirming optional selections appear and disappear without restarting.
+- [x] Preserve saved preferences for other file types; do not migrate them by guesswork.

@@ -15,6 +15,11 @@ import java.util.List;
 /** Registry-derived top-level checkboxes, edited in a draft until Save succeeds. */
 final class CommonTlvSettingsDialog extends QDialog {
     CommonTlvSettingsDialog(QWidget parent, OscarDocumentService service) throws InspectionException {
+        this(parent, service, null);
+    }
+
+    CommonTlvSettingsDialog(QWidget parent, OscarDocumentService service,
+                            OscarDocumentService.FileType activeType) throws InspectionException {
         super(parent);
         setObjectName("commonTlvSettingsDialog");
         setWindowTitle("User Defined Common TLVs");
@@ -26,6 +31,14 @@ final class CommonTlvSettingsDialog extends QDialog {
         var selector = new QComboBox();
         selector.setObjectName("commonTlvFileType");
         types.forEach(type -> selector.addItem(type.header()));
+        if (activeType != null && types.contains(activeType)) {
+            selector.setCurrentIndex(types.indexOf(activeType));
+        } else {
+            int docsisIndex = selector.findText("Docsis");
+            if (docsisIndex >= 0) {
+                selector.setCurrentIndex(docsisIndex);
+            }
+        }
         var form = new QFormLayout();
         form.addRow("File type", selector);
         layout.addLayout(form);

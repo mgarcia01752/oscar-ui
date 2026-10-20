@@ -20,6 +20,11 @@ final class GlobalSettingsDialog extends QDialog {
 
     GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance,
                          OscarDocumentService service) {
+        this(parent, showMic, showTextTlvNumbers, appearance, service, null);
+    }
+
+    GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance,
+                         OscarDocumentService service, OscarDocumentService.FileType activeType) {
         super(parent);
         setObjectName("globalSettingsDialog");
         setWindowTitle("Settings - Global");
@@ -44,7 +49,7 @@ final class GlobalSettingsDialog extends QDialog {
         layout.addWidget(common);
         common.clicked.connect(() -> {
             try {
-                var dialog = new CommonTlvSettingsDialog(this, service);
+                var dialog = new CommonTlvSettingsDialog(this, service, activeType);
                 try {
                     dialog.exec();
                 } finally {
