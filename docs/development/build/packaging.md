@@ -113,7 +113,7 @@ bump or commit; existing tags are never moved. Use a new version for new code.
   directory survives removal. Installer logs are retained as CI artifacts.
 
 `release.yml` handles version-tag pushes and manual runs selected on a tag.
-It first calls `java-ci.yml` for the exact tagged commit, running the full
+It first calls `oscar-ui-ci.yml` for the exact tagged commit, running the full
 Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, and macOS 15 matrix. Both platform jobs declare
 `needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
 A passing branch build or an older tag does not satisfy this gate.

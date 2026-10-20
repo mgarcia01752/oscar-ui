@@ -224,7 +224,7 @@ Do not change action versions while troubleshooting that release flow.
 
 - [ ] Check runner requirements and artifact upload/download compatibility;
   retain existing artifact names, paths, retention and release gates.
-- [ ] Run workflow lint and local checks, then verify Java CI and both platform
+- [ ] Run workflow lint and local checks, then verify OSCAR-UI CI and both platform
   installer workflows. Confirm the Node.js 20 deprecation warning disappears.
 
 This updates the actions' execution runtime, not OSCAR-UI's Java version or

@@ -12,7 +12,7 @@ jobs:
   ci:
     name: Validate tagged commit
     if: startsWith(github.ref, 'refs/tags/v')
-    uses: ./.github/workflows/java-ci.yml
+    uses: ./.github/workflows/oscar-ui-ci.yml
   windows:
     name: Windows package
     needs: ci

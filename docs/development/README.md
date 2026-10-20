@@ -196,10 +196,10 @@ the neighboring Oscar repository's helper cannot save oscar-ui changes.
 
 ## Verification
 
-**Java CI** builds the JAR and runs service tests with Java 21 on Ubuntu 22.04,
-Ubuntu 24.04, and macOS 15 for pushes and pull requests, or on manual dispatch.
+**OSCAR-UI CI** builds the JAR and runs service tests with Java 21 on Ubuntu 22.04,
+Ubuntu 24.04, Ubuntu 26.04, and macOS 15 for pushes and pull requests, or on manual dispatch.
 The CI badge shows the latest `main` workflow result and becomes passing only
-when all three platform jobs succeed. The Java CI badge also links to the live
+when all four platform jobs succeed. The OSCAR-UI CI badge also links to the live
 workflow status; platform badges identify
 matrix targets. Each job uploads its JUnit reports, including on failure.
 Native Qt UI tests are excluded from this Java-only matrix. macOS coverage
@@ -252,7 +252,7 @@ Add missing headers with `--fix`. Existing years and notices are preserved;
 conflicting or incomplete notices are reported for manual review. The checker
 covers Java source, development/build scripts, and owned installer/Git hooks,
 and excludes Maven Wrapper, generated files, and dependencies. Local pre-push
-validation and Java CI run the read-only check automatically.
+validation and OSCAR-UI CI run the read-only check automatically.
 
 For native DEB/MSI builds, see [Build local installers](build/build-images.md).
 
