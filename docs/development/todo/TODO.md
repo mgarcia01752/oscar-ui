@@ -217,15 +217,20 @@ were deliberately deleted.
   choices, installer failure/rollback, reboot handling and normal-user restart.
 - [ ] Verify longer successive patch chains from the original baseline.
 - [ ] Measure actual MSP size and document detailed Windows 11 results.
-- [ ] Validate the next full-MSI baseline and a later compatible update after
-  the v0.5.0 history cleanup. The cleanup removed the older baseline assets.
+- [x] Validate v0.5.1 as the new full-MSI baseline after cleanup: release CI
+  passed, retained inputs declare baselineVersion 0.5.1, and the user confirmed
+  both Windows and Ubuntu installations.
+- [ ] Validate the next compatible automatic update from v0.5.1 (planned v0.5.2).
 
 Only the immediately previous compatible release is supported by the updater.
-Changes to the installed helper or dependencies require a full MSI. The v0.5.0
-installation remains usable, but the next release after cleanup must establish
-and install a new full-MSI baseline before further automatic updates.
+Changes to the installed helper or dependencies require a full MSI. Preserve
+v0.5.1 and all subsequent releases in its patch family, including MSI/MSP,
+metadata and patch inputs. v0.5.0 was deleted after v0.5.1 was validated.
 
 ## GitHub workflow and release cleanup
+
+- [x] After validating v0.5.1, delete the v0.5.0 release and its two matching
+  workflow runs; retain v0.5.1 assets and history.
 
 - [x] Delete 11 releases older than v0.5.0 and 157 completed workflow runs;
   preserve v0.5.0 assets/runs, Git tags and source history.
@@ -238,7 +243,7 @@ and install a new full-MSI baseline before further automatic updates.
 
 ## GitHub Actions Node.js 24 migration
 
-Status: workflow references updated; hosted validation pending.
+Status: completed and validated by the v0.5.1 release workflow.
 
 - [x] Verify explicit Node.js 24 runtimes and update all workflow references:
 
@@ -256,8 +261,9 @@ Status: workflow references updated; hosted validation pending.
   Downloads select artifacts by name; their destination behavior is unchanged.
   Artifact names, paths, retention and release gates remain unchanged.
 - [x] Pass all required local checks, including workflow lint and documentation.
-- [ ] Verify OSCAR-UI CI and both installer workflows on GitHub, including artifact
-  transfer and release gating. Confirm Node.js 20 deprecation warnings disappear.
+- [x] Verify OSCAR-UI CI and both installer workflows, artifact transfer and
+  successful release publication in [run 39377086176](https://github.com/mgarcia01752/oscar-ui/actions/runs/39377086176).
+  Its logs contain no Node.js 20 deprecation warnings.
 
 This changes the actions' execution runtime, not OSCAR-UI's Java version or
 bundled dependencies. See [CI runtime](../build/packaging.md#github-actions-runtime)

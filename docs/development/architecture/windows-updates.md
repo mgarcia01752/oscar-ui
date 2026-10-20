@@ -226,3 +226,16 @@ and its MSI still exist. A missing baseline (HTTP 404) or removed MSI starts a
 new full-MSI family. Authentication, rate-limit and server failures still stop
 the build. The next release after this cleanup requires full-MSI installation;
 later compatible releases can patch from that new baseline.
+
+
+## Validated v0.5.1 baseline
+
+[Release run 39377086176](https://github.com/mgarcia01752/oscar-ui/actions/runs/39377086176)
+passed the CI matrix, Windows packaging, Ubuntu packaging/install matrix and
+publication with Node.js 24 actions; its logs contain no Node.js 20 deprecation
+warnings. Published inputs declare version and baselineVersion 0.5.1, with no
+fromVersion or patch. The user confirmed installation on Windows and Ubuntu.
+
+The v0.5.0 release and its two workflow runs were subsequently deleted. Preserve
+v0.5.1 and subsequent patch-family assets. The planned v0.5.2 release will test
+the first automatic update from this baseline; that test remains pending.

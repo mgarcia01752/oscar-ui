@@ -120,7 +120,7 @@ a skipped release, or a bundled dependency change:
 3. Install the downloaded MSI and launch from the Start menu.
 
 Removal of older release assets can also require a new full-MSI baseline. The
-next release after the v0.5.0 history cleanup requires these full-MSI steps.
+v0.5.1 baseline after the v0.5.0 history cleanup requires these full-MSI steps.
 
 Keep configurations outside the installation directory. Do not replace the JAR
 manually: Windows Installer must track the update for repair and uninstall.
