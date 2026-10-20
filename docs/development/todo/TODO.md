@@ -56,7 +56,9 @@ A symbolic column name does not remove the required row index.
 ## Configuration validation
 
 Status: deferred requirements. Binary Save currently works directly through
-OSCAR; optional Check Config is not a mandatory save gate.
+OSCAR; optional Check Config is not a mandatory save gate. OSCAR now enforces
+DOCSIS required top-level settings at finalization; broader family-specific
+validation and UI presentation remain deferred.
 
 - [ ] Define verified minimum rules per supported family/edition: required TLVs,
   nesting, instances, dependencies, encoded lengths, supported codecs, and
@@ -271,12 +273,21 @@ for upstream references.
 
 ## Embedded parent instance limits
 
-OSCAR 3.4.0 declares `maxInstances: 1` for regular DOCSIS eRouter (202)
-and eSTB (217). Add consequently hides these parents once a reference template
-already contains them. DOCSIS 4.0 eRouter declares unlimited instances.
-The eRouter specification's repeated-container behavior warrants an upstream
-metadata review; do not override upstream limits in the UI.
+Resolved in the OSCAR 3.5.0 dependency: regular DOCSIS eRouter (202)
+and eSTB (217) support repeated parents. The UI follows the registry limits.
 
-- [ ] Review parent multiplicity against the applicable eRouter/eDOCSIS and
-  OpenCable specifications in OSCAR, then update the dependency if corrected.
-- [ ] Verify Add and Duplicate against the resulting upstream instance limits.
+- [x] Consume the upstream parent multiplicity corrections.
+- [x] Verify Add remains available and Duplicate creates another parent.
+
+## DPoE embedded SNMP name
+
+OSCAR 3.4.0 `dpoe.json` still declares 217.11 as `SnmpOID` with a one-byte
+length field. Regular DOCSIS uses `Snmp11` in its OpenCable catalog. The UI
+does not silently alias the DPoE name. The user authorized the upstream
+correction: keep the specification/legacy terminology in the description and
+use Snmp11 as the one-byte-length VarBind grammar identifier.
+
+- [x] Verify the upstream DPoE VarBind name and nested value routing; both
+  DPoE export routes pass independent-byte and round-trip tests locally.
+- [ ] Publish the corrected OSCAR release and update the UI dependency.
+- [ ] Test nested Add/Edit and round trips after updating the OSCAR dependency.

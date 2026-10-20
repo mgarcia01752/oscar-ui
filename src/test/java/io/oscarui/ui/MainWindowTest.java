@@ -5,6 +5,7 @@
 package io.oscarui.ui;
 
 import static org.junit.jupiter.api.Assertions.*;
+import io.oscarui.service.DocsisTestFixtures;
 import io.oscarui.service.OscarDocumentService;
 import io.qt.core.*;
 import io.qt.gui.QAction;
@@ -60,6 +61,7 @@ class MainWindowTest {
             var dialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
             try {
                 dialog.show();
+                dialog.findChild(QRadioButton.class, "allTlvs").click();
                 var input = dialog.findChild(QPlainTextEdit.class, "certificateText");
                 var add = dialog.findChild(QPushButton.class, "confirmAddTlv");
                 assertFalse(add.isEnabled());
@@ -188,7 +190,7 @@ class MainWindowTest {
     @Test void checksSharedSecretInMaskedIndependentDialog() throws Exception {
         var documents = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(documents);
-        Path source = Files.writeString(temporary.resolve("source.txt"), "Docsis { NetworkAccess 1; }");
+        Path source = Files.writeString(temporary.resolve("source.txt"), DocsisTestFixtures.MINIMUM_DOCUMENT);
         Path binaryPath = temporary.resolve("check.bin");
         binary.saveDocument(binary.openAuto(source), binaryPath, null, "public-test-key");
         var dialog = new SharedSecretCheckDialog(null);
@@ -230,6 +232,7 @@ class MainWindowTest {
             var addDialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
             try {
                 addDialog.show();
+                addDialog.findChild(QRadioButton.class, "allTlvs").click();
                 var oidInput = addDialog.findChild(QLineEdit.class, "snmpOid");
                 var typeSelector = addDialog.findChild(QComboBox.class, "snmpType");
                 var valueInput = addDialog.findChild(QLineEdit.class, "snmpValue");
@@ -285,6 +288,7 @@ class MainWindowTest {
         var dialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));
         try {
             dialog.show();
+            dialog.findChild(QRadioButton.class, "allTlvs").click();
             var oid = dialog.findChild(QLineEdit.class, "snmpOid");
             var type = dialog.findChild(QComboBox.class, "snmpType");
             var value = dialog.findChild(QLineEdit.class, "snmpValue");
@@ -333,7 +337,7 @@ class MainWindowTest {
         var documents = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(documents);
         var textPath = Files.writeString(temporary.resolve("snmp.txt"),
-                "Docsis { Snmp11 1.3.6.1.2.1.69.1.2.1.4.1 OctetString \"lab-community\"; }");
+                "Docsis { Snmp11 1.3.6.1.2.1.69.1.2.1.4.1 OctetString \"lab-community\"; NetworkAccess 1; " + DocsisTestFixtures.SERVICE_FLOWS + "}");
         var binaryPath = temporary.resolve("snmp.bin");
         binary.saveDocument(binary.openAuto(textPath), binaryPath, null, "public-test-key");
         var window = new MainWindow(false);
@@ -501,7 +505,7 @@ class MainWindowTest {
         var service = new OscarDocumentService();
         var binary = new io.oscarui.service.OscarBinaryService(service);
         var source = service.open(Files.writeString(temporary.resolve("inspect-secret.txt"),
-                "Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-private; } NetworkAccess 1; }"));
+                "Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-private; } NetworkAccess 1; " + DocsisTestFixtures.SERVICE_FLOWS + "}"));
         Path file = Files.write(temporary.resolve("inspect-secret.bin"), binary.encode(source, "lab-test-key"));
         var window = new MainWindow(false);
         window.show();
@@ -918,6 +922,112 @@ class MainWindowTest {
         } finally { window.close(); window.dispose(); }
     }
 
+    @Test void commonSettingsSaveAcrossFileTypesAndCancelDoesNotApply() throws Exception {
+        var service = new OscarDocumentService();
+        Path settings = temporary.resolve("common-tlvs.json");
+        service.commonTlvs().load(settings);
+        var type = service.types().stream().filter(t -> t.header().equals("Docsis")).findFirst().orElseThrow();
+        var frequency = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family()).find(java.util.List.of(1));
+        var dialog = new CommonTlvSettingsDialog(null, service);
+        try {
+            dialog.show();
+            var selector = dialog.findChild(QComboBox.class, "commonTlvFileType");
+            selector.setCurrentText("Docsis");
+            var tree = dialog.findChild(QTreeWidget.class, "commonTlvCheckboxes");
+            var network = java.util.stream.IntStream.range(0, tree.topLevelItemCount()).mapToObj(tree::topLevelItem)
+                    .filter(row -> row.text(1).equals("NetworkAccess")).findFirst().orElseThrow();
+            assertEquals(Qt.CheckState.Checked, network.checkState(0));
+            assertFalse(network.flags().testFlag(Qt.ItemFlag.ItemIsUserCheckable));
+            var row = java.util.stream.IntStream.range(0, tree.topLevelItemCount()).mapToObj(tree::topLevelItem)
+                    .filter(item -> item.text(1).equals("DownstreamFrequency")).findFirst().orElseThrow();
+            assertEquals(Qt.CheckState.Unchecked, row.checkState(0));
+            row.setCheckState(0, Qt.CheckState.Checked);
+            selector.setCurrentText("Docsis-4.0");
+            selector.setCurrentText("Docsis");
+            row = java.util.stream.IntStream.range(0, tree.topLevelItemCount()).mapToObj(tree::topLevelItem)
+                    .filter(item -> item.text(1).equals("DownstreamFrequency")).findFirst().orElseThrow();
+            assertEquals(Qt.CheckState.Checked, row.checkState(0));
+            assertFalse(service.commonTlvs().isCommon(type, frequency));
+            dialog.findChild(QPushButton.class, "saveCommonTlvs").click();
+            assertEquals(QDialog.DialogCode.Accepted.value(), dialog.result());
+            assertTrue(service.commonTlvs().isCommon(type, frequency));
+        } finally {
+            dialog.dispose();
+        }
+        var reloaded = new io.oscarui.service.CommonTlvPreferences();
+        reloaded.load(settings);
+        assertTrue(reloaded.isCommon(type, frequency));
+        String saved = Files.readString(settings);
+        var cancelled = new CommonTlvSettingsDialog(null, service);
+        try {
+            cancelled.findChild(QComboBox.class, "commonTlvFileType").setCurrentText("Docsis");
+            var tree = cancelled.findChild(QTreeWidget.class, "commonTlvCheckboxes");
+            var row = java.util.stream.IntStream.range(0, tree.topLevelItemCount()).mapToObj(tree::topLevelItem)
+                    .filter(item -> item.text(1).equals("DownstreamFrequency")).findFirst().orElseThrow();
+            row.setCheckState(0, Qt.CheckState.Unchecked);
+            cancelled.reject();
+            assertTrue(service.commonTlvs().isCommon(type, frequency));
+            assertEquals(saved, Files.readString(settings));
+        } finally {
+            cancelled.dispose();
+        }
+    }
+
+    @Test void addModesExposeFullCatalogAndExplainUnavailableEntries() throws Exception {
+        var service = new OscarDocumentService();
+        var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+        var document = service.open(Files.writeString(temporary.resolve("catalog.txt"), "Docsis { NetworkAccess 1; }"));
+        var frequency = com.comcast.oscar.dictionary.TlvRegistry.forFamily(type.family()).find(java.util.List.of(1));
+        service.commonTlvs().setCommon(type, frequency, true);
+        var definitions = service.addDefinitions(document, document.root());
+        var dialog = new TlvEditorDialog(null, service, document, document.root(), definitions);
+        try {
+            dialog.show();
+            var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
+            var common = dialog.findChild(QRadioButton.class, "commonTlvs");
+            var all = dialog.findChild(QRadioButton.class, "allTlvs");
+            assertTrue(common.isChecked());
+            int commonCount = table.topLevelItemCount();
+            var search = dialog.findChild(QLineEdit.class, "tlvSearch");
+            search.setText("DownstreamFrequency");
+            dialog.findChild(QLineEdit.class, "tlvValue").setText("100000000");
+            all.click();
+            assertEquals("100000000", dialog.selection().value());
+            assertEquals("DownstreamFrequency", dialog.selection().definition().name());
+            search.clear();
+            assertEquals(definitions.size(), table.topLevelItemCount());
+            assertTrue(table.topLevelItemCount() > commonCount);
+            for (int index = 0; index < table.topLevelItemCount(); index++) {
+                var row = table.topLevelItem(index);
+                if (row.text(1).equals("NetworkAccess")) {
+                    assertTrue(row.isDisabled());
+                    assertTrue(row.text(2).contains("Instance limit"));
+                }
+                if (row.text(0).equals("6")) {
+                    assertTrue(row.isDisabled());
+                    assertEquals("Generated automatically", row.text(2));
+                }
+            }
+            // An uncommon registry entry must remain reachable through All and search.
+            var uncommon = definitions.stream().filter(entry -> entry.path().equals(java.util.List.of(9)))
+                    .findFirst().orElseThrow();
+            search.setText(uncommon.name());
+            assertEquals(1, table.topLevelItemCount());
+            assertFalse(table.topLevelItem(0).isDisabled());
+            assertEquals(uncommon, dialog.selection().definition());
+            common.click();
+            assertEquals(0, table.topLevelItemCount());
+            assertFalse(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
+            all.click();
+            assertEquals(1, table.topLevelItemCount());
+            search.setText("no-such-tlv");
+            assertFalse(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
+        } finally {
+            dialog.close();
+            dialog.dispose();
+        }
+    }
+
     @Test void embeddedParentsAppearInAddForTheirSupportedFamilies() throws Exception {
         var service = new OscarDocumentService();
         for (String header : java.util.List.of("Docsis", "Docsis-4.0")) {
@@ -926,6 +1036,7 @@ class MainWindowTest {
             var dialog = new TlvEditorDialog(null, service, document, document.root(), service.choices(document, document.root()));
             try {
                 dialog.show();
+                dialog.findChild(QRadioButton.class, "allTlvs").click();
                 var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
                 var names = java.util.stream.IntStream.range(0, table.topLevelItemCount())
                         .mapToObj(i -> table.topLevelItem(i).text(1)).toList();
@@ -949,6 +1060,7 @@ class MainWindowTest {
         var dialog = new TlvEditorDialog(null, service, document, document.root(), choices);
         try {
             dialog.show();
+            dialog.findChild(QRadioButton.class, "allTlvs").click();
             var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
             assertEquals("TLV", table.headerItem().text(0));
             assertEquals("Name", table.headerItem().text(1));
@@ -1099,6 +1211,7 @@ class MainWindowTest {
             window.createDocument(configurationType, false);
             await(() -> window.completed() && window.currentDocument() != null);
             respond(window, dialog -> {
+                dialog.findChild(QRadioButton.class, "allTlvs").click();
                 dialog.findChild(QLineEdit.class, "tlvSearch").setText(definition.name());
                 assertTrue(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
                 dialog.findChild(QPushButton.class, "confirmAddTlv").click();
@@ -1573,7 +1686,7 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            Path source = Files.writeString(temporary.resolve("source.txt"), "Docsis { NetworkAccess 1; }");
+            Path source = Files.writeString(temporary.resolve("source.txt"), DocsisTestFixtures.MINIMUM_DOCUMENT);
             window.openFile(source);
             await(() -> window.completed() && window.succeeded());
             Path output = temporary.resolve("output.bin");
@@ -1605,7 +1718,7 @@ class MainWindowTest {
             action(window, "fileSave").trigger();
             await(() -> window.completed() && !action(window, "fileSave").isEnabled());
             assertArrayEquals(new byte[]{3, 1, 0}, java.util.Arrays.copyOf(Files.readAllBytes(output), 3));
-            assertEquals("Docsis { NetworkAccess 1; }", Files.readString(source));
+            assertEquals(DocsisTestFixtures.MINIMUM_DOCUMENT, Files.readString(source));
             var saved = window.currentDocument();
             respond(window, QDialog::reject);
             action(window, "fileSaveAsBinary").trigger();

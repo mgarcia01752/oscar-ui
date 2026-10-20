@@ -26,6 +26,7 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 
 public final class OscarDocumentService {
+    private final CommonTlvPreferences commonTlvs = new CommonTlvPreferences();
     private static final String REFERENCE_MARKER = "/* OSCAR-UI reference template: not deployment defaults. */";
 
     private static final String LEGACY_REFERENCE_MARKER = "/* Oscar Desktop reference template: not deployment defaults. */";
@@ -173,6 +174,14 @@ public final class OscarDocumentService {
     private List<FileType> types;
 
     /**
+     * Returns this editor service's shared Common TLV presentation preferences.
+     * @return per-user preference owner, initially minimum-only and session-scoped
+     */
+    public CommonTlvPreferences commonTlvs() {
+        return commonTlvs;
+    }
+
+    /**
      * Discovers supported Oscar configuration types and caches the catalogs.
      *
      * <p>Loads bundled registries and matches them to Oscar grammar headers.
@@ -296,17 +305,54 @@ public final class OscarDocumentService {
      * @throws InspectionException if the bundled catalogs cannot be initialized
      */
     public List<TlvDefinition> choices(Document document, Node parent) throws InspectionException {
+        return addDefinitions(document, parent).stream()
+                .filter(definition -> insertionIssue(document, parent, definition).isEmpty()).toList();
+    }
+
+    /**
+     * Lists every registry definition belonging to an insertion parent, including unavailable rows.
+     *
+     * @param document current document snapshot
+     * @param parent insertion container from that snapshot
+     * @return full parent catalog, or an empty list for an invalid parent
+     * @throws InspectionException if the catalogs cannot be initialized
+     */
+    public List<TlvDefinition> addDefinitions(Document document, Node parent) throws InspectionException {
         types();
-        if (!contains(document.root(), parent) || !parent.isContainer() || parent.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE)) {
+        if (!contains(document.root(), parent) || !parent.isContainer()
+                || parent.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE)) {
             return List.of();
         }
-        return catalogsByFamily.get(new RegistryFamily(document.configurationType().family())).registry().children(parent.tlvPath()).stream()
-            .filter(definition -> !isGeneratedMic(document.configurationType(), definition.path()))
-            .filter(definition -> editingIssue(document.configurationType(), definition).isEmpty())
-                .filter(definition -> definition.maxInstances() < 0 || parent.childTlvs().stream()
-                        .filter(child -> child.tlvPath().equals(definition.path())).count() < definition.maxInstances())
-                .toList();
+        return catalogsByFamily.get(new RegistryFamily(document.configurationType().family()))
+                .registry().children(parent.tlvPath());
     }
+
+    /**
+     * Explains why a catalog definition cannot currently be inserted.
+     *
+     * @param document current document snapshot
+     * @param parent insertion container
+     * @param definition definition from the parent's catalog
+     * @return empty when available, otherwise a user-facing restriction
+     */
+    public String insertionIssue(Document document, Node parent, TlvDefinition definition) {
+        if (isGeneratedMic(document.configurationType(), definition.path())) {
+            return "Generated automatically";
+        }
+        String issue = editingIssue(document.configurationType(), definition);
+        if (!issue.isEmpty()) {
+            return "Editing not supported: " + issue;
+        }
+        if (definition.maxInstances() == 0) {
+            return "Not permitted in this context";
+        }
+        if (definition.maxInstances() > 0 && parent.childTlvs().stream()
+                .filter(child -> child.tlvPath().equals(definition.path())).count() >= definition.maxInstances()) {
+            return "Instance limit reached — edit existing entry in tree";
+        }
+        return "";
+    }
+
 
     /**
      * Identifies generated CM and CMTS integrity fields for a configuration family.
@@ -404,11 +450,23 @@ public final class OscarDocumentService {
         }
         if (isSnmpValue(definition)) {
             try {
-                String source = configurationType.header() + " { " + definition.name() + " " + supplied + "; }";
+                String statement = definition.name() + " " + supplied + ";";
+                var registry = catalogsByFamily.get(new RegistryFamily(configurationType.family())).registry();
+                for (int depth = definition.path().size() - 1; depth > 0; depth--) {
+                    var ancestor = registry.find(definition.path().subList(0, depth));
+                    statement = ancestor.name() + " { " + statement + " }";
+                }
+                String source = configurationType.header() + " { " + statement + " }";
                 var probe = parseDecodedTree(source, configurationType);
-                if (probe.root().childTlvs().size() != 1
-                        || !probe.root().childTlvs().getFirst().tlvPath().equals(definition.path())) {
-                    return "Enter one SNMP OID, type, and value";
+                Node node = probe.root();
+                for (int depth = 1; depth <= definition.path().size(); depth++) {
+                    if (node.childTlvs().size() != 1) {
+                        return "Enter one SNMP OID, type, and value";
+                    }
+                    node = node.childTlvs().getFirst();
+                    if (!node.tlvPath().equals(definition.path().subList(0, depth))) {
+                        return "Enter one SNMP OID, type, and value";
+                    }
                 }
                 OscarTextCompileCheck.validate(source);
                 return "";

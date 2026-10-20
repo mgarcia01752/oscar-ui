@@ -59,8 +59,8 @@ class SharedSecretCheckServiceTest {
 
     private byte[] compile(boolean docsis40, String extension) {
         String flows = docsis40
-                ? "UpstreamServiceFlow { ServiceFlowReference 1; QosParameterSetType 7; } "
-                    + "DownstreamServiceFlow { ServiceFlowReference 2; QosParameterSetType 7; } " : "";
+                ? DocsisTestFixtures.SERVICE_FLOWS.replace("QualityOfServiceParameterSetType 07", "QosParameterSetType 7")
+                : DocsisTestFixtures.SERVICE_FLOWS;
         var imported = new ConfigurationFileImport(new StringBuilder(
                 (docsis40 ? "Docsis-4.0" : "Docsis") + " { NetworkAccess 1; " + flows + extension + " }"));
         var configuration = new ConfigurationFile(docsis40 ? ConfigurationFile.DOCSIS_VER_40

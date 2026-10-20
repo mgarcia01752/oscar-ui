@@ -83,23 +83,36 @@ final class TlvEditorDialog extends QDialog {
         editingNode = editing;
         setObjectName(editing == null ? "addTlvDialog" : "editTlvDialog");
         setWindowTitle((editing == null ? "Add TLV - " : "Edit TLV - ") + document.configurationType().header());
-        resize(620, 540);
+        resize(780, 540);
         var layout = new QVBoxLayout(this);
         layout.addWidget(new QLabel("Parent: " + insertionParent.tlvName()));
         var search = new QLineEdit();
         search.setObjectName("tlvSearch");
         search.setPlaceholderText("Search TLVs");
+        var modes = new QHBoxLayout();
+        var common = new QRadioButton("Common TLVs");
+        common.setObjectName("commonTlvs");
+        var all = new QRadioButton("All TLVs");
+        all.setObjectName("allTlvs");
+        common.setChecked(true);
+        modes.addWidget(common);
+        modes.addWidget(all);
+        modes.addStretch();
+        layout.addLayout(modes);
+        common.setVisible(editing == null);
+        all.setVisible(editing == null);
         layout.addWidget(search);
         if (editing == null) {
-            var availability = new QLabel("TLVs at their instance limit are hidden. Edit existing entries in the tree.");
+            var availability = new QLabel("All TLVs includes uncommon entries. Disabled rows show why they cannot be added.");
             availability.setObjectName("tlvAvailabilityHint");
             availability.setWordWrap(true);
             layout.addWidget(availability);
         }
         list.setObjectName("tlvChoices");
-        list.setHeaderLabels(List.of("TLV", "Name"));
+        list.setHeaderLabels(editing == null ? List.of("TLV", "Name", "Status") : List.of("TLV", "Name"));
         list.setRootIsDecorated(false);
-        list.setColumnWidth(0, 110);
+        list.setColumnWidth(0, 90);
+        list.setColumnWidth(1, 280);
         list.header().setSectionsClickable(true);
         list.header().setSortIndicatorShown(true);
         list.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder);
@@ -151,7 +164,9 @@ final class TlvEditorDialog extends QDialog {
         layout.addWidget(buttons);
         Runnable update = () -> {
             boolean container = selected != null && service.isContainer(document.configurationType(), selected);
-            boolean supported = selected != null && service.editingIssue(document.configurationType(), selected).isEmpty();
+            boolean supported = selected != null && (editing == null
+                    ? service.insertionIssue(document, insertionParent, selected).isEmpty()
+                    : service.editingIssue(document.configurationType(), selected).isEmpty());
             value.setEnabled(supported && !container);
             String issue = isSnmp() ? snmp.issue() : isCertificate() ? certificate.issue() : "";
             if (selected != null && issue.isEmpty()) {
@@ -186,27 +201,62 @@ final class TlvEditorDialog extends QDialog {
             update.run();
         });
         value.textChanged.connect(text -> update.run());
-        search.textChanged.connect(text -> {
+        Runnable refresh = () -> {
+            TlvDefinition previousSelection = selected;
+            String previousValue = value.text();
             selected = null;
             list.clear();
-            String query = text.toLowerCase(Locale.ROOT);
-            var visible = choices.stream().filter(entry -> entry.name().toLowerCase(Locale.ROOT).contains(query)
+            String query = search.text().toLowerCase(Locale.ROOT);
+            var visible = choices.stream()
+                    .filter(entry -> editing != null || all.isChecked() || !insertionParent.tlvPath().isEmpty()
+                            || service.commonTlvs().isCommon(document.configurationType(), entry))
+                    .filter(entry -> entry.name().toLowerCase(Locale.ROOT).contains(query)
                     || pathText(entry).contains(query)
                     || entry.description().toLowerCase(Locale.ROOT).contains(query)
                     || entry.codec().toLowerCase(Locale.ROOT).contains(query)
                     || entry.supportedVersion().toLowerCase(Locale.ROOT).contains(query)).toList();
-            visible.forEach(entry -> list.addTopLevelItem(new TlvItem(entry)));
+            visible.forEach(entry -> {
+                var item = new TlvItem(entry);
+                String issue = editing == null ? service.insertionIssue(document, insertionParent, entry) : "";
+                item.setText(2, issue);
+                item.setToolTip(1, issue);
+                item.setToolTip(2, issue);
+                item.setDisabled(!issue.isEmpty());
+                list.addTopLevelItem(item);
+            });
             sortChoices();
-            if (!visible.isEmpty()) {
-                list.setCurrentItem(list.topLevelItem(0));
+            TlvItem firstAvailable = null;
+            TlvItem retained = null;
+            for (int index = 0; index < list.topLevelItemCount(); index++) {
+                var item = (TlvItem) list.topLevelItem(index);
+                if (!item.isDisabled()) {
+                    if (firstAvailable == null) {
+                        firstAvailable = item;
+                    }
+                    if (item.definition.equals(previousSelection)) {
+                        retained = item;
+                    }
+                }
             }
-            else {
+            list.setCurrentItem(retained != null ? retained : firstAvailable);
+            if (retained != null) {
+                if (isSnmp()) {
+                    snmp.setStatement(previousValue);
+                } else if (isCertificate()) {
+                    certificate.setValue(previousValue);
+                } else {
+                    value.setText(previousValue);
+                }
+            }
+            if (firstAvailable == null) {
                 description.clear();
-                metadata.setText("No available TLVs");
+                metadata.setText("No available TLVs in this view. Try All TLVs or edit an existing entry.");
                 update.run();
             }
-        });
-        search.textChanged.emit("");
+        };
+        search.textChanged.connect(text -> refresh.run());
+        all.toggled.connect(checked -> refresh.run());
+        refresh.run();
         if (editing != null) {
             search.hide();
             list.setEnabled(false);

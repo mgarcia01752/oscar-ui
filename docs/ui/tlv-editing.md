@@ -16,14 +16,26 @@ it does not interpret the embedded service contents.
 ## Add
 
 Select the parent or document root, then choose **Edit → Add TLV** or **Add TLV**
-from the tree's right-click menu. Search the catalog and choose an available entry.
-The chooser has **TLV** and **Name** columns. Click a column heading to toggle
-numeric path order or alphabetical name order. Paths use dots without brackets.
+from the tree's right-click menu. Choose a view above Search:
 
-Add hides TLVs already at the instance limit declared by OSCAR. A reference
-template already contains eRouter and eSTB in regular DOCSIS; select those
-existing parents in the tree to work with their children. An empty DOCSIS draft
-offers both parents. DOCSIS 4.0 offers eRouter, but not eSTB.
+- **Common TLVs** (default): your per-file-type selections from
+  [Settings → Global → User Defined Common TLVs](settings.md#user-defined-common-tlvs).
+  On first use, only required user-entered TLVs are included.
+- **All TLVs**: every registry-defined entry for the selected parent, including
+  uncommon and unavailable entries. Use this view when a TLV is missing from Common.
+
+Both views support searching by name, dotted path, description and codec.
+For child containers, both views show all defined children. The Common list is
+a saved display preference; it does not change OSCAR's supported TLVs or rules.
+
+The chooser has **TLV**, **Name**, and **Status** columns. Click TLV or Name to
+sort by numeric path or name. Disabled rows show their restriction in Status
+and a tooltip: instance limit reached, generated automatically, or editing not
+supported. To change a singleton already present, select it in the main tree
+and choose Edit. Even an empty reference-template placeholder counts as present.
+
+Regular DOCSIS offers eRouter and eSTB; DOCSIS 4.0 offers eRouter only. All TLVs
+shows registry-defined types, not arbitrary unknown numeric types.
 
 Adding a Parent TLV creates its immediate children as blank placeholders.
 Nested parents stay empty until explicitly populated. Placeholders are not

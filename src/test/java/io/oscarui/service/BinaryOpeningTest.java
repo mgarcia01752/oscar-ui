@@ -61,7 +61,8 @@ class BinaryOpeningTest {
     }
 
     @Test void savesActiveBinaryAndDetectsExternalChanges() throws Exception {
-        Path file = Files.write(temporary.resolve("active.bin"), HexFormat.of().parseHex("030101ff00"));
+        Path file = Files.write(temporary.resolve("active.bin"), HexFormat.of().parseHex(
+                "030101" + DocsisTestFixtures.SERVICE_FLOW_HEX + "ff00"));
         var opened = binary.openAuto(file);
         var edited = documents.replaceValue(opened, opened.root().childTlvs().getFirst(), "0");
         var saved = binary.saveDocument(edited, file, opened.origin().diskHash(), "public-test-key");
@@ -122,7 +123,7 @@ class BinaryOpeningTest {
     }
 
     @Test void opensActualEncoderOutputWithoutASecret() throws Exception {
-        var source = documents.open(Files.writeString(temporary.resolve("source.txt"), "Docsis { NetworkAccess 1; }"));
+        var source = documents.open(Files.writeString(temporary.resolve("source.txt"), DocsisTestFixtures.MINIMUM_DOCUMENT));
         Path file = Files.write(temporary.resolve("encoded.cfg"), binary.encode(source, "public-test-key"));
         var decoded = binary.open(file, source.configurationType());
         assertEquals("1", decoded.root().childTlvs().stream().filter(node -> node.tlvName().equals("NetworkAccess"))

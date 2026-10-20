@@ -117,8 +117,12 @@ source or aliases. Binary Save can replace its own origin. Cancellation, missing
 secrets, encoder errors, and write failures preserve document and destination.
 Save/Discard/Cancel protects replacement and exit while modified.
 
-Check Config is an optional draft preview, not a gate on Binary Save. Minimum
-rules, complete encoded-value checks, and interoperability remain unfinished;
+Check Config is an optional draft preview, not a gate on Binary Save. OSCAR
+enforces required top-level settings during DOCSIS finalization: NetworkAccess,
+UpstreamServiceFlow and DownstreamServiceFlow for the UI-supported editions.
+Incomplete drafts can still be edited and saved as text. Failed binary exports
+preserve existing destinations. Broader dependency checks and interoperability
+remain unfinished;
 future requirements are tracked in [TODO](../todo/TODO.md#configuration-validation).
 
 ## TLV editing transactions
@@ -129,8 +133,13 @@ and failures preserve the document. Unchanged Apply is a no-op. Edits do not
 write files; they preserve surrounding comments, line endings, repeated entries,
 and disk/origin protection. Cut/Paste and direct text editing are unavailable.
 
-Add filters registry children by the complete parent path and instance limits.
-The searchable chooser has sortable **TLV | Name** columns: numeric component
+Add obtains the complete parent catalog through `addDefinitions`; `choices`
+remains the insertion-authorized subset. Both share `insertionIssue` so displayed
+restrictions and insert-time enforcement agree. Common TLVs uses per-user
+`CommonTlvPreferences` with minimum-only defaults; All TLVs includes every parent definition.
+Child containers show all definitions in either mode. Unavailable rows are disabled
+with a Status explanation, including generated fields and instance limits.
+The searchable chooser has **TLV | Name | Status** columns, with TLV/Name sorting: numeric component
 order for dotted paths, alphabetical name order, both reversible. Sorting and
 search preserve the selected definition and entered value. Help shows a data
 type and example/range. Description formatting reflows prose into paragraphs
@@ -505,7 +514,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.4.0 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.5.0 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -607,6 +616,86 @@ Opaque eSAFE fields use the upstream byte-array metadata and hex validation.
 Add and Edit share the registry-based editing policy. DOCSIS 4.0 no longer
 blanket-blocks eSAFE type numbers: the upstream registry controls which services
 exist (currently eRouter only). The independent L2VPN editing restriction remains.
-Add still enforces upstream instance limits and explains hidden entries in the
-dialog. Reference templates can therefore omit already-present singleton parents
-from Add while allowing their existing children to be edited.
+Add still enforces upstream instance limits. Already-present singleton entries
+remain visible but disabled with a reason; their existing children can be edited.
+
+## SNMP VarBind naming and editing contract
+
+When adding a specification-backed SNMP VarBind definition, use the OSCAR grammar
+statement matching its TLV length field: `Snmp11` for the one-byte-length form,
+and `Snmp64` for the two-byte-length form. Length means the outer TLV length
+field width, not payload size or the SNMP BER length. Preserve the numeric TLV
+path and confirm type/length encoding against the applicable specification;
+naming does not authorize changing wire types.
+
+This convention applies to complete SNMP VarBinds (OID, type, value), not bare
+OID-valued settings such as access-view subtrees. Do not rename every `oid`
+codec entry. New VarBind entries must agree across registry, grammar, parser,
+exporter and UI, including nested parent paths. Avoid ambiguous `SnmpOID`
+VarBind names. Cover independent wire bytes and binary/text round trips.
+
+The UI presents OID, Type and Value fields for supported VarBind statements.
+Validation must wrap nested statements in their actual registry ancestors before
+compiling with OSCAR; validating a nested statement at the root is incorrect.
+
+
+## User-defined Common TLVs and upgrade persistence
+
+`Settings → Global → User Defined Common TLVs` opens a dedicated registry-backed
+checkbox dialog. It lists top-level definitions for each UI file type. The
+required user-entered minimum is checked and locked for DOCSIS and DPoG using
+upstream named type constants (NetworkAccess and both service flows). No DPoE or
+PacketCable minimum is inferred. Entries identified by the existing generated-field
+policy are not user-selectable.
+This is presentation metadata, not an additional compiler validation layer.
+
+`CommonTlvPreferences` owns the `common_ui_tlv` boolean overlay. Do not extend or
+rewrite OSCAR's bundled registry JSON for user preferences. Persist the overlay
+in `common-tlvs.json` under Qt's per-user AppConfigLocation, alongside existing
+global settings, outside the MSI/DEB installation tree. Key profiles by the
+stable grammar header and entries by dotted numeric TLV path, not display name,
+registry edition, application version or array position. Example:
+
+```json
+{
+  "version": 1,
+  "profiles": {
+    "Docsis": {
+      "1": { "common_ui_tlv": true },
+      "18": { "common_ui_tlv": false }
+    }
+  }
+}
+```
+
+The dialog edits an isolated copy across file-type switches. Save writes through
+a temporary file with atomic replacement where supported, then applies the
+snapshot; Cancel leaves both memory and disk unchanged. Save is independent of
+the enclosing Global dialog. Write failures keep the dialog open with a message.
+Malformed or future-schema files are preserved rather than silently overwritten;
+startup falls back to minimum-only defaults and reports the load failure.
+
+**Upgrade requirement:** installers, MSI patches, dependency updates, and future
+settings migrations must preserve this per-user file. Do not include it in
+packaged payloads or reset it as part of an update. Preserve unknown file-type
+and TLV entries so temporarily removed definitions can reappear with their saved
+choice. New optional definitions default false; required inputs always remain
+included even if an old override is false. Any schema migration must be explicit
+and tested for preservation; unsupported schema versions currently fail closed.
+
+```mermaid
+flowchart LR
+    Registry[OSCAR registry definitions] --> Dialog[Common TLV settings dialog]
+    UserFile[Per-user common-tlvs.json] --> Preferences[CommonTlvPreferences]
+    Preferences --> Dialog
+    Dialog -->|Save draft atomically| UserFile
+    Preferences --> Common[Add: Common TLVs]
+    Registry --> All[Add: All TLVs]
+    Common --> Rules[Existing insertion restrictions]
+    All --> Rules
+```
+
+Required-default ownership must be reviewed whenever upstream minimum rules
+change. Saving a preference for an unsupported codec does not bypass editing
+restrictions, instance limits or generated-field rules. Child containers remain
+unfiltered. No document values or shared secrets are stored in the overlay.

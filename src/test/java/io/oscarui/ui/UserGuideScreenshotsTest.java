@@ -23,6 +23,31 @@ class UserGuideScreenshotsTest {
     @TempDir Path temporary;
     private Throwable captureFailure;
 
+    @Test void captureCommonTlvSettings() throws Exception {
+        QApplication.initialize(new String[0]);
+        QApplication.setQuitOnLastWindowClosed(false);
+        try {
+            DesktopTheme.apply(Appearance.DARK);
+            var service = new OscarDocumentService();
+            var dialog = new CommonTlvSettingsDialog(null, service);
+            dialog.findChild(QComboBox.class, "commonTlvFileType").setCurrentText("Docsis");
+            Path images = Path.of("target/user-guide-images");
+            Files.createDirectories(images);
+            captureDialog(dialog, images.resolve("common-tlv-settings-dark.png"));
+            captureDialog(new GlobalSettingsDialog(null, false, true, Appearance.DARK, service),
+                    images.resolve("global-settings-dark.png"));
+            var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+            var document = service.create(type, false);
+            var add = new TlvEditorDialog(null, service, document, document.root(), service.addDefinitions(document, document.root()));
+            add.findChild(QRadioButton.class, "allTlvs").click();
+            add.findChild(QLineEdit.class, "tlvSearch").setText("DownstreamFrequency");
+            add.findChild(QLineEdit.class, "tlvValue").setText("500000000");
+            captureDialog(add, images.resolve("add-tlv-dark.png"));
+        } finally {
+            QApplication.shutdown();
+        }
+    }
+
     @Test void captureDarkUserGuide() throws Exception {
         QApplication.initialize(new String[0]);
         QApplication.setQuitOnLastWindowClosed(false);
@@ -157,6 +182,7 @@ class UserGuideScreenshotsTest {
         var tree = window.findChild(QTreeWidget.class, "configurationTree");
         tree.setCurrentItem(tree.topLevelItem(0));
         captureAction(window, "addTlv", images.resolve("add-tlv-dark.png"), dialog -> {
+            dialog.findChild(QRadioButton.class, "allTlvs").click();
             dialog.findChild(QLineEdit.class, "tlvSearch").setText("DownstreamFrequency");
             dialog.findChild(QLineEdit.class, "tlvValue").setText("500000000");
         });

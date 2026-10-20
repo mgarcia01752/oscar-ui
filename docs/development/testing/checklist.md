@@ -257,3 +257,36 @@ See [Windows update architecture](../architecture/windows-updates.md).
   find eRouter only. Verify eRouter child Add/Edit updates the text in both.
 - [ ] In a regular DOCSIS reference template, confirm existing singleton parents
   are excluded from Add and the dialog explains instance-limit filtering.
+
+- [ ] Add and edit nested eSTB Snmp11 through OID/Type/Value controls; verify
+  validation uses the full parent path and rejects extra injected statements.
+
+### OSCAR 3.5 integration
+
+- [x] Use synthetic required service flows in finalized DOCSIS fixtures.
+- [x] Retain independent CM/CMTS MIC byte comparisons and DPoE alignment checks.
+- [x] Reject incomplete DOCSIS exports without changing existing destinations.
+- [x] Verify repeated eRouter/eSTB parents remain available and duplicate correctly.
+- [x] Dependency updater clean verify passed; Linux offscreen UI suite passed
+  (133 tests, zero failures/errors, two opt-in screenshot tests skipped).
+  Windows installer and interactive desktop validation remain separate.
+
+### Add TLV catalog views
+
+- [x] Default to Common TLVs; All TLVs exposes the complete parent catalog.
+- [x] Keep instance-limited and generated entries visible but disabled with reasons.
+- [x] Search uncommon entries, preserve retained selection/value on view changes,
+  and disable Add for empty results.
+- [x] Retain insertion-time limits independently of presentation filters.
+
+### User-defined Common TLVs
+
+- [x] Populate per-file-type top-level checkboxes from the registry.
+- [x] Default only required user inputs; lock them and exclude generated MICs.
+- [x] Retain draft choices across file-type switches; Cancel changes nothing.
+- [x] Save/reload selections independently per type and preserve unknown entries.
+- [x] Retain selections across registry edition changes; reject corrupt/future schemas without overwriting.
+- [ ] Verify the same saved choices after an installed MSI/DEB update on each platform.
+- [x] Capture the real dark-mode settings dialog for the user guide.
+- [x] Linux offscreen suite: 139 tests, no failures/errors, three opt-in capture tests skipped;
+  dedicated Common/Global/Add screenshot capture passed separately.

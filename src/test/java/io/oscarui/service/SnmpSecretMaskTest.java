@@ -124,7 +124,8 @@ class SnmpSecretMaskTest {
     }
 
     @Test void inspectionMasksOriginalBinaryEvenAfterSensitiveTlvIsDeletedInEditor() throws Exception {
-        var source = open("Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-original; } NetworkAccess 1; }");
+        var source = open("Docsis { SNMPv1v2cCoexistenceConfig { SNMPv1v2cCommunityName lab-original; } NetworkAccess 1; "
+                + DocsisTestFixtures.SERVICE_FLOWS + "}");
         byte[] bytes = binary.encode(source, "synthetic-shared-key");
         var document = binary.open(Files.write(temporary.resolve("source.bin"), bytes), source.configurationType());
         var edited = documents.delete(document, document.root().childTlvs().getFirst());

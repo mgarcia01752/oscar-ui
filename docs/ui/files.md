@@ -45,8 +45,10 @@ there are unsaved changes.
 ## Check Config and current limits
 
 **File → Check Config** is an optional draft-check preview. It does not gate
-binary saving, and complete minimum-field, length and dependency validation is
-unfinished. Some codecs remain read-only. Editable PacketCable binary import
+binary saving. OSCAR nevertheless requires NetworkAccess, UpstreamServiceFlow
+and DownstreamServiceFlow when compiling a DOCSIS binary. Include those settings
+before exporting, or save an incomplete draft as text. Broader length and
+dependency validation is unfinished. Some codecs remain read-only. Editable PacketCable binary import
 with generated SNMP statements is not yet supported.
 
 See [TLV editing](tlv-editing.md) and [configuration file security](../configuration-file-security.md).

@@ -5,6 +5,8 @@
 package io.oscarui.ui;
 
 import io.oscarui.service.Appearance;
+import io.oscarui.service.OscarDocumentService;
+import io.oscarui.service.InspectionException;
 import io.qt.widgets.*;
 
 final class GlobalSettingsDialog extends QDialog {
@@ -13,6 +15,11 @@ final class GlobalSettingsDialog extends QDialog {
     private final QComboBox appearanceSelector = new QComboBox();
 
     GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance) {
+        this(parent, showMic, showTextTlvNumbers, appearance, new OscarDocumentService());
+    }
+
+    GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance,
+                         OscarDocumentService service) {
         super(parent);
         setObjectName("globalSettingsDialog");
         setWindowTitle("Settings - Global");
@@ -32,6 +39,21 @@ final class GlobalSettingsDialog extends QDialog {
         var form = new QFormLayout();
         form.addRow("Appearance", appearanceSelector);
         layout.addLayout(form);
+        var common = new QPushButton("User Defined Common TLVs...");
+        common.setObjectName("userDefinedCommonTlvs");
+        layout.addWidget(common);
+        common.clicked.connect(() -> {
+            try {
+                var dialog = new CommonTlvSettingsDialog(this, service);
+                try {
+                    dialog.exec();
+                } finally {
+                    dialog.dispose();
+                }
+            } catch (InspectionException exception) {
+                QMessageBox.warning(this, "Catalog unavailable", "Could not load the TLV registry.");
+            }
+        });
         var buttons = new QDialogButtonBox();
         buttons.addButton(QDialogButtonBox.StandardButton.Ok);
         buttons.addButton(QDialogButtonBox.StandardButton.Cancel);

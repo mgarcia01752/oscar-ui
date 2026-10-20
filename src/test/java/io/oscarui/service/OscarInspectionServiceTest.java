@@ -58,7 +58,7 @@ class OscarInspectionServiceTest {
         }
     }
 
-    @Test void docsisEmbeddedParentsAreAvailableUntilTheirInstanceLimit() throws Exception {
+    @Test void docsisEmbeddedParentsRemainAvailableForRepeatedInstances() throws Exception {
         var type = documents.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
         var empty = documents.create(type, false);
         var reference = documents.create(type, true);
@@ -66,7 +66,11 @@ class OscarInspectionServiceTest {
             assertTrue(documents.choices(empty, empty.root()).stream().anyMatch(entry -> entry.name().equals(name)), name);
             var parent = reference.root().childTlvs().stream().filter(node -> node.tlvName().equals(name)).findFirst().orElseThrow();
             assertEquals("", documents.editingIssue(type, documents.definition(reference, parent)));
-            assertFalse(documents.choices(reference, reference.root()).stream().anyMatch(entry -> entry.name().equals(name)), name);
+            assertTrue(documents.choices(reference, reference.root()).stream().anyMatch(entry -> entry.name().equals(name)), name);
+            long before = reference.root().childTlvs().stream().filter(node -> node.tlvName().equals(name)).count();
+            var duplicated = documents.duplicate(reference, parent);
+            assertEquals(before + 1, duplicated.root().childTlvs().stream()
+                    .filter(node -> node.tlvName().equals(name)).count());
         }
     }
 
@@ -82,6 +86,23 @@ class OscarInspectionServiceTest {
             var edited = documents.replaceValue(inserted, node, "1");
             assertEquals("1", edited.root().childTlvs().getFirst().childTlvs().getFirst().encodedValueText());
         }
+    }
+
+    @Test void nestedSnmpCanBeAddedAndEditedWithinItsParent() throws Exception {
+        var document = documents.open(input("Docsis { eSTBConfig; }"));
+        var parent = document.root().childTlvs().getFirst();
+        var definition = documents.choices(document, parent).stream()
+                .filter(entry -> entry.name().equals("Snmp11")).findFirst().orElseThrow();
+        String value = ".1.3.6.1.2.1.1.5.0 OctetString \"lab\"";
+        assertEquals("", documents.valueIssue(document.configurationType(), definition, value));
+        var added = documents.insert(document, parent, definition, value);
+        var node = added.root().childTlvs().getFirst().childTlvs().getFirst();
+        assertEquals(java.util.List.of(217, 11), node.tlvPath());
+        assertTrue(documents.canEdit(added, node));
+        var edited = documents.replaceValue(added, node, value.replace("lab", "updated"));
+        assertTrue(edited.text().contains("updated"));
+        assertFalse(documents.valueIssue(document.configurationType(), definition,
+                value + "; Snmp11 " + value).isEmpty());
     }
 
     @Test void resolvesEmbeddedServicesThroughDocsis() throws Exception {

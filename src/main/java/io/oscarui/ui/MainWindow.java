@@ -188,6 +188,14 @@ public final class MainWindow extends QMainWindow {
                 showStatus("Could not read appearance settings; using System. Save a preference in Settings > Global to replace them.");
             }
         }
+        if (interactive) {
+            try {
+                documentService.commonTlvs().load(Path.of(QStandardPaths.writableLocation(
+                        QStandardPaths.StandardLocation.AppConfigLocation), "common-tlvs.json"));
+            } catch (IOException exception) {
+                showStatus("Could not load Common TLV settings; using minimum-only defaults. Existing file was preserved.");
+            }
+        }
         upgradeChip = new UpgradeChip(() -> showAbout(true));
         menuBar().setCornerWidget(upgradeChip, Qt.Corner.TopRightCorner);
         if (interactive) {
@@ -401,7 +409,7 @@ public final class MainWindow extends QMainWindow {
         showMicTlvs.setCheckable(true);
         showMicTlvs.toggled.connect(checked -> updateMicVisibility());
         global.triggered.connect(() -> {
-            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance);
+            var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance, documentService);
             try {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                     try {
@@ -654,7 +662,7 @@ public final class MainWindow extends QMainWindow {
             populateContainer(parent);
             return;
         }
-        submit(() -> documentService.choices(original, parent), choices -> {
+        submit(() -> documentService.addDefinitions(original, parent), choices -> {
             var dialog = new TlvEditorDialog(this, documentService, original, parent, choices);
             dialog.applyMask(secrets.masking());
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {

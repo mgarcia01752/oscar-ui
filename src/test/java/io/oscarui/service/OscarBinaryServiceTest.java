@@ -70,9 +70,10 @@ class OscarBinaryServiceTest {
     }
 
     @Test void writesEncoderBytesWithIndependentlyCalculatedLegacyMics() throws Exception {
-        var source = open("\uFEFF/* keep */ Docsis { NetworkAccess 1; }");
+        var source = open("\uFEFF/* keep */ " + DocsisTestFixtures.MINIMUM_DOCUMENT);
         byte[] encoded = binary.encode(source, LAB_KEY);
-        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"), new byte[0]), encoded);
+        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"),
+                HexFormat.of().parseHex(DocsisTestFixtures.SERVICE_FLOW_HEX)), encoded);
         var destination = temporary.resolve("output.bin");
         binary.save(source, destination, null, LAB_KEY);
         assertArrayEquals(encoded, Files.readAllBytes(destination));
@@ -82,7 +83,7 @@ class OscarBinaryServiceTest {
     }
 
     @Test void retainsUnresolvedNumericOidsAcrossBinaryReopen() throws Exception {
-        var source = open("Docsis { Snmp11 1.3.6.1.4.1.55555.999.0 OctetString \"synthetic\"; }");
+        var source = open("Docsis { NetworkAccess 1; " + DocsisTestFixtures.SERVICE_FLOWS + " Snmp11 1.3.6.1.4.1.55555.999.0 OctetString \"synthetic\"; }");
         byte[] expected = binary.encode(source, LAB_KEY);
         var destination = temporary.resolve("unknown-oid.bin");
         var saved = binary.saveDocument(source, destination, null, LAB_KEY);
@@ -157,7 +158,7 @@ class OscarBinaryServiceTest {
 
     @Test void dispatchesDpoeAndEachPacketCableHeaderThroughOscar() throws Exception {
         var dpoe = open("DPoE { NetworkAccess 1; }");
-        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"), new byte[0], true), binary.encode(dpoe, LAB_KEY));
+        assertArrayEquals(expectedDocsis(HexFormat.of().parseHex("030101"), new byte[0]), binary.encode(dpoe, LAB_KEY));
         for (String header : List.of("PacketCable-1.0", "PacketCable-1.5", "PacketCable-2.0")) {
             var source = open(header + " { TelephonyConfigFileBeginEnd 1; }");
             assertFalse(binary.requiresSharedSecret(source));
@@ -169,7 +170,7 @@ class OscarBinaryServiceTest {
     }
 
     @Test void preservesFilesOnConflictMissingKeySnmpAndUnsafeDestination() throws Exception {
-        var source = open("Docsis { NetworkAccess 1; }");
+        var source = open(DocsisTestFixtures.MINIMUM_DOCUMENT);
         Path output = Files.writeString(temporary.resolve("out.bin"), "old output");
         String oldHash = documents.destinationHash(output);
         Files.writeString(output, "external change");
@@ -185,7 +186,7 @@ class OscarBinaryServiceTest {
             assertThrows(InspectionException.class, () -> binary.save(source, symlink, documents.destinationHash(output), LAB_KEY));
         }
         assertEquals(source.text(), Files.readString(source.path()));
-        var snmp = open("Docsis { Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"public\"; }");
+        var snmp = open("Docsis { NetworkAccess 1; " + DocsisTestFixtures.SERVICE_FLOWS + " Snmp11 1.3.6.1.2.1.1.5.0 OctetString \"public\"; }");
         byte[] encodedSnmp = binary.encode(snmp, LAB_KEY);
         assertTrue(encodedSnmp.length > 0);
         assertFalse(Files.exists(temporary.resolve("db")));
@@ -195,7 +196,7 @@ class OscarBinaryServiceTest {
     }
 
     @Test void disablesThePinnedCompilersSecretDebugLog() throws Exception {
-        var source = open("Docsis { NetworkAccess 1; }");
+        var source = open(DocsisTestFixtures.MINIMUM_DOCUMENT);
         String logger = "com.comcast.oscar.compiler.DocsisCompiler";
         org.apache.logging.log4j.core.config.Configurator.setLevel(logger, org.apache.logging.log4j.Level.DEBUG);
         binary.encode(source, LAB_KEY);
@@ -203,24 +204,29 @@ class OscarBinaryServiceTest {
     }
 
     @Test void savesWithoutRequiringOptionalDraftChecks() throws Exception {
-        var source = open("Docsis { NetworkAccess 1; }");
+        var source = open(DocsisTestFixtures.MINIMUM_DOCUMENT);
         var checks = DraftChecks.inspect(documents, source, true);
         assertFalse(DraftChecks.permitsBinarySave(checks));
         assertFalse(DraftChecks.permitsBinarySave(List.of()));
         Path destination = Files.writeString(temporary.resolve("export.bin"), "replace existing file");
         binary.save(source, destination, documents.destinationHash(destination), LAB_KEY);
         assertArrayEquals(binary.encode(source, LAB_KEY), Files.readAllBytes(destination));
-        assertTrue(checks.stream().anyMatch(check -> check.id().equals("minimum-rules") && !check.status().equals("PASS")));
+    }
+
+    @Test void rejectsIncompleteDocsisWithoutChangingDestination() throws Exception {
+        for (String header : List.of("Docsis", "Docsis-4.0")) {
+            var source = open(header + " { NetworkAccess 1; }");
+            Path destination = Files.writeString(temporary.resolve("incomplete.bin"), "keep original");
+            assertThrows(InspectionException.class, () -> binary.save(source, destination,
+                    documents.destinationHash(destination), LAB_KEY));
+            assertEquals("keep original", Files.readString(destination));
+        }
     }
 
     // MULPI 3.1 I21 D.1.3.1 / D.2.1, pp. 736-738; 4.0 I12 pp. 860-862.
     // This fixture has no E-MIC. CM digest covers parameters in file order;
     // legacy CMTS order is NetworkAccess, CmMic, UpstreamSF, DownstreamSF.
     private byte[] expectedDocsis(byte[] network, byte[] flows) throws Exception {
-        return expectedDocsis(network, flows, false);
-    }
-
-    private byte[] expectedDocsis(byte[] network, byte[] flows, boolean legacyDpoePadding) throws Exception {
         var parameters = new ByteArrayOutputStream();
         parameters.writeBytes(network);
         parameters.writeBytes(flows);
@@ -238,10 +244,7 @@ class OscarBinaryServiceTest {
         parameters.writeBytes(new byte[]{7, 16});
         parameters.writeBytes(hmac.doFinal(hmacInput.toByteArray()));
         parameters.write(255);
-        if (legacyDpoePadding) {
-            parameters.write(0);
-        }
-        // OSCAR 3.2.0 DOCSIS adds only the bytes needed for four-byte alignment.
+        // Finalized DOCSIS and DPoE use only the padding needed for four-byte alignment.
         while (parameters.size() % 4 != 0) {
             parameters.write(0);
         }

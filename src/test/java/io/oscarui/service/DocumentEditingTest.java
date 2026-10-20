@@ -18,7 +18,7 @@ class DocumentEditingTest {
     }
 
     @Test void addsAndEditsAdjacentCertificatesThroughOscar() throws Exception {
-        var document = open("Docsis { NetworkAccess 1; }");
+        var document = open(DocsisTestFixtures.MINIMUM_DOCUMENT);
         byte[] payload = new byte[1025];
         for (int index = 0; index < payload.length; index++) {
             payload[index] = (byte) index;
