@@ -3,6 +3,8 @@
 """Portable tests for Windows patch input authoring; no MSI installation."""
 import importlib.util
 import json
+import shutil
+import subprocess
 from pathlib import Path
 import tempfile
 import unittest
@@ -35,6 +37,37 @@ class WindowsPatchPrototypeTest(unittest.TestCase):
             archive.writestr('build-info.properties', 'ui.version=0.4.3\noscar.version=3.3.0\n')
             archive.writestr('application.class', b'synthetic unchanged application code')
         self.output = self.root / 'prototype'
+
+    def test_msiexec_package_arguments_use_backslashes_and_quotes(self):
+        """Execute the actual PowerShell helper without running installer actions."""
+        repository = Path(__file__).resolve().parents[2]
+        local_powershell = repository / '.tools/release-validation/pwsh/pwsh'
+        powershell = shutil.which('pwsh') or (str(local_powershell) if local_powershell.is_file() else None)
+        if not powershell:
+            self.skipTest('PowerShell is unavailable')
+        package = self.root / 'package with spaces.msi'
+        package.write_bytes(b'synthetic package')
+        script = repository / 'scripts/windows/test-windows-patch.ps1'
+        harness = self.root / 'test-path.ps1'
+        harness.write_text("""param($Source, $Package)
+$ErrorActionPreference = 'Stop'
+$Tokens = $null; $Errors = $null
+$Ast = [System.Management.Automation.Language.Parser]::ParseFile($Source, [ref]$Tokens, [ref]$Errors)
+if ($Errors.Count) { throw 'Invalid script syntax' }
+$Function = $Ast.Find({ param($Node)
+    $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+    $Node.Name -eq 'Get-MsiPackageArgument'
+}, $true)
+Invoke-Expression $Function.Extent.Text
+Get-MsiPackageArgument $Package
+""", encoding='utf-8')
+        result = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
+                                 str(package)], capture_output=True, text=True, encoding='utf-8', check=True)
+        self.assertEqual('"' + str(package.resolve()).replace('/', '\\') + '"', result.stdout.strip())
+        package.unlink()
+        missing = subprocess.run([powershell, '-NoProfile', '-File', str(harness), str(script),
+                                  str(package)], capture_output=True, text=True, encoding='utf-8')
+        self.assertNotEqual(0, missing.returncode)
 
     def test_only_application_jar_changes_and_source_is_preserved(self):
         """Ensure the paired fixtures differ only in their application version."""

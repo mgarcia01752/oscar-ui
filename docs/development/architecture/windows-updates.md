@@ -246,3 +246,12 @@ PowerShell parsing is not evidence of Windows Installer execution.
 Windows execution remains pending. Existing installations, including v0.4.3,
 continue to use the normal full-MSI flow; this prototype does not grandfather
 them into a patch family.
+
+### First hosted run
+
+Run `39347508359` passed the normal MSI install/launch/uninstall checks and built
+both prototype MSIs and the MSP. Baseline installation then failed with 1619;
+the MSI log identified a mixed-separator package path (error 1324). Package
+arguments now resolve existing files, normalize backslashes and quote paths
+before invoking Windows Installer. A PowerShell regression test covers spaces
+and missing files. The complete patch lifecycle still requires a new hosted run.

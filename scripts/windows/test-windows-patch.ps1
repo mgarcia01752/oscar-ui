@@ -31,6 +31,14 @@ function Invoke-Checked([string]$Tool, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "$Tool failed with exit $LASTEXITCODE" }
 }
 
+# Resolve an existing package before quoting it for msiexec. Windows Installer
+# rejects mixed separators even when PowerShell and WiX accept the same path.
+function Get-MsiPackageArgument([string]$PackagePath) {
+    $Package = Get-Item -LiteralPath $PackagePath -ErrorAction Stop
+    if ($Package.PSIsContainer) { throw "Expected a package file: $PackagePath" }
+    return '"' + $Package.FullName.Replace('/', '\') + '"'
+}
+
 # Run a logged MSI operation. A reboot-required result stops this prototype;
 # it must not be reported as a successfully tested launch on the new payload.
 function Invoke-Installer([string]$Label, [string[]]$Arguments, [int]$Expected = 0) {
@@ -97,8 +105,8 @@ Get-Item "$Output/baseline/product.msi", "$Output/target/product.msi", "$Output/
 $Fixture = Join-Path $Output 'user configuration.txt'
 Copy-Item "$Root/src/test/resources/simple-docsis.txt" $Fixture
 $FixtureHash = (Get-FileHash $Fixture).Hash
-$BaselineMsi = "`"$Output/baseline/product.msi`""
-$Patch = "`"$Output/prototype.msp`""
+$BaselineMsi = Get-MsiPackageArgument "$Output/baseline/product.msi"
+$Patch = Get-MsiPackageArgument "$Output/prototype.msp"
 try {
     Invoke-Installer 'reject-missing-product' @('/p', $Patch) 1642
     Invoke-Installer 'install' @('/i', $BaselineMsi, "INSTALLDIR=`"$InstallDirectory`"")
