@@ -26,15 +26,14 @@ class BuildImageTest(unittest.TestCase):
                 self.assertEqual(BUILD._plan(target), BUILD._plan('all'))
                 with self.assertRaisesRegex(RuntimeError, 'Cannot build'):
                     BUILD._plan('windows' if target == 'linux' else 'linux')
-        with patch.object(BUILD, 'sys', SimpleNamespace(platform='darwin')):
-            with self.assertRaisesRegex(RuntimeError, '[Uu]nsupported'):
-                BUILD._plan('all')
+        for host, architecture in [('darwin', 'x86_64'), ('linux', 'aarch64'),
+                                   ('win32', 'ARM64'), ('unsupported', 'AMD64')]:
+            with self.subTest(host=host, architecture=architecture), patch.object(BUILD, 'sys', SimpleNamespace(platform=host)), patch.object(BUILD.platform, 'machine', return_value=architecture):
+                with self.assertRaisesRegex(RuntimeError, '[Uu]nsupported'):
+                    BUILD._plan('all')
         with patch.object(BUILD, 'sys', SimpleNamespace(platform='darwin', executable='python3')), patch.object(BUILD.platform, 'machine', return_value='arm64'):
             self.assertEqual('macos', BUILD._plan('all')[0])
             self.assertTrue(str(BUILD._plan('macos')[2]).endswith('-macos-arm64.dmg'))
-        with patch.object(BUILD.platform, 'machine', return_value='aarch64'):
-            with self.assertRaisesRegex(RuntimeError, '[Uu]nsupported'):
-                BUILD._plan('all')
 
     def test_preview_and_existing_output_do_not_start_build(self):
         """Preview without mutations and preserve previous installer output.
