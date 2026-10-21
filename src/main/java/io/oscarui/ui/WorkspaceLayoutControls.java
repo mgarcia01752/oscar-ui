@@ -70,6 +70,8 @@ final class WorkspaceLayoutControls extends QWidget {
             setObjectName("layout" + mode.name());
             setToolTip(label);
             setAccessibleName(label);
+            setAutoRaise(true);
+            setStyleSheet("QToolButton { border: none; background: transparent; padding: 0; }");
             setCheckable(true);
             setChecked(mode == Mode.BOTH);
             setFixedSize(28, 26);
@@ -79,7 +81,8 @@ final class WorkspaceLayoutControls extends QWidget {
             super.paintEvent(event);
             var painter = new QPainter(this);
             try {
-                var color = palette().color(QPalette.ColorRole.ButtonText);
+                var color = QApplication.palette().color(isChecked()
+                        ? QPalette.ColorRole.Highlight : QPalette.ColorRole.ButtonText);
                 painter.setPen(color);
                 painter.drawRoundedRect(6, 6, 16, 13, 2, 2);
                 if (mode != Mode.TEXT) {

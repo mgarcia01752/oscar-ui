@@ -10,6 +10,10 @@ followed by **Tree only**, **Text only**, and **Both panels** layout buttons.
 Hover over an icon for its label. Both panels are shown at startup; switching
 back to both restores your previous split widths. Switching layouts preserves
 the document and selection, and the text preview continues updating while hidden.
+Layout buttons blend into the menu background in light and dark mode. The active
+layout uses the theme's highlight color.
+
+[View the workspace in light mode](../images/user-guide/workspace-light.png).
 
 ## Configuration tree
 

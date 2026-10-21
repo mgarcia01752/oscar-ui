@@ -83,6 +83,9 @@ class UserGuideScreenshotsTest {
             // Show a synthetic available-update state without a network lookup.
             window.findChild(UpgradeChip.class, "upgradeChip").setAvailable(true);
             capture(window, images.resolve("workspace-dark.png"));
+            DesktopTheme.apply(Appearance.LIGHT);
+            capture(window, images.resolve("workspace-light.png"));
+            DesktopTheme.apply(Appearance.DARK);
             var service = new OscarDocumentService();
             var types = service.types();
             var create = new NewDocumentDialog(window, types);
