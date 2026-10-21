@@ -5,6 +5,12 @@
 The main window contains a configuration tree and a read-only text preview.
 Use the tree actions to change a configuration; the preview is not a text editor.
 
+The top-right row shows **Update** first when a newer release is available,
+followed by **Tree only**, **Text only**, and **Both panels** layout buttons.
+Hover over an icon for its label. Both panels are shown at startup; switching
+back to both restores your previous split widths. Switching layouts preserves
+the document and selection, and the text preview continues updating while hidden.
+
 ## Configuration tree
 
 The **Configuration**, **TLV**, and **Value** columns show the name, dotted TLV

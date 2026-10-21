@@ -19,6 +19,40 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void workspaceLayoutsKeepUpdateFirstAndRestoreBothPanes() {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            var controls = window.findChild(QWidget.class, "workspaceLayoutControls");
+            var row = (QHBoxLayout) controls.layout();
+            assertEquals("upgradeChip", row.itemAt(0).widget().objectName());
+            var update = window.findChild(UpgradeChip.class, "upgradeChip");
+            update.setAvailable(true);
+            QApplication.processEvents();
+            assertTrue(update.width() >= update.minimumSizeHint().width());
+            assertTrue(controls.x() + controls.width() <= window.menuBar().width());
+            var tree = window.findChild(ConfigurationTreePane.class);
+            var text = window.findChild(ConfigurationTextPane.class);
+            var splitter = window.findChild(QSplitter.class);
+            splitter.setSizes(java.util.List.of(400, 600));
+            QApplication.processEvents();
+            var sizes = splitter.sizes();
+            for (String mode : java.util.List.of("TREE", "TEXT", "BOTH")) {
+                var button = window.findChild(QToolButton.class, "layout" + mode);
+                button.click();
+                assertTrue(button.isChecked());
+                assertEquals(mode.equals("TEXT"), tree.isHidden());
+                assertEquals(mode.equals("TREE"), text.isHidden());
+            }
+            assertEquals(sizes, splitter.sizes());
+            assertFalse(window.findChild(QToolButton.class, "layoutTREE").isChecked());
+            assertFalse(window.findChild(QToolButton.class, "layoutTEXT").isChecked());
+        } finally {
+            window.close();
+            window.dispose();
+        }
+    }
+
     @Test void upgradeChipOnlyAppearsForNewerReleasesAndOpensUpdates() throws Exception {
         var clicked = new java.util.concurrent.atomic.AtomicBoolean();
         var chip = new UpgradeChip(() -> clicked.set(true));

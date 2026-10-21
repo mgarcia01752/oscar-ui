@@ -326,3 +326,7 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [ ] Remove the test copy and preserve the external synthetic configuration.
 - [ ] Confirm missing/failed macOS artifacts prevent public release publication.
 - [ ] Test downloaded-app Gatekeeper approval on a user's Mac; do not equate CI with this check.
+## Workspace layout controls
+
+- [x] Verify Update is first, layout buttons are exclusive, and each mode shows
+  the intended panes; returning to both restores previous splitter sizes.

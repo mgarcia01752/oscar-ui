@@ -731,3 +731,10 @@ native framework closure; the DMG must pass an isolated packaged-app smoke test
 before release publication. About links to the macOS installation guide.
 Ad-hoc signing is not Developer ID signing or notarization. First native CI and
 interactive downloaded-app testing remain pending; automatic updates are deferred.
+## Workspace layout controls
+
+`WorkspaceLayoutControls` owns the menu-bar corner row: the conditional Update
+chip first, then exclusive tree-only, text-only and both-panel buttons. It changes
+pane visibility without recreating widgets or documents. Both panels are the
+startup default; split widths are retained within the session. Icon painting uses
+the active palette. Layout selection is not persisted across application restarts.

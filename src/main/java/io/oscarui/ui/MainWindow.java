@@ -197,7 +197,8 @@ public final class MainWindow extends QMainWindow {
             }
         }
         upgradeChip = new UpgradeChip(() -> showAbout(true));
-        menuBar().setCornerWidget(upgradeChip, Qt.Corner.TopRightCorner);
+        menuBar().setCornerWidget(new WorkspaceLayoutControls(upgradeChip, splitter,
+                configurationTreePane, configurationTextPane), Qt.Corner.TopRightCorner);
         if (interactive) {
             upgradeChip.check(() -> new ReleaseUpdateService().checkRelease(
                     AboutDialog.loadBuildInfo().getProperty("ui.version", "unknown")));
