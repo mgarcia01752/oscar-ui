@@ -705,6 +705,7 @@ unfiltered. No document values or shared secrets are stored in the overlay.
 
 ### Release platform gate
 
+CodeQL Java analysis must complete successfully before any OS test job starts.
 Release publication requires reusable Java/tooling CI on Ubuntu 22.04/24.04/26.04,
 macOS 15, and Windows 11 ARM, followed by Windows and Ubuntu installer checks.
 Build the x64 MSI on Windows Server 2022 and test that same artifact on Windows

@@ -430,7 +430,8 @@ assets are not the final public release. Failure or cancellation blocks publicat
 
 ```mermaid
 flowchart TD
-    Tag[Release tag] --> CI[Java and tooling checks]
+    Tag[Release tag] --> Security[CodeQL Java analysis]
+    Security --> CI[Java and tooling checks]
     CI --> Platforms[Ubuntu 22.04 / 24.04 / 26.04<br/>macOS 15 / Windows 11 ARM]
     Platforms --> MSI[Build candidate x64 MSI on Windows Server 2022]
     Platforms --> DEB[Build candidate DEB on Ubuntu 22.04]
@@ -448,3 +449,17 @@ Windows 11 ARM provides x64 emulation coverage, not native Windows 11 x64
 hardware coverage. The automated smoke test does not establish interactive
 SmartScreen or UAC behavior. macOS runs Java checks only; no macOS installer
 is produced. See GitHub's [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+
+### CodeQL before platform checks
+
+`security.yml` is called by OSCAR-UI CI before either OS test job starts,
+including when release CI runs against a tag. It builds Java with the pinned
+OSCAR dependency, analyzes it, and uploads results to GitHub code scanning.
+A failed or cancelled analysis blocks OS tests and downstream release jobs.
+Only the security job and its reusable-workflow callers receive
+`security-events: write`; OS test jobs retain read-only permissions.
+
+Successful analysis means the scan completed, not that it found no alerts.
+Findings appear in GitHub Security; alert severity is not an automatic release
+failure policy in this workflow. If GitHub default CodeQL setup is enabled,
+disable that duplicate setup when enabling this advanced workflow.

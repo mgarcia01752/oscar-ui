@@ -312,3 +312,7 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 - [ ] Verify Help is last, About and update actions still work, and User Guide
   opens the GitHub docs/ui directory in the default browser.
+
+- [ ] Confirm CodeQL runs before both OS test jobs and uploads Java results.
+- [ ] Verify analysis failure prevents OS tests and release publication; review
+  reported alerts separately from scan execution success.

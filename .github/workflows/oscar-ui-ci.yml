@@ -11,7 +11,14 @@ concurrency:
   group: oscar-ui-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  security:
+    name: CodeQL
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/security.yml
   build:
+    needs: security
     name: Java 21 / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
@@ -48,6 +55,7 @@ jobs:
           if-no-files-found: warn
 
   windows:
+    needs: security
     name: Java 21 / Windows 11 ARM (x64 emulation)
     runs-on: windows-11-arm
     timeout-minutes: 20
