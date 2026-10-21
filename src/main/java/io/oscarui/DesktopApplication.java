@@ -78,10 +78,10 @@ public final class DesktopApplication {
             || !menus.get(2).text().equals("&Settings")
             || !menus.get(3).text().equals("&Inspect")
             || !menus.get(4).text().equals("&Tools")
-            || !menus.get(5).text().equals("&About")) {
+            || !menus.get(5).text().equals("&Help")) {
             return false;
         }
-        for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "aboutQt", "checkSharedSecret"}) {
+        for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "userGuide", "checkSharedSecret"}) {
             var action = window.findChild(QAction.class, name);
             if (action == null || !action.isEnabled()) {
                 return false;

@@ -259,8 +259,7 @@ manual update status. A Package | Version | Link grid lists OSCAR-UI, OSCAR,
 and Qt Jambi with clickable GitHub links. The OSCAR-UI license links to the
 repository’s `LICENSE` file on GitHub. Maven filters `build-info.properties` from the project,
 Oscar, and Qt Jambi versions so packaged and development builds report their
-actual build versions. About → Check for updates opens the same dialog and
-starts the check; the dialog also offers a retry button.
+actual build versions. The About dialog offers a Check for updates button.
 
 `ReleaseUpdateService` reads GitHub's latest published stable OSCAR-UI release
 API without credentials. It compares numeric major/minor/patch components with
@@ -702,3 +701,21 @@ Required-default ownership must be reviewed whenever upstream minimum rules
 change. Saving a preference for an unsupported codec does not bypass editing
 restrictions, instance limits or generated-field rules. Child containers remain
 unfiltered. No document values or shared secrets are stored in the overlay.
+
+
+### Release platform gate
+
+Release publication requires reusable Java/tooling CI on Ubuntu 22.04/24.04/26.04,
+macOS 15, and Windows 11 ARM, followed by Windows and Ubuntu installer checks.
+Build the x64 MSI on Windows Server 2022 and test that same artifact on Windows
+11 ARM under x64 emulation. Preserve the existing production MSP checks.
+Publish only after both installer workflows succeed and metadata is verified;
+do not rebuild the tested installers. See the
+[release flow diagram](../build/packaging.md#release-validation-gate).
+
+
+### Help menu
+
+The final menu is Help. It contains User Guide followed by About. User Guide opens the repository documentation in the
+system browser and reports a browser launch failure. Documentation is currently
+online; no offline guide is bundled.

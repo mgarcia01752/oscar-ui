@@ -408,3 +408,43 @@ the v0.4.8 draft in run `39358420041`, despite successful installer uploads.
 Require exactly one numeric ID and keep all installer/manifest gates before
 changing `draft` to false. Shell regression tests simulate this draft-only case
 and reject missing or ambiguous release identities without publishing.
+
+## Release validation gate
+
+The reusable OSCAR-UI CI workflow tests Java on Ubuntu 22.04, 24.04,
+26.04, macOS 15, and Windows 11 ARM. Windows uses x64 Java and Python
+under emulation to match the shipping x64 application.
+
+After that CI passes, build candidate installers. The Windows Server 2022
+builder retains its MSI and production MSP checks. A fresh Windows 11 ARM
+runner downloads the exact candidate MSI and verifies installation, bundled
+Java/license materials, shortcuts, native launch, uninstall, and preservation
+of an external user configuration. It receives the build JDK version from the
+builder rather than maintaining another dependency pin. Ubuntu installation,
+update, launch, and removal checks run on all three supported Ubuntu versions.
+
+All required jobs must succeed before the release becomes public. A candidate
+installer must exist before it can be installed for testing; the tested bytes
+are promoted without rebuilding. Intermediate CI artifacts and draft release
+assets are not the final public release. Failure or cancellation blocks publication.
+
+```mermaid
+flowchart TD
+    Tag[Release tag] --> CI[Java and tooling checks]
+    CI --> Platforms[Ubuntu 22.04 / 24.04 / 26.04<br/>macOS 15 / Windows 11 ARM]
+    Platforms --> MSI[Build candidate x64 MSI on Windows Server 2022]
+    Platforms --> DEB[Build candidate DEB on Ubuntu 22.04]
+    MSI --> Server[Server MSI lifecycle and applicable MSP checks]
+    Server --> Win11[Same MSI: Windows 11 ARM<br/>Install, launch, uninstall]
+    DEB --> Ubuntu[Ubuntu 22.04 / 24.04 / 26.04<br/>Install, update, launch, remove]
+    Win11 --> Gate{All required checks passed?}
+    Ubuntu --> Gate
+    Gate -->|Yes| Verify[Verify release assets and update metadata]
+    Verify --> Publish[Publish tested MSI and DEB]
+    Gate -->|No| Stop[Block publication]
+```
+
+Windows 11 ARM provides x64 emulation coverage, not native Windows 11 x64
+hardware coverage. The automated smoke test does not establish interactive
+SmartScreen or UAC behavior. macOS runs Java checks only; no macOS installer
+is produced. See GitHub's [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).

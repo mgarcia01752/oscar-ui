@@ -106,7 +106,7 @@ for the component breakdown.
 
 ## Update
 
-Use **About → Check for updates**. When **Update on Windows** is enabled, click
+Use **Help → About → Check for updates**. When **Update on Windows** is enabled, click
 it, save or discard edits, and confirm closing the app. The helper downloads a
 smaller MSP patch, asks to install, and requests administrator approval. It
 restarts OSCAR-UI after success or reports if Windows needs a reboot.

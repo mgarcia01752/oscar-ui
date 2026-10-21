@@ -455,16 +455,18 @@ public final class MainWindow extends QMainWindow {
                 dialog.dispose();
             }
         });
-        var aboutMenu = menuBar().addMenu("&About");
-        var about = action("About &OSCAR-UI", "aboutOscar", null);
+        var helpMenu = menuBar().addMenu("&Help");
+        var about = action("&About", "aboutOscar", null);
         about.triggered.connect(() -> showAbout(false));
-        aboutMenu.addAction(about);
-        var updates = action("Check for &updates…", "checkUpdates", null);
-        updates.triggered.connect(() -> showAbout(true));
-        aboutMenu.addAction(updates);
-        var aboutQt = action("About &Qt", "aboutQt", null);
-        aboutQt.triggered.connect(() -> QMessageBox.aboutQt(this));
-        aboutMenu.addAction(aboutQt);
+        var userGuide = action("&User Guide", "userGuide", null);
+        userGuide.triggered.connect(() -> {
+            if (!io.qt.gui.QDesktopServices.openUrl(new io.qt.core.QUrl(
+                    ReleaseUpdateService.UI_PROJECT + "/tree/main/docs/ui"))) {
+                QMessageBox.warning(this, "User Guide", "Could not open the user guide in your browser.");
+            }
+        });
+        helpMenu.addAction(userGuide);
+        helpMenu.addAction(about);
     }
 
     private void showAbout(boolean checkUpdates) {

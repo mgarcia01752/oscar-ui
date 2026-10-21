@@ -1,15 +1,18 @@
-# About and updates
+# Help, About and updates
 
 [User guide](README.md)
 
-Choose **About → About OSCAR-UI** to see installed component versions in the
+**Help** is the last menu. Choose **Help → User Guide** to open the
+[online user guide](https://github.com/mgarcia01752/oscar-ui/tree/main/docs/ui)
+in your default browser. This requires an internet connection.
+
+Choose **Help → About** to see installed component versions in the
 **Package | Version | Link** table. Project links open OSCAR-UI, OSCAR and Qt
 Jambi on GitHub. The license link opens OSCAR-UI's license in its repository.
 **Report an issue with OSCAR-UI** opens the project's GitHub issue form in your
 browser.
-**About → About Qt** displays the Qt information dialog.
 
-Choose **About → Check for updates** for a manual online check against the latest
+Choose **Help → About → Check for updates** for a manual online check against the latest
 published stable OSCAR-UI release. Draft releases are not offered. The check does
 not install updates automatically. Use the releases/downloads link to obtain the
 installer for your platform and follow the [installation instructions](../../README.md#download).
@@ -39,7 +42,7 @@ This is available for installed Ubuntu x64 DEB packages. Development runs retain
 
 ## Uninstall OSCAR-UI
 
-Choose **About → About OSCAR-UI**. In a supported installed package, the
+Choose **Help → About**. In a supported installed package, the
 **Uninstall OSCAR-UI…** button is below **Release updates**, above **Close**.
 Confirm, then save or discard unsaved changes; Cancel keeps the application open.
 On Ubuntu the UI closes, administrator approval appears, and a separate progress
@@ -79,7 +82,7 @@ other installations retain the download link. Clicking the chip installs nothing
 
 OSCAR-UI makes one background GitHub release check at startup. The chip stays
 hidden when up to date, running a newer development build, or offline.
-**About → Check for updates** retries the check and refreshes the indicator.
+**Help → About → Check for updates** retries the check and refreshes the indicator.
 
 ## Install a Windows update
 

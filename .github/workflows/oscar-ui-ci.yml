@@ -46,3 +46,36 @@ jobs:
           name: java-test-reports-${{ matrix.os }}
           path: target/surefire-reports/
           if-no-files-found: warn
+
+  windows:
+    name: Java 21 / Windows 11 ARM (x64 emulation)
+    runs-on: windows-11-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          architecture: x64
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Check source license headers
+        run: python tools/development/check-license-headers.py
+      - name: Test dependency updater
+        run: python -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s tools/development -p 'test_*.py'
+      - name: Test Windows packaging helpers
+        run: python -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s scripts/tests -p 'test_windows_*.py'
+      - name: Bootstrap pinned Oscar release
+        run: ./scripts/windows/bootstrap-oscar.ps1
+      - name: Build JAR and run Java tests
+        run: ./mvnw.cmd -B "-Dmaven.repo.local=$PWD/.m2" clean verify
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: java-test-reports-windows-11-arm
+          path: target/surefire-reports/
+          if-no-files-found: warn

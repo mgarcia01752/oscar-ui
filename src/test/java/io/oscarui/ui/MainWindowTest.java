@@ -830,8 +830,12 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&Tools", "&About"),
+            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&Tools", "&Help"),
                     window.menuBar().actions().stream().map(QAction::text).toList());
+            var helpActions = window.menuBar().actions().getLast().menu().actions();
+            assertEquals(java.util.List.of("userGuide", "aboutOscar"),
+                    helpActions.stream().map(QAction::objectName).toList());
+            assertTrue(helpActions.stream().allMatch(QAction::isEnabled));
             var inspectMenu = window.findChild(QMenu.class, "inspectMenu");
             assertFalse(inspectMenu.isEnabled());
             assertFalse(inspectMenu.menuAction().isEnabled());

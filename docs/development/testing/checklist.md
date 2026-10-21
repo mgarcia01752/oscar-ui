@@ -297,3 +297,18 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [x] Exercise Global → Common settings → Save → Add through MainWindow,
   confirming optional selections appear and disappear without restarting.
 - [x] Preserve saved preferences for other file types; do not migrate them by guesswork.
+
+
+### Windows 11 release gate
+
+- [ ] Require Java/tooling checks on Windows 11 ARM alongside Ubuntu and macOS.
+- [ ] Confirm x64 JDK/Python selection on the ARM runner.
+- [ ] Download the same candidate MSI built on Windows Server 2022; verify
+  installation, native launch, shortcuts, removal, and user-file preservation.
+- [ ] Retain Server MSI/MSP checks and all three Ubuntu installer checks.
+- [ ] Confirm failed or cancelled required jobs block public release publication.
+- [ ] Inspect Windows 11 installer logs; report CI execution separately from
+  local workflow validation and interactive Windows 11 testing.
+
+- [ ] Verify Help is last, About and update actions still work, and User Guide
+  opens the GitHub docs/ui directory in the default browser.

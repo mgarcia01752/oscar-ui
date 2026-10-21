@@ -8,9 +8,12 @@ jobs:
   windows:
     runs-on: windows-2022
     timeout-minutes: 45
+    outputs:
+      java-version: ${{ steps.java.outputs.version }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
+        id: java
         with:
           distribution: temurin
           # Use Adoptium's full SemVer, including its LTS build suffix.
@@ -65,9 +68,38 @@ jobs:
           name: windows-release
           path: dist/windows/release/*
           if-no-files-found: error
+  windows11-install:
+    name: MSI lifecycle / Windows 11 ARM (x64 emulation)
+    needs: windows
+    runs-on: windows-11-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ needs.windows.outputs.java-version }}
+          architecture: x64
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - uses: actions/download-artifact@v7
+        with:
+          name: windows-release
+          path: dist/windows/release
+      - name: Verify MSI install, launch, and uninstall
+        run: ./scripts/windows/test-windows-install.ps1
+      - name: Upload Windows 11 installer logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-11-arm-installer-logs
+          path: target/installer-logs/
+          if-no-files-found: ignore
   publish:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: windows
+    needs: [windows, windows11-install]
     runs-on: ubuntu-latest
     concurrency:
       group: publish-desktop-${{ github.ref_name }}

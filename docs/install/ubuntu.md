@@ -47,7 +47,7 @@ if it reports `install ok installed`, no reinstall is needed.
 ## Update
 
 Install a release containing this feature manually once to enable future in-app
-updates. In those versions, open **About → Check for updates**.
+updates. In those versions, open **Help → About → Check for updates**.
 When a newer verified Ubuntu package is available, select **Update on Ubuntu**.
 Save your configuration or explicitly discard changes, then download the update.
 After verification, select **Close and install**. Ubuntu asks for administrator

@@ -1,6 +1,8 @@
-# The pinned actionlint version predates this GitHub-hosted runner.
+# The pinned actionlint version predates these GitHub-hosted runners.
 # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2604-Readme.md
+# https://docs.github.com/en/actions/reference/runners/github-hosted-runners
 # actionlint uses this list to supplement its built-in runner labels.
 self-hosted-runner:
   labels:
     - ubuntu-26.04
+    - windows-11-arm
