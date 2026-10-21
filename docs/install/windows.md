@@ -16,6 +16,14 @@ under **Assets**, not a Source code archive.
    **More info → Run anyway**.
 3. Open the Start menu, search for **OSCAR-UI**, and launch it.
 
+## If Windows says “Windows protected your PC”
+
+If Microsoft Defender SmartScreen displays **Windows protected your PC**,
+confirm the MSI came from the OSCAR-UI GitHub release, then follow the
+[PowerShell installation steps below](#powershell). Complete any Windows
+approval prompts. The command starts Windows Installer with logging; it does
+not disable SmartScreen or bypass Windows security checks.
+
 ## If the downloaded MSI does not open
 
 On some Windows systems, double-clicking the MSI in Downloads may not start
