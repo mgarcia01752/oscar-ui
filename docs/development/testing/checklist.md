@@ -316,3 +316,11 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [ ] Confirm CodeQL runs before both OS test jobs and uploads Java results.
 - [ ] Verify analysis failure prevents OS tests and release publication; review
   reported alerts separately from scan execution success.
+
+### Experimental macOS package
+
+- [ ] Pass Apple Silicon macOS 15 build, framework deployment, and signature verification.
+- [ ] Mount the generated DMG, copy and launch with build Qt hidden and environment cleared.
+- [ ] Remove the test copy and preserve the external synthetic configuration.
+- [ ] Confirm missing/failed macOS artifacts prevent public release publication.
+- [ ] Test downloaded-app Gatekeeper approval on a user's Mac; do not equate CI with this check.

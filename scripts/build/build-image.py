@@ -24,13 +24,14 @@ def main(argv=None):
     targets = parser.add_mutually_exclusive_group(required=True)
     targets.add_argument('--linux', action='store_true', help='Build an Ubuntu x64 DEB on Linux')
     targets.add_argument('--windows', action='store_true', help='Build a Windows x64 MSI on Windows')
+    targets.add_argument('--macos', action='store_true', help='Build an experimental Apple Silicon DMG on macOS')
     targets.add_argument('--all', action='store_true', help='Build all supported installers for this host only')
     parser.add_argument('--dry-run', action='store_true', help='Show the build command and output without executing')
     arguments = parser.parse_args(argv)
-    requested = 'linux' if arguments.linux else 'windows' if arguments.windows else 'all'
+    requested = 'linux' if arguments.linux else 'windows' if arguments.windows else 'macos' if arguments.macos else 'all'
     try:
         target, command, artifact, build_directories = _plan(requested)
-        print(f'[build-image] Target: {target} x64; local build only', flush=True)
+        print(f'[build-image] Target: {target}; local build only', flush=True)
         if requested == 'all':
             print('[build-image] --all selects the current host only; no cross-platform build.', flush=True)
         print(f'[build-image] Command: {subprocess.list2cmdline(command)}', flush=True)
@@ -58,13 +59,14 @@ def main(argv=None):
 
 
 def _plan(requested):
-    hosts = {'linux': 'linux', 'win32': 'windows'}
+    hosts = {'linux': 'linux', 'win32': 'windows', 'darwin': 'macos'}
     host = hosts.get(sys.platform)
-    if host is None or platform.machine().lower() not in ('x86_64', 'amd64'):
-        raise RuntimeError('Native installer builds require Linux or Windows x64; macOS and ARM are unsupported.')
+    architectures = ('arm64',) if host == 'macos' else ('x86_64', 'amd64')
+    if host is None or platform.machine().lower() not in architectures:
+        raise RuntimeError('Unsupported host: require Linux/Windows x64 or macOS arm64.')
     target = host if requested == 'all' else requested
     if target != host:
-        raise RuntimeError(f'Cannot build {target} on {host}. Run this command on a {target} x64 host.')
+        raise RuntimeError(f'Cannot build {target} on {host}. Run this command on a supported {target} host.')
     version_node = ET.parse(ROOT / 'pom.xml').getroot().find('{http://maven.apache.org/POM/4.0.0}version')
     if version_node is None or not version_node.text:
         raise RuntimeError('Missing project version in pom.xml')
@@ -73,6 +75,10 @@ def _plan(requested):
         command = ['bash', (ROOT / 'scripts/unix/linux-release.sh').as_posix()]
         directories = [ROOT / 'dist/linux/deb']
         artifact = ROOT / 'dist/linux/release/oscar-ui_amd64.deb'
+    elif target == 'macos':
+        command = [sys.executable, (ROOT / 'scripts/build/macos-release.py').as_posix()]
+        directories = [ROOT / 'dist/macos']
+        artifact = ROOT / f'dist/macos/release/OSCAR-UI-{version}-macos-arm64.dmg'
     else:
         command = ['pwsh', '-NoProfile', '-File', (ROOT / 'scripts/windows/windows-release.ps1').as_posix()]
         directories = [ROOT / 'dist/windows/app-image', ROOT / 'dist/windows/msi']

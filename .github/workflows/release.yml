@@ -28,15 +28,26 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/ubuntu-release.yml
+  macos:
+    permissions:
+      contents: read
+      security-events: write
+    name: Experimental macOS package
+    needs: ci
+    uses: ./.github/workflows/macos-release.yml
   publish:
     name: Publish verified release
-    needs: [windows, ubuntu]
+    needs: [windows, ubuntu, macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v5
-      - name: Verify both installers and publish
+      - uses: actions/download-artifact@v7
+        with:
+          name: macos-release
+          path: macos-release
+      - name: Verify installers and publish
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -58,4 +69,7 @@ jobs:
           gh release download "$RELEASE_TAG" --pattern windows-update.json --dir windows-metadata
           python3 scripts/build/verify-windows-release.py --version "$version" \
             --assets release-assets.json --manifest windows-metadata/windows-update.json
+          dmg="macos-release/OSCAR-UI-${version}-macos-arm64.dmg"
+          test -s "$dmg"
+          gh release upload "$RELEASE_TAG" "$dmg" --clobber
           gh release edit "$RELEASE_TAG" --draft=false

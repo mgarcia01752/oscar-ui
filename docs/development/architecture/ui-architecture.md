@@ -720,3 +720,14 @@ do not rebuild the tested installers. See the
 The final menu is Help. It contains User Guide followed by About. User Guide opens the repository documentation in the
 system browser and reports a browser launch failure. Documentation is currently
 online; no offline guide is bundled.
+
+### Experimental macOS packaging
+
+Apple Silicon DMG packaging owns its native deployment in
+`scripts/build/macos-release.py`; existing Windows/Ubuntu packagers retain their
+platform behavior. Java build staging and dependency-source collection are shared.
+The POM owns application and Qt Jambi versions. Qt's deployment tool resolves the
+native framework closure; the DMG must pass an isolated packaged-app smoke test
+before release publication. About links to the macOS installation guide.
+Ad-hoc signing is not Developer ID signing or notarization. First native CI and
+interactive downloaded-app testing remain pending; automatic updates are deferred.

@@ -291,3 +291,9 @@ use Snmp11 as the one-byte-length VarBind grammar identifier.
   DPoE export routes pass independent-byte and round-trip tests locally.
 - [ ] Publish the corrected OSCAR release and update the UI dependency.
 - [ ] Test nested Add/Edit and round trips after updating the OSCAR dependency.
+
+## Experimental macOS distribution
+
+- [ ] Run the new macOS DMG workflow and resolve any native deployment failures.
+- [ ] Verify interactive installation and Gatekeeper approval on a downloaded DMG.
+- [ ] Consider Intel packaging, Developer ID/notarization, and automatic updates after Apple Silicon validation.

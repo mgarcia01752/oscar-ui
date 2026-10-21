@@ -113,7 +113,15 @@ final class AboutDialog extends QDialog {
         windowsUpdateButton.clicked.connect(this::requestWindowsUpdate);
         updateLayout.addWidget(windowsUpdateButton);
         updateLayout.addWidget(releaseNotes);
-        String installGuide = System.getProperty("os.name", "").startsWith("Windows") ? "windows" : "ubuntu";
+        String operatingSystem = System.getProperty("os.name", "");
+        String installGuide;
+        if (operatingSystem.startsWith("Windows")) {
+            installGuide = "windows";
+        } else if (operatingSystem.startsWith("Mac")) {
+            installGuide = "macos";
+        } else {
+            installGuide = "ubuntu";
+        }
         var updateInstructions = link("How to update or uninstall OSCAR-UI",
                 ReleaseUpdateService.UI_PROJECT + "/blob/main/docs/install/" + installGuide + ".md#update");
         updateInstructions.setObjectName("updateUninstallLink");

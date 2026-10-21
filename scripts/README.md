@@ -119,3 +119,10 @@ Tests mock all removal processes; no real package removal is performed locally.
 - `build/verify-windows-release.py`: publication gate for manifest/asset consistency.
 
 See [Windows update architecture](../docs/development/architecture/windows-updates.md).
+
+## Experimental macOS
+
+`scripts/macos/setup-qt.sh` installs project-local Qt on Apple Silicon.
+`scripts/build/macos-release.py` builds, ad-hoc signs, and verifies the DMG.
+Use `python3 scripts/build/build-image.py --macos` after bootstrap/setup.
+See [macOS packaging](../docs/development/build/packaging.md#experimental-macos-dmg).

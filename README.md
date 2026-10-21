@@ -61,3 +61,5 @@ To create a local DEB or MSI, see [Build local installers](docs/development/buil
 
 Licensed under [Apache License 2.0](LICENSE). See
 [Third-party notices](THIRD-PARTY-NOTICES.md) for bundled dependencies.
+
+Experimental Apple Silicon macOS packaging: [installation and limitations](docs/install/macos.md).

@@ -27,8 +27,9 @@ python3 scripts/build/build-image.py --all
 
 Use `python` instead of `python3` on Windows. **`--all` builds only the current
 OS installer**, not both operating systems. Linux produces a DEB; Windows
-produces an MSI. Explicitly selecting the other OS fails before building.
-macOS and ARM installer builds are unsupported.
+produces an MSI; Apple Silicon macOS produces an experimental DMG.
+Explicitly selecting another OS fails before building. Other ARM targets and
+Intel macOS packaging are unsupported.
 
 Preview the command and output path without starting a build:
 
@@ -36,7 +37,7 @@ Preview the command and output path without starting a build:
 python3 scripts/build/build-image.py --all --dry-run
 ```
 
-Choose exactly one of `--linux`, `--windows`, or `--all`. An absolute path to
+Choose exactly one of `--linux`, `--windows`, `--macos`, or `--all`. An absolute path to
 the script also works from outside the checkout. `--help` lists the options.
 
 ## Prerequisites
@@ -72,3 +73,13 @@ The existing builders run their build, smoke, source/license, and packaging
 checks. Linux checks the extracted DEB; Windows checks its application image.
 MSI install/uninstall testing runs separately on disposable CI runners.
 A successful local build does not replace the release CI requirements.
+
+## Experimental Apple Silicon build
+
+On macOS 15 ARM64, bootstrap OSCAR, run `bash scripts/macos/setup-qt.sh`, then
+`python3 scripts/build/build-image.py --macos`. Java 21 must match the release
+source bundle pin. `--all` selects this target on an Apple Silicon host.
+The output is `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg`.
+Native validation is CI-only when developing from Linux. See
+[macOS packaging](packaging.md#experimental-macos-dmg) and the
+[installation guide](../../install/macos.md).

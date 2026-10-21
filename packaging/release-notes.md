@@ -71,3 +71,7 @@ Keep configurations outside the installation directory. Bundled runtimes are pri
 ### Windows updates
 
 The MSI establishes a patch baseline. Compatible subsequent releases can offer **Update on Windows** in About for the immediately previous version. Older installations without a compatible baseline, skipped versions and dependency changes require the full MSI. `windows-update.json` and `windows-patch-inputs.zip` support update and build automation; they are not standalone applications. An MSP appears only when compatibility and native patch lifecycle checks pass.
+
+### Experimental macOS (Apple Silicon)
+
+When included, `OSCAR-UI-<version>-macos-arm64.dmg` contains the application with Java and Qt for Apple Silicon on macOS 15. Open it and drag OSCAR-UI into Applications. It is ad-hoc signed, not Developer ID signed or notarized. See the [macOS installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/macos.md) for Gatekeeper prompts, manual updates and removal. Interactive downloaded-app testing is still pending.

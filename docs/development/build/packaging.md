@@ -435,20 +435,23 @@ flowchart TD
     CI --> Platforms[Ubuntu 22.04 / 24.04 / 26.04<br/>macOS 15 / Windows 11 ARM]
     Platforms --> MSI[Build candidate x64 MSI on Windows Server 2022]
     Platforms --> DEB[Build candidate DEB on Ubuntu 22.04]
+    Platforms --> Mac[Experimental Apple Silicon DMG]
+    Mac --> MacTest[Mount, copy, native launch, remove]
+    MacTest --> Gate
     MSI --> Server[Server MSI lifecycle and applicable MSP checks]
     Server --> Win11[Same MSI: Windows 11 ARM<br/>Install, launch, uninstall]
     DEB --> Ubuntu[Ubuntu 22.04 / 24.04 / 26.04<br/>Install, update, launch, remove]
     Win11 --> Gate{All required checks passed?}
     Ubuntu --> Gate
     Gate -->|Yes| Verify[Verify release assets and update metadata]
-    Verify --> Publish[Publish tested MSI and DEB]
+    Verify --> Publish[Publish tested MSI, DEB and experimental DMG]
     Gate -->|No| Stop[Block publication]
 ```
 
 Windows 11 ARM provides x64 emulation coverage, not native Windows 11 x64
 hardware coverage. The automated smoke test does not establish interactive
-SmartScreen or UAC behavior. macOS runs Java checks only; no macOS installer
-is produced. See GitHub's [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+SmartScreen or UAC behavior. The separate experimental macOS package workflow
+adds native DMG validation. See GitHub's [runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
 ### CodeQL before platform checks
 
@@ -463,3 +466,38 @@ Successful analysis means the scan completed, not that it found no alerts.
 Findings appear in GitHub Security; alert severity is not an automatic release
 failure policy in this workflow. If GitHub default CodeQL setup is enabled,
 disable that duplicate setup when enabling this advanced workflow.
+
+## Experimental macOS DMG
+
+`macos-release.yml` builds on an Apple Silicon macOS 15 runner. The macOS Maven
+profile supplies Qt Jambi's universal native framework JAR. The focused
+`scripts/build/macos-release.py` reuses Java build/attribution staging, extracts
+JNI frameworks, invokes Qt's `macdeployqt` for Qt frameworks and Cocoa plugins,
+and bundles a private Java runtime with `jpackage`. `sips`/`iconutil` produce the
+native icon from the existing PNG. Dependency sources and notices are retained.
+
+The bundle is ad-hoc signed after deployment, verified with `codesign`, and
+packed into a DMG with an Applications shortcut. No Apple credentials, Developer
+ID signature, notarization, or automatic macOS updates are configured.
+
+The installer test mounts the actual DMG, copies the app into a temporary
+Applications directory, ejects the DMG, and runs the native Cocoa smoke test.
+It hides the build Qt directory and clears Java/Qt/dynamic-library environment
+overrides before launching the packaged app. It then removes only that temporary
+app and checks preservation of a synthetic external configuration file.
+This is not proof of interactive Gatekeeper approval on a downloaded package.
+
+Release publication now waits for Windows, Ubuntu, and macOS package jobs.
+The final publisher attaches the verified DMG before making the release public.
+Manual workflow dispatch builds a downloadable Actions artifact without publishing.
+Until a native run succeeds, macOS packaging is implemented but unverified.
+
+Local Apple Silicon build (after OSCAR bootstrap and Java 21 setup):
+
+```bash
+bash scripts/macos/setup-qt.sh
+python3 scripts/build/build-image.py --macos
+```
+
+Output: `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg`.
+`--all` selects macOS on Apple Silicon; Linux cannot cross-build this package.

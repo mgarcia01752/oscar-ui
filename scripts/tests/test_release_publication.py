@@ -28,11 +28,18 @@ class ReleasePublicationTest(unittest.TestCase):
             with self.subTest(identity=identity):
                 self.run_publication(identity, False)
 
-    def run_publication(self, identity, success):
+    def test_missing_macos_image_blocks_publication(self):
+        """A successful Windows metadata check cannot publish without the DMG."""
+        self.run_publication('42', False, macos_image=False)
+
+    def run_publication(self, identity, success, macos_image=True):
         """Execute the workflow using isolated assets and a non-network gh command."""
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / 'bin').mkdir()
+            (root / 'macos-release').mkdir()
+            if macos_image:
+                (root / 'macos-release/OSCAR-UI-1.0.0-macos-arm64.dmg').write_bytes(b'test dmg')
             (root / 'scripts/build').mkdir(parents=True)
             shutil.copy2(ROOT / 'scripts/build/verify-windows-release.py', root / 'scripts/build')
             assets = [{'name': name, 'size': 10, 'state': 'uploaded'} for name in
@@ -54,6 +61,8 @@ elif args[:2] == ['release', 'download']:
     Path('windows-metadata').mkdir()
     Path('windows-metadata/windows-update.json').write_text(json.dumps(
         {'layout': 1, 'version': '1.0.0', 'fromVersion': None, 'patch': None}), encoding='utf-8')
+elif args[:2] == ['release', 'upload']:
+    pass
 elif args == ['release', 'edit', 'v1.0.0', '--draft=false']:
     Path('published').touch()
 else:

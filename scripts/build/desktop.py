@@ -56,7 +56,7 @@ def build():
     for name in ('LICENSE', 'NOTICE', 'THIRD-PARTY-NOTICES.md'):
         shutil.copy2(ROOT / name, app)
     shutil.copytree(ROOT / 'licenses', app / 'licenses', dirs_exist_ok=True)
-    if not WINDOWS:
+    if sys.platform == 'linux':
         for helper in ('ubuntu-update.py', 'ubuntu-uninstall.py'):
             shutil.copy2(ROOT / 'scripts/unix' / helper, app / helper)
     # Keep the pinned original Oscar attribution alongside its unmodified library.

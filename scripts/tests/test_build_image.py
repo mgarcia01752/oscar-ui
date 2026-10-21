@@ -27,10 +27,13 @@ class BuildImageTest(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'Cannot build'):
                     BUILD._plan('windows' if target == 'linux' else 'linux')
         with patch.object(BUILD, 'sys', SimpleNamespace(platform='darwin')):
-            with self.assertRaisesRegex(RuntimeError, 'unsupported'):
+            with self.assertRaisesRegex(RuntimeError, '[Uu]nsupported'):
                 BUILD._plan('all')
+        with patch.object(BUILD, 'sys', SimpleNamespace(platform='darwin', executable='python3')), patch.object(BUILD.platform, 'machine', return_value='arm64'):
+            self.assertEqual('macos', BUILD._plan('all')[0])
+            self.assertTrue(str(BUILD._plan('macos')[2]).endswith('-macos-arm64.dmg'))
         with patch.object(BUILD.platform, 'machine', return_value='aarch64'):
-            with self.assertRaisesRegex(RuntimeError, 'unsupported'):
+            with self.assertRaisesRegex(RuntimeError, '[Uu]nsupported'):
                 BUILD._plan('all')
 
     def test_preview_and_existing_output_do_not_start_build(self):
