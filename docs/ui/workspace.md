@@ -50,5 +50,5 @@ See [Files](files.md), [TLV editing](tlv-editing.md), and [Settings](settings.md
 
 ![Workspace in dark mode in OSCAR-UI dark mode](../images/user-guide/workspace-dark.png)
 
-A green **Upgrade** chip appears at the upper-right of the menu bar when a
+A green **Update** chip appears at the upper-right of the menu bar when a
 newer stable release is available. Select it for [update options](about.md#upgrade-indicator).

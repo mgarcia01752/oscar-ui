@@ -6,8 +6,10 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 MODE=""
 TAG=""
 BUMP=""
+FORCE_PUSH=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --force-push) FORCE_PUSH=true; shift ;;
     --master|--branch)
       [[ -z "$MODE" ]] || { echo 'Choose only one push mode.' >&2; exit 2; }
       MODE=branch
@@ -27,7 +29,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -h|--help)
       cat <<'EOF'
-Usage: tools/git/git-push.sh MODE
+Usage: tools/git/git-push.sh MODE [--force-push]
 Modes: --master | --branch | --tag TAG | --tag-major | --tag-minor | --tag-patch
 
 --master, --branch  Push only the current main/master branch to origin.
@@ -37,6 +39,9 @@ Modes: --master | --branch | --tag TAG | --tag-major | --tag-minor | --tag-patch
 --tag-major        Bump major, commit, tag, and push branch plus new tag.
 --tag-minor        Bump minor, commit, tag, and push branch plus new tag.
 --tag-patch        Bump patch, commit, tag, and push branch plus new tag.
+
+--force-push       Allow a release without new commits, or recheck a no-op push.
+                  Never overwrites remote history or bypasses a dirty checkout.
 
 Requires committed changes and installs the repository-local pre-push hook.
 Already-published refs skip checks. Behind/diverged branches fail early.
@@ -60,7 +65,11 @@ GIT_ROOT="$(git -C "$ROOT" rev-parse --show-toplevel)"
 [[ -z "$(git -C "$ROOT" status --porcelain)" ]] || { echo 'Commit or stash changes before pushing.' >&2; exit 1; }
 if [[ "$MODE" == release ]]; then
   echo "[git-push] Starting $BUMP release bump with local validation."
-  exec bash "$ROOT/tools/git/push-release.sh" "--push-$BUMP"
+  RELEASE_ARGS=("--push-$BUMP")
+  if [[ "$FORCE_PUSH" == true ]]; then
+    RELEASE_ARGS+=(--force-push)
+  fi
+  exec bash "$ROOT/tools/git/push-release.sh" "${RELEASE_ARGS[@]}"
 fi
 if [[ "$MODE" == branch ]]; then
   BRANCH="$(git -C "$ROOT" symbolic-ref --quiet --short HEAD)" || { echo 'Check out main or master before pushing.' >&2; exit 1; }
@@ -85,6 +94,12 @@ if [[ -n "$REMOTE_REF" ]]; then
   REMOTE_OID="${REMOTE_REF%%$'\t'*}"
   if [[ "$REMOTE_OID" == "$LOCAL_OID" ]]; then
     echo "[git-push] Nothing to push: origin already has $REF. Checks skipped."
+    if [[ "$FORCE_PUSH" == false ]]; then
+      echo 'Use --force-push to run local checks again without rewriting history.'
+      exit 0
+    fi
+    python3 "$ROOT/tools/development/pre-push-checks.py"
+    echo '[git-push] Checks passed; origin is already current. No upload needed.'
     exit 0
   fi
   if [[ "$MODE" == tag ]]; then

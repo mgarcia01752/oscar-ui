@@ -41,6 +41,20 @@ class PushReleaseTest(unittest.TestCase):
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return result
 
+    def test_force_push_creates_new_release_without_moving_old_tag(self):
+        self.git('tag', '-a', 'v0.1.0', '-m', 'Published')
+        self.git('push', 'origin', 'refs/tags/v0.1.0')
+        original = self.git('rev-parse', 'v0.1.0')
+        result = self.run_release('--push-minor', '--force-push')
+        self.assertIn('Fixture checks passed', result.stdout)
+        self.assertEqual(original, self.git('rev-parse', 'v0.1.0'))
+        self.assertIn('refs/tags/v0.2.0', self.git('ls-remote', 'origin'))
+
+    def test_force_push_rejects_dirty_checkout(self):
+        (self.root / 'dirty.txt').write_text('pending', encoding='utf-8')
+        result = self.run_release('--force-push', success=False)
+        self.assertIn('Commit or stash', result.stderr)
+
     def test_patch_commits_and_atomically_pushes_matching_tag(self):
         self.run_release()
         self.assertIn('<version>0.1.1</version>', (self.root / 'pom.xml').read_text())

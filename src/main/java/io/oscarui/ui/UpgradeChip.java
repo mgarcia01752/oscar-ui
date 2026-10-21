@@ -21,11 +21,11 @@ final class UpgradeChip extends QPushButton {
     private Future<ReleaseCheck> pending;
 
     UpgradeChip(Runnable openUpdates) {
-        super("Upgrade");
+        super("Update");
         this.openUpdates = openUpdates;
         setObjectName("upgradeChip");
-        setAccessibleName("Upgrade OSCAR-UI");
-        setToolTip("A newer OSCAR-UI release is available. View upgrade options.");
+        setAccessibleName("Update OSCAR-UI");
+        setToolTip("A newer OSCAR-UI release is available. View update options.");
         setStyleSheet("QPushButton { background: #238636; color: white; border: 1px solid #2ea043;"
                 + " border-radius: 4px; padding: 3px 12px; font-weight: bold; }"
                 + " QPushButton:hover { background: #2ea043; }"

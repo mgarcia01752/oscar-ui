@@ -80,6 +80,8 @@ class UserGuideScreenshotsTest {
             window.findChild(QSplitter.class).setSizes(java.util.List.of(600, 600));
             tree.setColumnWidth(0, 300);
             tree.setColumnWidth(1, 90);
+            // Show a synthetic available-update state without a network lookup.
+            window.findChild(UpgradeChip.class, "upgradeChip").setAvailable(true);
             capture(window, images.resolve("workspace-dark.png"));
             var service = new OscarDocumentService();
             var types = service.types();

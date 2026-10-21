@@ -77,7 +77,7 @@ See the [Windows installation guide](../install/windows.md) for more details.
 
 ## Upgrade indicator
 
-When a newer stable release is available, a green **Upgrade** chip appears at
+When a newer stable release is available, a green **Update** chip appears at
 the upper-right of the main window's menu bar. Click it to open the update
 dialog. Compatible installed packages offer their platform update action;
 other installations retain the download link. Clicking the chip installs nothing.

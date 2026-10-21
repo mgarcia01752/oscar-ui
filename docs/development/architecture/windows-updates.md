@@ -28,7 +28,7 @@ Version numbers alone never establish compatibility.
 ## User flow
 
 1. Startup checks once for a stable release; About supports manual retries.
-   The green Upgrade chip opens About and does not install silently.
+   The green Update chip opens About and does not install silently.
 2. A compatible release enables **Update on Windows**, displaying patch size.
    Save/discard checks and a confirmation precede closing OSCAR-UI.
 3. The installed PowerShell helper downloads the exact patch with a cancellable

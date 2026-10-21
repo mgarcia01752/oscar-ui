@@ -24,7 +24,7 @@ def git(*args, check=True):
     return result
 
 
-def release(bump, explicit, dry_run):
+def release(bump, explicit, dry_run, force_push=False):
     """
     Validate, check locally, then bump and push a new immutable release tag.
     """
@@ -42,11 +42,12 @@ def release(bump, explicit, dry_run):
     current_tag = f'refs/tags/v{current}'
     published = git('ls-remote', 'origin', current_tag, current_tag + '^{}').stdout.splitlines()
     published_commits = {line.split()[0] for line in published}
-    if starting_head in published_commits:
+    if starting_head in published_commits and not force_push:
         print(f'Nothing to release: HEAD is already published as v{current}. Checks skipped.', flush=True)
+        print('Use --force-push to create a new version without new commits; all checks still run.', flush=True)
         return
     local_tag = git('rev-parse', '--verify', current_tag + '^{commit}', check=False)
-    if local_tag.returncode == 0 and local_tag.stdout.strip() == starting_head:
+    if local_tag.returncode == 0 and local_tag.stdout.strip() == starting_head and starting_head not in published_commits:
         raise RuntimeError(f'HEAD is already tagged v{current} locally. Push the existing release instead of bumping again; checks skipped.')
     numbers = [int(n) for n in current.split('.')]
     if explicit:
@@ -114,9 +115,11 @@ def main():
                        help='Increment patch (default)')
     group.add_argument('--version', help='Explicit newer version, e.g. 0.2.0')
     parser.add_argument('--dry-run', action='store_true', help='Check origin and preview without editing or pushing')
+    parser.add_argument('--force-push', action='store_true',
+                        help='Allow a new release without new commits; never rewrite remote history')
     args = parser.parse_args()
     try:
-        release(args.bump, args.version, args.dry_run)
+        release(args.bump, args.version, args.dry_run, args.force_push)
     except (RuntimeError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'ERROR: {error}\n')
 

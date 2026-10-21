@@ -576,7 +576,7 @@ retains all fragments in the selected row. Binary opening also groups contiguous
 physical-fragment byte comparisons on reimport. Other TLVs retain their existing
 instance handling. OSCAR 3.3.0 owns fragmentation and adjacent-CVC export.
 
-## Upgrade chip
+## Update chip
 
 `UpgradeChip` owns a daemon worker and Qt polling timer for a single read-only
 startup release check in interactive windows. It is mounted in the menu bar's
@@ -588,7 +588,7 @@ availability. About's successful checks refresh the chip on the Qt thread and
 supersede an outstanding startup lookup. Closing the window cancels the worker.
 Failures are quiet and do not show an upgrade offer; manual retries remain in About.
 
-The Upgrade chip retains its update callback for the widget lifetime and connects
+The Update chip retains its update callback for the widget lifetime and connects
 clicks through a widget-owned method, so collection of a temporary callback
 receiver cannot disconnect the update action.
 

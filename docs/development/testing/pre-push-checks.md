@@ -141,3 +141,17 @@ Source headers are checked with `tools/development/check-license-headers.py`.
 To add absent project-owned copyright/SPDX headers, run it with `--fix`, review
 the changes, and commit them before pushing. Conflicting notices need manual
 review; validation never rewrites source files.
+
+
+### Recheck an up-to-date branch
+
+Use `tools/git/git-push.sh --master --force-push` to run local checks even
+when origin already has the current commit. This option never passes Git's
+force flag, overwrites tags, bypasses checks, or permits uncommitted changes.
+The no-change message suggests this option; dirty checkouts still require
+committing or stashing first.
+
+For a version-only release, use
+`tools/git/git-push.sh --tag-minor --force-push` (major/patch also supported).
+The release helper creates a new version commit and tag, runs validation, and
+uses a normal atomic push. Existing remote tags remain immutable.
