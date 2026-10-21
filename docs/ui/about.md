@@ -25,9 +25,11 @@ version is current; retry when GitHub is reachable.
 
 ## Dark-mode screenshots
 
-**About, package links, and release updates**
+**Help → About: package links and release updates**
 
 ![About, package links, and release updates in OSCAR-UI dark mode](../images/user-guide/about-dark.png)
+
+Shown from a development build; installed packages also show the uninstall button.
 
 ## Install an Ubuntu update
 
