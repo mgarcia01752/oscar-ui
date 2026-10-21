@@ -815,11 +815,11 @@ class MainWindowTest {
             assertCallback();
             assertEquals(io.oscarui.service.Appearance.SYSTEM, store.load());
             QApplication.styleHints().colorSchemeChanged.emit(Qt.ColorScheme.Dark);
-            QApplication.processEvents();
-            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
+            // Theme changes use a queued connection; wait for delivery rather
+            // than assuming one processEvents call drains all pending work.
+            await(() -> QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() < 128);
             QApplication.styleHints().colorSchemeChanged.emit(Qt.ColorScheme.Light);
-            QApplication.processEvents();
-            assertTrue(QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() > 128);
+            await(() -> QApplication.palette().color(io.qt.gui.QPalette.ColorRole.Window).lightness() > 128);
         } finally {
             reopened.close();
             reopened.dispose();
