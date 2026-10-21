@@ -199,6 +199,34 @@ public final class MainWindow extends QMainWindow {
             }
         }
         upgradeChip = new UpgradeChip(() -> showAbout(true));
+        int menuInset = layout.contentsMargins().left();
+        var menuIcon = new QWidget() {
+            /** Reserve menu-bar space for the icon and its horizontal padding. */
+            @Override public io.qt.core.QSize sizeHint() {
+                return new io.qt.core.QSize(menuInset + 14, 26);
+            }
+
+            @Override protected void paintEvent(io.qt.gui.QPaintEvent event) {
+                var painter = new io.qt.gui.QPainter(this);
+                try {
+                    // Match File's actual menu-item center, not the taller corner row.
+                    var fileBounds = menuBar().actionGeometry(menuBar().actions().getFirst());
+                    var center = mapFrom(menuBar(), fileBounds.center());
+                    int iconSize = 20;
+                    QApplication.windowIcon().paint(painter, menuInset + (14 - iconSize) / 2,
+                            center.y() - iconSize / 2, iconSize, iconSize);
+                } finally {
+                    painter.end();
+                    painter.dispose();
+                }
+            }
+        };
+        menuIcon.setObjectName("workspaceAppIcon");
+        menuIcon.setAccessibleName("OSCAR-UI");
+        menuIcon.setToolTip("OSCAR-UI");
+        menuIcon.setFixedSize(menuInset + 14, 26);
+        windowIconChanged.connect(icon -> menuIcon.update());
+        menuBar().setCornerWidget(menuIcon, Qt.Corner.TopLeftCorner);
         menuBar().setCornerWidget(new WorkspaceLayoutControls(upgradeChip, splitter,
                 configurationTreePane, configurationTextPane), Qt.Corner.TopRightCorner);
         if (interactive) {

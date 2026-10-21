@@ -24,6 +24,12 @@ class MainWindowTest {
         window.show();
         try {
             assertFalse(window.menuBar().isNativeMenuBar());
+            var icon = window.menuBar().cornerWidget(Qt.Corner.TopLeftCorner);
+            assertEquals("workspaceAppIcon", icon.objectName());
+            assertTrue(icon.isVisible());
+            assertFalse(QApplication.windowIcon().isNull());
+            await(() -> icon.geometry().right()
+                    < window.menuBar().actionGeometry(window.menuBar().actions().getFirst()).left());
             var controls = window.findChild(QWidget.class, "workspaceLayoutControls");
             var row = (QHBoxLayout) controls.layout();
             assertEquals(java.util.List.of("upgradeChip", "layoutTREE", "layoutTEXT", "layoutBOTH"),

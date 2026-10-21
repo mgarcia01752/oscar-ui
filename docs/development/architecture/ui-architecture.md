@@ -736,6 +736,9 @@ interactive downloaded-app testing remain pending; automatic updates are deferre
 `WorkspaceLayoutControls` owns the menu-bar corner row: the conditional Update
 chip and layout controls stay in the window on Windows, Linux and macOS because
 `MainWindow` disables native menu-bar integration. Window decorations remain native.
+The left menu corner paints the current application icon before File, so branding
+remains visible even when the native title bar omits icons. It follows theme icon
+changes without adding a menu action or duplicating the icon assets.
 The row places the Update
 chip first, then exclusive tree-only, text-only and both-panel buttons. It changes
 pane visibility without recreating widgets or documents. Both panels are the
