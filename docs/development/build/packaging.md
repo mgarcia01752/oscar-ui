@@ -469,6 +469,13 @@ disable that duplicate setup when enabling this advanced workflow.
 
 ## Experimental macOS DMG
 
+The POM remains the sole release-version source. Java 21 `jpackage` rejects
+a macOS app version whose first component is zero. Packaging therefore derives
+`CFBundleVersion` by adding one to the release major version (`0.6.0` becomes
+`1.6.0`; `1.0.0` becomes `2.0.0`). Before signing, the packager sets
+`CFBundleShortVersionString` back to the actual POM version. The About dialog,
+JAR and DMG names retain the actual release version; no second version is maintained.
+
 `macos-release.yml` builds on an Apple Silicon macOS 15 runner. The macOS Maven
 profile supplies Qt Jambi's universal native framework JAR. The focused
 `scripts/build/macos-release.py` reuses Java build/attribution staging, extracts

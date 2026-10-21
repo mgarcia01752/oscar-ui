@@ -319,6 +319,8 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 ### Experimental macOS package
 
+- [x] Test positive derived bundle versions across pre-1.0 and 1.0 releases,
+  preserving the displayed POM version and existing launcher metadata.
 - [ ] Pass Apple Silicon macOS 15 build, framework deployment, and signature verification.
 - [ ] Mount the generated DMG, copy and launch with build Qt hidden and environment cleared.
 - [ ] Remove the test copy and preserve the external synthetic configuration.

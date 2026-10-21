@@ -3,6 +3,7 @@
 """Verify macOS native extraction and launch isolation without macOS tools."""
 import importlib.util
 from pathlib import Path
+import plistlib
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -14,6 +15,28 @@ SPEC.loader.exec_module(MAC)
 
 
 class MacosReleaseTest(unittest.TestCase):
+    def test_bundle_metadata_preserves_display_version_and_other_fields(self):
+        """Retain the release version and existing launcher metadata on disk."""
+        with tempfile.TemporaryDirectory() as directory:
+            application = Path(directory)
+            path = application / 'Contents/Info.plist'
+            path.parent.mkdir()
+            path.write_bytes(plistlib.dumps({'CFBundleExecutable': 'OSCAR-UI',
+                                            'CFBundleShortVersionString': '1.6.0'}))
+            MAC.set_bundle_versions(application, '0.6.0')
+            metadata = plistlib.loads(path.read_bytes())
+            self.assertEqual('0.6.0', metadata['CFBundleShortVersionString'])
+            self.assertEqual('1.6.0', metadata['CFBundleVersion'])
+            self.assertEqual('OSCAR-UI', metadata['CFBundleExecutable'])
+
+    def test_bundle_version_is_positive_unique_and_derived(self):
+        """Pre-1.0 releases need a positive packaging version without collisions."""
+        self.assertEqual('1.6.0', MAC.bundle_build_version('0.6.0'))
+        self.assertEqual('1.7.0', MAC.bundle_build_version('0.7.0'))
+        self.assertEqual('2.0.0', MAC.bundle_build_version('1.0.0'))
+        with self.assertRaises(ValueError):
+            MAC.bundle_build_version('0.6.0-SNAPSHOT')
+
     def test_framework_executable_and_relative_link_survive_relocation(self):
         """Restore the native manifest links into a portable framework bundle."""
         with tempfile.TemporaryDirectory() as directory:

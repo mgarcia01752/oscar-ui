@@ -6,6 +6,8 @@ import importlib.util
 import os
 from pathlib import Path
 import platform
+import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +16,29 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def bundle_build_version(version):
+    """Derive a positive macOS build version from the stable POM version.
+
+    Offset every major version by one: 0.6.0 becomes 1.6.0, and 1.0.0
+    becomes 2.0.0. This satisfies jpackage without collisions at 1.0.
+    """
+    if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+        raise ValueError(f'Expected a stable major.minor.patch version: {version}')
+    major, minor, patch = map(int, version.split('.'))
+    return f'{major + 1}.{minor}.{patch}'
+
+
+def set_bundle_versions(application, version):
+    """Keep the displayed POM version and derived build number before signing."""
+    path = application / 'Contents/Info.plist'
+    with path.open('rb') as source:
+        metadata = plistlib.load(source)
+    metadata['CFBundleShortVersionString'] = version
+    metadata['CFBundleVersion'] = bundle_build_version(version)
+    with path.open('wb') as destination:
+        plistlib.dump(metadata, destination)
 
 
 def run(arguments, **kwargs):
@@ -81,6 +106,7 @@ def build():
         raise RuntimeError('Build on an Apple Silicon macOS runner; cross-compilation is unsupported.')
     pom = ET.parse(ROOT / 'pom.xml')
     version = pom.findtext('{*}version')
+    build_version = bundle_build_version(version)
     qt_version = pom.findtext('{*}properties/{*}qtjambi.version')
     qt = ROOT / '.tools/Qt' / qt_version / 'macos'
     if not (qt / 'bin/macdeployqt').is_file():
@@ -109,7 +135,7 @@ def build():
     icon = ROOT / 'target/oscar-ui.icns'
     run(['iconutil', '-c', 'icns', iconset, '-o', icon])
     run([desktop.java_tool('jpackage'), '--type', 'app-image', '--name', 'OSCAR-UI',
-         '--app-version', version, '--input', ROOT / 'target/app', '--dest', image,
+         '--app-version', build_version, '--input', ROOT / 'target/app', '--dest', image,
          '--main-jar', f'oscar-ui-{version}.jar', '--main-class', 'io.oscarui.DesktopApplication',
          '--icon', icon, '--mac-package-identifier', 'io.oscarui.desktop',
          '--java-options', '-XstartOnFirstThread',
@@ -132,6 +158,7 @@ def build():
     run([sys.executable, ROOT / 'scripts/build/verify-java-distribution.py',
          '--runtime', application / 'Contents/runtime/Contents/Home',
          '--sources', application / 'Contents/app/sources', '--jdk-home', os.environ['JAVA_HOME']])
+    set_bundle_versions(application, version)
     run(['codesign', '--force', '--deep', '--sign', '-', application])
     run(['codesign', '--verify', '--deep', '--strict', application])
     release = output / 'release'
