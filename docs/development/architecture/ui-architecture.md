@@ -255,8 +255,8 @@ injects a temporary settings store.
 ## About and release checks
 
 `AboutDialog` owns the branded About panel, project links, build versions, and
-manual update status. A Package | Version | Link grid lists OSCAR-UI, OSCAR,
-and Qt Jambi with clickable GitHub links. The OSCAR-UI license links to the
+manual update status. A Package | Version | Link grid lists OSCAR-UI and OSCAR
+with clickable GitHub links. The OSCAR-UI license links to the
 repository’s `LICENSE` file on GitHub. Maven filters `build-info.properties` from the project,
 Oscar, and Qt Jambi versions so packaged and development builds report their
 actual build versions. The About dialog offers a Check for updates button.

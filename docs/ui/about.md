@@ -7,8 +7,7 @@
 in your default browser. This requires an internet connection.
 
 Choose **Help → About** to see installed component versions in the
-**Package | Version | Link** table. Project links open OSCAR-UI, OSCAR and Qt
-Jambi on GitHub. The license link opens OSCAR-UI's license in its repository.
+**Package | Version | Link** table. Project links open OSCAR-UI and OSCAR on GitHub. The license link opens OSCAR-UI's license in its repository.
 **Report an issue with OSCAR-UI** opens the project's GitHub issue form in your
 browser.
 

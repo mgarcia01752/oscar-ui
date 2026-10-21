@@ -82,8 +82,6 @@ final class AboutDialog extends QDialog {
         addPackageRow(packageGrid, 1, "OSCAR-UI", installedVersion, ReleaseUpdateService.UI_PROJECT);
         addPackageRow(packageGrid, 2, "OSCAR", build.getProperty("oscar.version", "unknown"),
                 ReleaseUpdateService.OSCAR_PROJECT);
-        addPackageRow(packageGrid, 3, "Qt Jambi", build.getProperty("qt.version", "unknown"),
-                "https://github.com/OmixVisualization/qtjambi");
         layout.addWidget(packages);
         var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
