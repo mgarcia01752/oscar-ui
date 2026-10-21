@@ -135,6 +135,8 @@ public final class MainWindow extends QMainWindow {
         this.appearanceSettings = appearanceSettings;
         this.interactive = interactive;
         setWindowTitle("OSCAR-UI");
+        // Keep menus and their corner controls together on every desktop OS.
+        menuBar().setNativeMenuBar(false);
 
         resize(1200, 780);
         var central = new QWidget();

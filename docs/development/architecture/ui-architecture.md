@@ -734,6 +734,9 @@ interactive downloaded-app testing remain pending; automatic updates are deferre
 ## Workspace layout controls
 
 `WorkspaceLayoutControls` owns the menu-bar corner row: the conditional Update
+chip and layout controls stay in the window on Windows, Linux and macOS because
+`MainWindow` disables native menu-bar integration. Window decorations remain native.
+The row places the Update
 chip first, then exclusive tree-only, text-only and both-panel buttons. It changes
 pane visibility without recreating widgets or documents. Both panels are the
 startup default; split widths are retained within the session. Icon painting uses

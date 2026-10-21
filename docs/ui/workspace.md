@@ -4,6 +4,10 @@
 
 The main window contains a configuration tree and a read-only text preview.
 Use the tree actions to change a configuration; the preview is not a text editor.
+Windows, Linux and macOS use the same in-window menu and workspace control order.
+The title bar and minimize, maximize and close buttons follow your operating system.
+The application and packaged launchers use the OSCAR-UI icon. macOS displays
+the application icon in the Dock; its standard title bar does not show that icon.
 
 The top-right row shows **Update** first when a newer release is available,
 followed by **Tree only**, **Text only**, and **Both panels** layout buttons.

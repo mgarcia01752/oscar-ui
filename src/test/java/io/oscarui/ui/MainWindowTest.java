@@ -23,9 +23,12 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
+            assertFalse(window.menuBar().isNativeMenuBar());
             var controls = window.findChild(QWidget.class, "workspaceLayoutControls");
             var row = (QHBoxLayout) controls.layout();
-            assertEquals("upgradeChip", row.itemAt(0).widget().objectName());
+            assertEquals(java.util.List.of("upgradeChip", "layoutTREE", "layoutTEXT", "layoutBOTH"),
+                    java.util.stream.IntStream.range(0, row.count())
+                            .mapToObj(index -> row.itemAt(index).widget().objectName()).toList());
             var update = window.findChild(UpgradeChip.class, "upgradeChip");
             update.setAvailable(true);
             QApplication.processEvents();
