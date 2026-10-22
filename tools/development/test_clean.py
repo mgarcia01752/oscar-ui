@@ -20,14 +20,14 @@ class CleanupTest(unittest.TestCase):
             (self.root / name).mkdir(parents=True, exist_ok=True)
         for name in ('target/app', 'dist/image.msi', '.tools/qt', '.m2/cache',
                      'cm-config/customer.cfg', 'docs/images/guide.png'):
-            (self.root / name).write_text('keep or generated')
+            (self.root / name).write_text('keep or generated', encoding='utf-8')
         for name in ('tools/development/clean.py', 'scripts/unix/clean.sh'):
             shutil.copy2(SOURCE / name, self.root / name)
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
 
     def run_clean(self, *args):
         return subprocess.run(['bash', str(self.root / 'scripts/unix/clean.sh'), *args],
-                              cwd=self.temporary.name, text=True, capture_output=True)
+                              cwd=self.temporary.name, encoding='utf-8', capture_output=True)
 
     def test_preview_then_clean_from_other_directory_preserves_inputs(self):
         self.assertEqual(0, self.run_clean('--dry-run').returncode)
