@@ -7,6 +7,13 @@ It describes the current source version; older installed releases may lack newer
 features. The application is under development: successful editing or encoding
 does not establish full configuration validity or modem interoperability.
 
+## Installation
+
+Download installers from the [latest release](https://github.com/mgarcia01752/oscar-ui/releases/latest).
+Follow the [Ubuntu](../install/ubuntu.md), [Windows](../install/windows.md), or
+[macOS (Apple Silicon, experimental)](../install/macos.md) guide for installation,
+updates, and removal.
+
 ## Features
 
 | Task | Guide |

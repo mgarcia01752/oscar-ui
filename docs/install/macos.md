@@ -9,8 +9,9 @@ Gatekeeper behavior still needs testing on a downloaded copy on a user's Mac.
 
 ## Install and launch
 
-1. Download `OSCAR-UI-<version>-macos-arm64.dmg` from
-   [Releases](https://github.com/mgarcia01752/oscar-ui/releases), when available.
+1. Open the [latest release](https://github.com/mgarcia01752/oscar-ui/releases/latest).
+   Under **Assets**, download `OSCAR-UI-<version>-macos-arm64.dmg`.
+   Choose the DMG disk image, not the **Source code** archives.
 2. Open the DMG and drag **OSCAR-UI** onto **Applications**.
 3. Eject the disk image and open OSCAR-UI from Applications.
 
@@ -23,8 +24,17 @@ Managed Macs may prevent this exception. Do not disable Gatekeeper globally.
 
 ## Update
 
-Updates are manual: quit OSCAR-UI and replace the app in Applications with the
-new version. The Update chip links to About and downloads; there is no automatic
-macOS installer. To uninstall, quit and move OSCAR-UI from Applications to Trash.
-Keep configuration files outside the application bundle; replacing or removing
-the app must not remove your configuration files.
+The Update chip links to About and downloads; there is no automatic macOS
+installer. To update manually:
+
+1. Download the new DMG from the
+   [latest release](https://github.com/mgarcia01752/oscar-ui/releases/latest).
+2. Quit OSCAR-UI, open the DMG, and drag **OSCAR-UI** into **Applications**.
+3. Choose **Replace** when prompted, eject the disk image, and launch OSCAR-UI.
+4. Check the installed version in **Help → About**.
+
+## Uninstall
+
+Quit OSCAR-UI and move it from Applications to Trash. Keep configuration files
+outside the application bundle so replacing or removing the app leaves them
+untouched.
