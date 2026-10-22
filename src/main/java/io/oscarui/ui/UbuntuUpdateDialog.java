@@ -46,6 +46,7 @@ final class UbuntuUpdateDialog extends QDialog {
         setMinimumWidth(480);
         var layout = new QVBoxLayout(this);
         status.setTextFormat(Qt.TextFormat.PlainText);
+        status.setObjectName("ubuntuUpdateStatus");
         status.setWordWrap(true);
         status.setText("Downloading OSCAR-UI " + installer.version() + "…");
         layout.addWidget(status);
@@ -102,6 +103,9 @@ final class UbuntuUpdateDialog extends QDialog {
             pending = null;
             worker.shutdown();
         }
+        // Completion text is longer than the initial download message.
+        status.setMinimumHeight(status.heightForWidth(status.width()));
+        adjustSize();
         if (canceled.get()) {
             reject();
         }

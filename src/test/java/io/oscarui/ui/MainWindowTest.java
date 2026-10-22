@@ -167,6 +167,9 @@ class MainWindowTest {
             dialog.show();
             await(() -> dialog.findChild(QPushButton.class, "installUbuntuUpdate").isEnabled());
             assertEquals(download, dialog.downloadedPackage());
+            var message = dialog.findChild(QLabel.class, "ubuntuUpdateStatus");
+            assertTrue(message.height() >= message.heightForWidth(message.width()),
+                    "The complete wrapped installation instructions must fit");
             dialog.reject();
             assertFalse(Files.exists(download));
             assertEquals(QDialog.DialogCode.Rejected.value(), dialog.result());
