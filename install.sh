@@ -99,7 +99,8 @@ if [[ "$CHECK_ONLY" == 1 ]]; then
 fi
 
 bash "$ROOT/scripts/unix/bootstrap-oscar.sh"
-QT_DIRECTORY="${QT_HOME:-${ROOT}/.tools/Qt/6.8.3/gcc_64}"
+QT_VERSION="$(python3 -c 'import sys,xml.etree.ElementTree as E; print(E.parse(sys.argv[1]).findtext("{*}properties/{*}qtjambi.version"))' "$ROOT/pom.xml")"
+QT_DIRECTORY="${QT_HOME:-${ROOT}/.tools/Qt/${QT_VERSION}/gcc_64}"
 if [[ ! -x "$QT_DIRECTORY/bin/qmake" ]]; then
   if [[ -n "${QT_HOME:-}" ]]; then
     printf 'QT_HOME does not contain bin/qmake: %s\n' "$QT_HOME" >&2
@@ -107,8 +108,8 @@ if [[ ! -x "$QT_DIRECTORY/bin/qmake" ]]; then
   fi
   bash "$ROOT/scripts/unix/setup-qt.sh"
 fi
-if [[ "$("$QT_DIRECTORY/bin/qmake" -query QT_VERSION)" != 6.8.3 ]]; then
-  printf '%s\n' 'Qt 6.8.3 is required; check QT_HOME or rerun scripts/unix/setup-qt.sh.' >&2
+if [[ "$("$QT_DIRECTORY/bin/qmake" -query QT_VERSION)" != "$QT_VERSION" ]]; then
+  printf 'Qt %s is required; check QT_HOME or rerun scripts/unix/setup-qt.sh.\n' "$QT_VERSION" >&2
   exit 1
 fi
 bash "$ROOT/scripts/unix/desktop.sh" build

@@ -5,8 +5,8 @@ The application's Apache-2.0 license does not replace third-party licenses.
 | Component | Selected license / source |
 | --- | --- |
 | Comcast/Oscar 3.6.0, commit 66dd66c36f9199ab708092210554ee3f67761325 | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v3.6.0 |
-| Qt Jambi 6.8.3 | LGPL-2.1 option; https://github.com/OmixVisualization/qtjambi/tree/v6.8.3 |
-| Qt 6.8.3 Core, GUI, Widgets, DBus and their platform plugins | LGPL-3.0 option; https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz |
+| Qt Jambi 6.12.0 | LGPL-2.1 option; https://github.com/OmixVisualization/qtjambi/tree/v6.12.0 |
+| Qt 6.12.0 Core, GUI, Widgets, DBus and their platform plugins | LGPL-3.0 option; https://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz |
 | ICU 73.2 (Linux Qt dependency) | ICU/Unicode license; https://github.com/unicode-org/icu/releases/tag/release-73-2 |
 | Bundled OpenJDK runtime | GPL-2.0 with Classpath Exception and its included third-party notices; see runtime/legal/ and the JDK vendor's source distribution |
 | Oscar transitive dependencies | Original JAR license/notice files retained; see generated dependency inventory and bundled JARs |
@@ -48,9 +48,9 @@ Windows executable for native dependency lookup; replace both copies when
 substituting compatible Qt builds.
 
 Official references:
-- https://raw.githubusercontent.com/OmixVisualization/qtjambi/v6.8.3/LICENSE.LGPLv21
-- https://doc.qt.io/qt-6.8/qtcore-index.html#licenses-and-attributions
-- https://doc.qt.io/qt-6.8/qtgui-index.html#licenses
-- https://doc.qt.io/qt-6.8/qtwidgets-index.html#licenses
-- https://doc.qt.io/qt-6.8/qtdbus-index.html#licenses
-- https://doc.qt.io/qt-6.8/lgpl.html
+- https://raw.githubusercontent.com/OmixVisualization/qtjambi/v6.12.0/LICENSE.LGPLv21
+- https://doc.qt.io/qt-6.12/qtcore-index.html#licenses-and-attributions
+- https://doc.qt.io/qt-6.12/qtgui-index.html#licenses
+- https://doc.qt.io/qt-6.12/qtwidgets-index.html#licenses
+- https://doc.qt.io/qt-6.12/qtdbus-index.html#licenses
+- https://doc.qt.io/qt-6.12/lgpl.html

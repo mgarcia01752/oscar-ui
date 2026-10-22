@@ -42,7 +42,7 @@ Run that command yourself, then rerun setup. Java 21 must be selected through
 elevated privileges. Other Linux distributions are not currently supported by
 this installer.
 
-Development setup downloads the verified Oscar release, installs Qt 6.8.3
+Development setup downloads the verified Oscar release, installs the Qt version pinned in `pom.xml`
 through a project-local Python virtual environment, and builds and tests the
 UI using the Maven wrapper. Existing Qt installations can be selected with
 `QT_HOME`. Downloads require internet access. The `--check` option checks only

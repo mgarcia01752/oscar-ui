@@ -24,14 +24,16 @@ class ReleaseSourcesTest(unittest.TestCase):
         while simulating the collector's Windows and Linux source selection.
         """
         host_platform = sys.platform
-        for platform, count, version in [('win32', 3, '21.0.12.1+1'), ('linux', 4, '21.0.13+9')]:
+        for platform, count, version, qt_version in [
+                ('win32', 3, '21.0.12.1+1', '6.12.0'),
+                ('linux', 4, '21.0.13+9', '6.13.1')]:
             with self.subTest(platform=platform), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 (root / 'target/app').mkdir(parents=True)
                 (root / 'jdk').mkdir()
                 (root / 'jdk/release').write_text(f'IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="{version}-LTS"\n', encoding='utf-8')
                 content = b'example source archive'
-                self._pin(root, version, hashlib.sha256(content).hexdigest())
+                self._pin(root, version, hashlib.sha256(content).hexdigest(), qt_version)
                 with patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
                     self.assertEqual(host_platform, sys.platform)
                     sources.collect()
@@ -41,6 +43,8 @@ class ReleaseSourcesTest(unittest.TestCase):
                     digest, name = line.split('  ')
                     self.assertEqual(hashlib.sha256(content).hexdigest(), digest)
                     self.assertEqual(content, (root / 'target/app/sources' / name).read_bytes())
+                self.assertTrue((root / 'target/app/sources' / f'qtbase-everywhere-src-{qt_version}.tar.xz').is_file())
+                self.assertTrue((root / 'target/app/sources' / f'qtjambi-{qt_version}.tar.gz').is_file())
                 self.assertFalse(list(root.rglob('*.download')))
                 expected_source = ('OpenJDK21U-jdk-sources_21.0.12.1_1.tar.gz'
                                    if platform == 'win32' else 'OpenJDK21U-jdk-sources_21.0.13_9.tar.gz')
@@ -74,7 +78,10 @@ class ReleaseSourcesTest(unittest.TestCase):
                     sources.collect()
                 request.assert_not_called()
 
-    def _pin(self, root, version='21.0.10+7', checksum='a' * 64):
+    def _pin(self, root, version='21.0.10+7', checksum='a' * 64, qt_version='6.12.0'):
+        (root / 'pom.xml').write_text(
+            f'<project><properties><qtjambi.version>{qt_version}</qtjambi.version></properties></project>',
+            encoding='utf-8')
         pin = root / 'scripts/build/release-java.json'
         pin.parent.mkdir(parents=True, exist_ok=True)
         pin.write_text(json.dumps({'version': version, 'source_sha256': checksum}), encoding='utf-8')

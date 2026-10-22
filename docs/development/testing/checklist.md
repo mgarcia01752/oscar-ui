@@ -358,3 +358,12 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [x] Dirty close cancellation, all-document save review, and last-tab clearing.
 - [x] Tab-row context menu reuses File actions, including an empty workspace.
 - [ ] Confirm tab overflow, keyboard context menu, and desktop rendering on Windows/macOS.
+
+### Qt dependency updates
+
+- [ ] Change the POM Qt Jambi pin and verify matching Qt SDKs for every platform.
+- [ ] Verify source archives, license notices and bundled ICU match native files.
+- [ ] Test source-name propagation with two synthetic dependency versions.
+- [ ] Run native dialog and launch checks on the oldest supported Ubuntu; run
+  Windows/macOS and full installer checks in CI before publication.
+- [ ] Review Qt advisories separately from the Maven dependency audit.

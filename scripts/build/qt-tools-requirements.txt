@@ -1,0 +1,3 @@
+# Qt 6.11+ Windows repository support; upstream fix, pinned for reproducibility.
+# https://github.com/miurahr/aqtinstall/commit/7e5a5c3d95cf962cfc2f36c86ffa0d2c07f1a0d4
+aqtinstall @ git+https://github.com/miurahr/aqtinstall.git@7e5a5c3d95cf962cfc2f36c86ffa0d2c07f1a0d4

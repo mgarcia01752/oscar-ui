@@ -145,6 +145,12 @@ Existing old release assets are not deleted by these workflows.
 
 ## Build locally
 
+Qt and Qt Jambi share the POM's `qtjambi.version`. Setup reads the shared
+`scripts/build/qt-tools-requirements.txt` downloader pin. Python 3.10+ and Git
+are required. The current upstream fix handles
+Qt's newer Windows repository layout; checksum verification remains enabled.
+A Qt update changes the Windows baseline and requires a full MSI.
+
 Use the [local installer wrapper](build-images.md) for `--linux`, `--windows`,
 or host-only `--all`. The underlying platform commands are documented below.
 

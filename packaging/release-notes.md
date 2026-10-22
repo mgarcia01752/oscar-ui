@@ -24,8 +24,8 @@ This is the OSCAR engine JAR only; its supporting libraries are also bundled. No
 | Dependency | Compressed source size (approx.) | Included in |
 | --- | ---: | --- |
 | OpenJDK 21 (pinned Temurin release) | 115.1 MB | Windows, Ubuntu, and macOS |
-| Qt 6.8.3 | 48.4 MB | Windows, Ubuntu, and macOS |
-| Qt Jambi 6.8.3 | 5.2 MB | Windows, Ubuntu, and macOS |
+| Qt 6.12.0 | 51.2 MB | Windows, Ubuntu, and macOS |
+| Qt Jambi 6.12.0 | 5.3 MB | Windows, Ubuntu, and macOS |
 | ICU 73.2 | 27 MB | Ubuntu |
 
 These are **source archive sizes**, not runtime sizes or total installed sizes. The archives are bundled for source availability and contribute substantially to installer size. Users do not need to download or compile them separately. All packages include license notices and source checksums.

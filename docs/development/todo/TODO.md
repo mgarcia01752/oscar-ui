@@ -1,5 +1,17 @@
 # Development TODO
 
+## Python test encoding follow-up
+
+- [ ] Add explicit UTF-8 in existing DEB dependency and maintainer test fixtures.
+  An additional strict-encoding run found eight fixture setup errors; the normal
+  packaging suite passes. Extend strict encoding coverage after those fixes.
+
+## Qt downloader follow-up
+
+- [ ] Replace the pinned upstream aqtinstall fix with a published version that
+  supports Qt 6.11+ Windows repository layouts. Verify Windows MSVC x64,
+  Linux x64 and macOS downloads before changing the shared tool requirement.
+
 ## Java security follow-up
 
 - [ ] Move the shared release Java pin to Temurin 21.0.13 once Windows x64,

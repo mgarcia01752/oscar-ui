@@ -59,7 +59,7 @@ public final class DesktopApplication {
                 System.exit(result);
             }
         } catch (LinkageError | RuntimeException e) {
-            System.err.println("OSCAR-UI could not start. Check Qt 6.8.3 libraries, platform plugins, and display access. " + e.getClass().getSimpleName());
+            System.err.println("OSCAR-UI could not start. Check the bundled Qt libraries, platform plugins, and display access. " + e.getClass().getSimpleName());
             System.exit(1);
         }
     }

@@ -10,12 +10,10 @@ from pathlib import Path
 import shutil
 import sys
 import urllib.request
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCES = {
-    'qtbase-everywhere-src-6.8.3.tar.xz': 'https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz',
-    'qtjambi-6.8.3.tar.gz': 'https://github.com/OmixVisualization/qtjambi/archive/refs/tags/v6.8.3.tar.gz',
-}
+
 
 
 def collect():
@@ -39,7 +37,14 @@ def collect():
     app = ROOT / 'target/app'
     if not app.is_dir():
         raise RuntimeError('Build the application before collecting release sources.')
-    sources = dict(SOURCES)
+    qt_version = ET.parse(ROOT / 'pom.xml').findtext('{*}properties/{*}qtjambi.version')
+    qt_series = '.'.join(qt_version.split('.')[:2])
+    sources = {
+        f'qtbase-everywhere-src-{qt_version}.tar.xz':
+            f'https://download.qt.io/archive/qt/{qt_series}/{qt_version}/submodules/qtbase-everywhere-src-{qt_version}.tar.xz',
+        f'qtjambi-{qt_version}.tar.gz':
+            f'https://github.com/OmixVisualization/qtjambi/archive/refs/tags/v{qt_version}.tar.gz',
+    }
     tag = version.replace('+', '%2B')
     sources[source_name] = f'https://github.com/adoptium/temurin21-binaries/releases/download/jdk-{tag}/{source_name}'
     if sys.platform == 'linux':

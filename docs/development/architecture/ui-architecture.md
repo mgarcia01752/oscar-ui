@@ -855,3 +855,24 @@ macOS ARM64 release available on 2026-10-22. Temurin 21.0.13 was partially
 published then, without Windows binaries; its follow-up is recorded in TODO.
 Changing the bundled runtime changes the Windows baseline fingerprint and
 requires a full MSI installation, as covered by the Windows installer tests.
+
+## Qt dependency ownership
+
+The POM's `qtjambi.version` owns the matching Qt and Qt Jambi release. Linux,
+Windows and macOS setup, desktop staging and corresponding-source collection
+read this pin; application diagnostics do not embed a separate version.
+Dependency updates must verify the native SDK and Maven artifacts together.
+Linux x64 Qt 6.12.0 comes from the RHEL 9.6 build and retains ICU 73.2; do not
+infer its compatibility from the separate ARM binary requirements.
+
+A Qt runtime change requires a new Windows MSI baseline. Native OS tests and
+installer checks must pass before publishing. Passing Maven dependency scans
+alone does not establish that native Qt or its third-party code is free of
+vulnerabilities. Check the [Qt security advisories](https://wiki.qt.io/List_of_known_vulnerabilities_in_Qt_products)
+and the modules actually staged with each update.
+
+Qt's Windows repository layout changed for 6.11+. The shared
+`scripts/build/qt-tools-requirements.txt` pins the upstream aqtinstall fix
+commit because published aqtinstall 3.3.0 cannot locate those packages. Setup
+requires Python 3.10+ and Git, and retains the downloader's checksum checks.
+Replace this source pin with a verified published release when available.
