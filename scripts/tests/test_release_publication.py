@@ -33,7 +33,10 @@ class ReleasePublicationTest(unittest.TestCase):
         self.run_publication('42', False, macos_image=False)
 
     def run_publication(self, identity, success, macos_image=True):
-        """Execute the workflow using isolated assets and a non-network gh command."""
+        """Execute the workflow using isolated assets and a non-network gh command.
+
+        Decode captured output as UTF-8 independently of Python or host defaults.
+        """
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / 'bin').mkdir()
@@ -75,6 +78,6 @@ else:
             environment = dict(os.environ, PATH=str(root / 'bin') + os.pathsep + os.environ['PATH'],
                                GH_REPO='example/project', RELEASE_TAG='v1.0.0')
             result = subprocess.run(['bash', '-c', script], cwd=root, env=environment,
-                                    capture_output=True, text=True)
+                                    capture_output=True, text=True, encoding='utf-8')
             self.assertEqual(success, result.returncode == 0, result.stdout + result.stderr)
             self.assertEqual(success, (root / 'published').exists())

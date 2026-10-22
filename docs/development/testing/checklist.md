@@ -371,3 +371,6 @@ See [Windows update architecture](../architecture/windows-updates.md).
 ### Packaging text encoding
 
 - [ ] Run packaging Python tests with `-X warn_default_encoding -W error::EncodingWarning`; preserve UTF-8 metadata and unrelated files through DEB normalization and maintainer scripts.
+
+- [ ] Repeat strict packaging checks with CI Python 3.12 when developing on
+  Python 3.10; subprocess encoding warnings differ between interpreter versions.
