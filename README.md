@@ -8,6 +8,7 @@
   </picture>
 </p>
 
+[![Monthly Maven dependency security](https://github.com/mgarcia01752/oscar-ui/actions/workflows/dependency-security.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/dependency-security.yml)
 [![CI status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/oscar-ui-ci.yml?branch=main&label=CI)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
 [![Windows MSI, Ubuntu DEB and macOS DMG release status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/release.yml?label=MSI%20%2B%20DEB%20%2B%20DMG)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)
 [![OSCAR-UI CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)

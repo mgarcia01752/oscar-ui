@@ -876,3 +876,29 @@ Qt's Windows repository layout changed for 6.11+. The shared
 commit because published aqtinstall 3.3.0 cannot locate those packages. Setup
 requires Python 3.10+ and Git, and retains the downloader's checksum checks.
 Replace this source pin with a verified published release when available.
+
+## Monthly dependency advisory scan
+
+`dependency-security.yml` runs on the default branch on the first of each month
+at 08:41 UTC and supports manual dispatch. It does not run on each push or tag.
+The workflow bootstraps the pinned OSCAR artifact. Its helper resolves all Maven application
+and test dependencies across Linux, Windows and macOS profiles, and resolves
+build plugins and their dependencies. It submits public Maven coordinates to
+the [OSV batch API](https://google.github.io/osv.dev/post-v1-querybatch/),
+consumes pagination and rejects incomplete responses. No project files or
+configuration contents are uploaded to OSV.
+
+Advisory matches fail the workflow (exit 1); resolution/network/API failures
+also fail it (exit 2). Timestamped JSON and Markdown reports are retained for
+35 days and the summary appears on the run. The README badge reports workflow
+status, not a guarantee that the application is secure. Disabled Maven Site is
+excluded only when absent from the effective build.
+
+This supplements CodeQL. Native Qt/ICU, the bundled JDK, Maven distribution,
+Python tooling and GitHub Actions are outside this Maven-coordinate scan and
+require separate vendor-advisory review. Findings are reported without
+automatically upgrading dependencies or opening issues.
+
+For a local scan after OSCAR bootstrap, run
+`python3 tools/development/dependency-security.py`. Reports are written under
+`target/security-audit/`. The offline helper tests run in the developer test suite.

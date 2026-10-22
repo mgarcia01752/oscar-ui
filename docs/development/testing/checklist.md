@@ -374,3 +374,9 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 - [ ] Repeat strict packaging checks with CI Python 3.12 when developing on
   Python 3.10; subprocess encoding warnings differ between interpreter versions.
+
+### Monthly dependency audit
+
+- [ ] Check monthly scan findings and retained report; distinguish advisory matches
+  from infrastructure failures. Review excluded native/runtime dependencies separately.
+- [ ] Test pagination, malformed responses and failure reports without network calls.
