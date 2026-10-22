@@ -25,6 +25,18 @@ are rejected. Input and decoded text are limited to 1 MiB.
 Opening a binary does not require a shared secret. Opening alone is not a MIC
 verification; use [Tools → Check Shared Secret](check-shared-secret.md).
 
+## Work with several files
+
+Open each file with **File → Open**, or right-click the tab row and choose
+**Open**. Select a filename tab to show that file in both the TLV tree and text
+preview. The lower-right **Text/Binary** label follows the selected tab.
+
+Save applies to the selected tab. An italic tab title marks unsaved changes;
+switching tabs preserves them. Opening the same file again selects its existing
+tab. For navigation and closing shortcuts, see [Workspace](workspace.md#keyboard-shortcuts).
+
+![Binary file selected among multiple open tabs](../images/user-guide/workspace-binary-tabs-dark.png)
+
 ## Save and Save As
 
 **File → Save** or **Ctrl+S** writes the current file in its existing format.

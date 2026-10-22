@@ -86,14 +86,21 @@ These are the standard Linux/Windows shortcuts; the menus reflect the platform.
 
 See [Files](files.md), [TLV editing](tlv-editing.md), and [Settings](settings.md).
 
-## Dark-mode screenshots
+## Workspace screenshots
 
-**Workspace in dark mode**
+**Left-aligned tabs in dark mode**
 
-![Workspace in dark mode in OSCAR-UI dark mode](../images/user-guide/workspace-dark.png)
+![Left-aligned workspace tabs in dark mode](../images/user-guide/workspace-dark.png)
 
 A green **Update** chip appears at the upper-right of the menu bar when a
 newer stable release is available. Select it for [update options](about.md#upgrade-indicator).
+
+**Left-aligned tabs in light mode**
+
+![Left-aligned workspace tabs in light mode](../images/user-guide/workspace-light.png)
+
+The tabs and path row span both panels in either theme. In these examples,
+*Untitled 1* is an unsaved draft; the other two tabs are opened files.
 
 **Binary tab selected: tree and status follow the active file**
 
