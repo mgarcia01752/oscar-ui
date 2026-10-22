@@ -839,3 +839,19 @@ audit verifies them. These are build dependencies, separate from shipped JARs.
 The unused Maven Site lifecycle is disabled in `.mvn/jvm.config`; explicitly
 invoking a Site plugin goal is still possible and requires a separate review.
 Java runtime, Qt and Qt Jambi updates are independent of this build-tool change.
+
+## Bundled Java release ownership
+
+`scripts/build/release-java.json` owns the Temurin runtime version, the vendor's
+setup-java selector and the corresponding source SHA-256. The vendor uses a
+different SemVer selector for four-part Java versions; retain the verified
+mapping in this one manifest. All release builders consume its selector through
+one workflow job, while source collection derives the archive name and URL from
+the runtime version and rejects a mismatched JDK or source digest. Ordinary
+development still accepts Java 21; release packaging requires the exact pin.
+
+The selected release is the latest verified common Windows x64, Linux x64 and
+macOS ARM64 release available on 2026-10-22. Temurin 21.0.13 was partially
+published then, without Windows binaries; its follow-up is recorded in TODO.
+Changing the bundled runtime changes the Windows baseline fingerprint and
+requires a full MSI installation, as covered by the Windows installer tests.

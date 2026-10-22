@@ -55,6 +55,10 @@ Use the commands in the [development guide](../README.md#verification); use the
 - [ ] For Maven changes, verify wrapper checksum/version, resolved plugin
   dependencies, bootstrap installation and unchanged shipped dependency JARs.
   Run local service/native Qt tests, then the CI OS and installer matrix.
+- [ ] For Java runtime updates, verify all release platforms have the pinned
+  vendor binaries, the setup-java selector matches the runtime version, and
+  source checksums match. Test with the actual selected JDK, verify source and
+  legal files against a generated runtime, and check new-MSI baseline handling.
 
 - [ ] Enable the [local pre-push gate](pre-push-checks.md) for this checkout and
   resolve any local failure before uploading a branch or tag.

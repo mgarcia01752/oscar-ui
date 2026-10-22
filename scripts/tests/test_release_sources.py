@@ -3,6 +3,7 @@
 import hashlib
 import importlib.util
 import io
+import json
 from pathlib import Path
 import tempfile
 import sys
@@ -23,23 +24,27 @@ class ReleaseSourcesTest(unittest.TestCase):
         while simulating the collector's Windows and Linux source selection.
         """
         host_platform = sys.platform
-        for platform, count in [('win32', 3), ('linux', 4)]:
+        for platform, count, version in [('win32', 3, '21.0.12.1+1'), ('linux', 4, '21.0.13+9')]:
             with self.subTest(platform=platform), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 (root / 'target/app').mkdir(parents=True)
                 (root / 'jdk').mkdir()
-                (root / 'jdk/release').write_text('IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n')
+                (root / 'jdk/release').write_text(f'IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="{version}-LTS"\n', encoding='utf-8')
                 content = b'example source archive'
-                with patch.object(sources, 'JAVA_SOURCE_SHA256', hashlib.sha256(content).hexdigest()), patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
+                self._pin(root, version, hashlib.sha256(content).hexdigest())
+                with patch.object(sources, 'ROOT', root), patch.object(sources, 'sys', SimpleNamespace(platform=platform)), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(content)):
                     self.assertEqual(host_platform, sys.platform)
                     sources.collect()
-                manifest = (root / 'target/app/sources/SHA256SUMS.txt').read_text().splitlines()
+                manifest = (root / 'target/app/sources/SHA256SUMS.txt').read_text(encoding='utf-8').splitlines()
                 self.assertEqual(count, len(manifest))
                 for line in manifest:
                     digest, name = line.split('  ')
                     self.assertEqual(hashlib.sha256(content).hexdigest(), digest)
                     self.assertEqual(content, (root / 'target/app/sources' / name).read_bytes())
                 self.assertFalse(list(root.rglob('*.download')))
+                expected_source = ('OpenJDK21U-jdk-sources_21.0.12.1_1.tar.gz'
+                                   if platform == 'win32' else 'OpenJDK21U-jdk-sources_21.0.13_9.tar.gz')
+                self.assertTrue((root / 'target/app/sources' / expected_source).is_file())
 
     def test_rejects_corrupted_java_source(self):
         """Block packaging when downloaded JDK sources fail the vendor pin.
@@ -52,6 +57,7 @@ class ReleaseSourcesTest(unittest.TestCase):
             (root / 'jdk').mkdir()
             (root / 'jdk/release').write_text(
                 'IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n', encoding='utf-8')
+            self._pin(root)
             with patch.object(sources, 'ROOT', root), patch.dict(sources.os.environ, {'JAVA_HOME': str(root / 'jdk')}), patch.object(sources.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(b'corrupted')):
                 with self.assertRaisesRegex(RuntimeError, 'vendor checksum'):
                     sources.collect()
@@ -61,8 +67,26 @@ class ReleaseSourcesTest(unittest.TestCase):
     def test_rejects_unmatched_jdk_before_downloading(self):
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp)
-            (home / 'release').write_text('IMPLEMENTOR="Ubuntu"\nJAVA_RUNTIME_VERSION="21.0.10+7"\n')
-            with patch.dict(sources.os.environ, {'JAVA_HOME': temp}), patch.object(sources.urllib.request, 'urlopen') as request:
+            (home / 'release').write_text('IMPLEMENTOR="Ubuntu"\nJAVA_RUNTIME_VERSION="21.0.10+7"\n', encoding='utf-8')
+            self._pin(home)
+            with patch.object(sources, 'ROOT', home), patch.dict(sources.os.environ, {'JAVA_HOME': temp}), patch.object(sources.urllib.request, 'urlopen') as request:
+                with self.assertRaisesRegex(RuntimeError, 'requires Temurin'):
+                    sources.collect()
+                request.assert_not_called()
+
+    def _pin(self, root, version='21.0.10+7', checksum='a' * 64):
+        pin = root / 'scripts/build/release-java.json'
+        pin.parent.mkdir(parents=True, exist_ok=True)
+        pin.write_text(json.dumps({'version': version, 'source_sha256': checksum}), encoding='utf-8')
+
+    def test_rejects_old_temurin_before_downloading(self):
+        """An authentic but older Temurin build must not use newer pinned sources."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._pin(root, '21.0.13+9')
+            (root / 'release').write_text(
+                'IMPLEMENTOR="Eclipse Adoptium"\nJAVA_RUNTIME_VERSION="21.0.10+7-LTS"\n', encoding='utf-8')
+            with patch.object(sources, 'ROOT', root), patch.dict(sources.os.environ, {'JAVA_HOME': str(root)}), patch.object(sources.urllib.request, 'urlopen') as request:
                 with self.assertRaisesRegex(RuntimeError, 'requires Temurin'):
                     sources.collect()
                 request.assert_not_called()

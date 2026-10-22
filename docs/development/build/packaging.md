@@ -148,10 +148,10 @@ Existing old release assets are not deleted by these workflows.
 Use the [local installer wrapper](build-images.md) for `--linux`, `--windows`,
 or host-only `--all`. The underlying platform commands are documented below.
 
-Release packaging requires **Temurin 21.0.10+7**, Python, and the pinned Qt/Oscar
+Release packaging requires **Temurin Java 21** at the version in [the release pin](../../../scripts/build/release-java.json), Python, and the pinned Qt/Oscar
 bootstrap dependencies. Source collection checks that the JDK matches the source
-archive being distributed. Update the workflow JDK pins and
-`scripts/build/collect-release-sources.py` together when changing Java versions.
+archive being distributed. Update `scripts/build/release-java.json` when changing
+Java versions; release workflows and source collection consume that shared pin.
 
 Windows x64 also requires Visual Studio 2022 C++ build tools with the x64 CRT
 redistributable directory, plus WiX 3.14.1 (`candle.exe` and `light.exe` on

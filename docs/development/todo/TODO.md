@@ -1,5 +1,14 @@
 # Development TODO
 
+## Java security follow-up
+
+- [ ] Move the shared release Java pin to Temurin 21.0.13 once Windows x64,
+  Linux x64, macOS ARM64 and matching source assets are all published. On
+  2026-10-22, `jdk-21.0.13+9` had no Windows assets; the verified common release
+  is `jdk-21.0.12.1+1`. This does not claim the October security fixes are included.
+  Update `scripts/build/release-java.json`, verify the vendor source checksum,
+  rerun source matching and native tests, and validate full installers in CI.
+
 ## Multi-file workspace
 
 - [x] Implement [document tabs and synchronized workspace sessions](multi-file-workspace.md).

@@ -56,7 +56,7 @@ by the wrapper; Qt's `aqtinstall` is installed in `.tools/venv`. No system Maven
 Qt development packages, or separate Python pip installation is needed.
 
 Normal development accepts any Java 21 JDK. Release source bundling additionally
-requires **Temurin 21.0.10+7**, as described in [packaging](build/packaging.md);
+requires **Temurin Java 21** at the version in [the release pin](../../scripts/build/release-java.json), as described in [packaging](build/packaging.md);
 passing development preflight does not verify that release-specific pin.
 RPM packaging and Windows build tools are outside this Linux setup.
 

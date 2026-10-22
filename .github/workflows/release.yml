@@ -16,8 +16,25 @@ jobs:
     name: Validate tagged commit
     if: startsWith(github.ref, 'refs/tags/v')
     uses: ./.github/workflows/oscar-ui-ci.yml
-  windows-build:
+  java-pin:
     needs: ci
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.pin.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Read release Java pin
+        id: pin
+        run: |
+          python3 - <<'PYTHON'
+          import json, os
+          from pathlib import Path
+          pin = json.loads(Path('scripts/build/release-java.json').read_text(encoding='utf-8'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('version=' + pin['setup_java_version'] + '\n')
+          PYTHON
+  windows-build:
+    needs: [ci, java-pin]
     runs-on: windows-2022
     timeout-minutes: 45
     outputs:
@@ -29,7 +46,7 @@ jobs:
         with:
           distribution: temurin
           # Use Adoptium's full SemVer, including its LTS build suffix.
-          java-version: '21.0.10+7.0.LTS'
+          java-version: ${{ needs.java-pin.outputs.version }}
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -144,7 +161,7 @@ jobs:
           gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
 
   ubuntu-build:
-    needs: ci
+    needs: [ci, java-pin]
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
@@ -152,7 +169,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21.0.10+7.0.LTS'
+          java-version: ${{ needs.java-pin.outputs.version }}
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -279,7 +296,7 @@ jobs:
           gh release upload "$RELEASE_TAG" "${assets[0]}" --clobber
 
   macos-build:
-    needs: ci
+    needs: [ci, java-pin]
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -287,7 +304,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21.0.10+7.0.LTS'
+          java-version: ${{ needs.java-pin.outputs.version }}
           architecture: aarch64
       - uses: actions/setup-python@v6
         with:

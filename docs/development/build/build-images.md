@@ -42,7 +42,7 @@ the script also works from outside the checkout. `--help` lists the options.
 
 ## Prerequisites
 
-Use Python 3.10 or later and **Temurin 21.0.10+7** for release packaging. Set
+Use Python 3.10 or later and **Temurin Java 21** at the version in [the release pin](../../../scripts/build/release-java.json) for release packaging. Set
 `JAVA_HOME` to that JDK and put its `bin` directory on `PATH`. The general Java
 21 development requirement alone is insufficient for the pinned source bundle.
 Prepare OSCAR and Qt using the [platform setup instructions](packaging.md#build-locally).
