@@ -7,6 +7,14 @@ Status: proposed; implementation has not started.
 - New and Open create/select a tab instead of replacing the current document.
   Opening another file does not prompt to discard the current file.
 - Put tabs immediately above the text panel. Keep one shared TLV tree on the left.
+- Right-click anywhere on the tab row (a tab or unused space) opens a context
+  menu with **Open File...** and **New File...**. Reuse the File menu actions and
+  their existing dialogs; each successful operation creates/selects a tab without
+  replacing another document. Support keyboard context-menu activation as well.
+  Dismissing the menu or cancelling a dialog leaves tabs and selection unchanged.
+  **Compare Files...** is a possible future menu item, not part of the first
+  implementation. Define file selection, text versus TLV comparison, and result
+  presentation before enabling it; do not ship a nonfunctional menu item.
 - Tab titles use the filename. New documents use unique Untitled names.
   Italic means unsaved: a new draft or modifications since the last successful
   save. Use normal text after successful save; do not italicize merely because
@@ -89,7 +97,8 @@ workers or launch an installer until outstanding operations and saves settle.
 
 1. Extract per-document session state and controller behind the existing single
    workspace; retain existing behavior and tests before introducing tabs.
-2. Add tabs/path display and atomically bind active session to tree/text/status.
+2. Add tabs/path display, the tab-row context menu, and atomic active-session
+   binding to tree/text/status.
 3. Route New/Open, editing, saves, inspections, and asynchronous completion through
    stable session IDs; preserve dirty and view state and prevent duplicate paths.
 4. Add per-tab close and all-session exit/update/uninstall review.
@@ -101,6 +110,9 @@ workers or launch an installer until outstanding operations and saves settle.
 - Two text files, two binary files, and mixed file types keep independent values,
   TLV selections, dirty states, save destinations, and indicators.
 - New/Open retains existing unsaved work; parse failure creates no broken tab.
+- Right-click a tab or empty tab-row space and use Open File/New File; verify
+  the same dialogs and safeguards as the File menu. Test cancellation, keyboard
+  activation, and availability when no documents are open.
 - Editing B cannot change A; switching back restores repeated-TLV occurrence
   selection and scroll/expansion without taking nodes from another document.
 - Untitled/modified tabs are italic; successful save clears italics; cancellation,
