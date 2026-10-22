@@ -24,6 +24,57 @@ FILES = ('pom.xml', 'scripts/unix/bootstrap-oscar.sh', 'scripts/windows/bootstra
 class UpdateOscarTest(unittest.TestCase):
     """Verify reference integrity, release validation, and failure recovery."""
 
+    def test_latest_tag_resolves_two_versions(self):
+        """Read the latest API tag without hard-coding a release version."""
+        for version in ('3.6.0', '4.1.2'):
+            release = {'tag_name': f'v{version}', 'draft': False, 'prerelease': False}
+            with patch.object(UPDATER, '_api', return_value=release) as api, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(UPDATER._latest_version(), version)
+                api.assert_called_once_with('releases/latest')
+
+    def test_latest_rejects_unstable_and_malformed_tags(self):
+        """Reject invalid latest-release metadata before running an update."""
+        stable = {'tag_name': 'v3.6.0', 'draft': False, 'prerelease': False}
+        for release in (dict(stable, draft=True), dict(stable, prerelease=True),
+                        dict(stable, tag_name='3.6.0'), dict(stable, tag_name='v3.6.0-rc1'),
+                        dict(stable, tag_name=None)):
+            with patch.object(UPDATER, '_api', return_value=release), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(RuntimeError):
+                    UPDATER._latest_version()
+
+    def test_latest_cli_uses_existing_update_path(self):
+        """Latest selection forwards the resolved version and dry-run setting."""
+        for dry_run in (False, True):
+            arguments = ['update-oscar.py', '--latest-jar'] + (['--dry-run'] if dry_run else [])
+            with patch.object(UPDATER.sys, 'argv', arguments), \
+                    patch.object(UPDATER, '_latest_version', return_value='3.6.0'), \
+                    patch.object(UPDATER, '_update') as update:
+                UPDATER.main()
+                update.assert_called_once_with(UPDATER.ROOT, '3.6.0', dry_run)
+
+    def test_release_selection_is_required_and_exclusive(self):
+        """Reject missing or conflicting selection without network access."""
+        for arguments in ([], ['--version', '3.6.0', '--latest-jar']):
+            with patch.object(UPDATER.sys, 'argv', ['update-oscar.py', *arguments]), \
+                    patch.object(UPDATER, '_api') as api, contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    UPDATER.main()
+                self.assertEqual(raised.exception.code, 2)
+                api.assert_not_called()
+
+    def test_latest_network_failure_never_updates_files(self):
+        """Report lookup failures without entering installation or reference changes."""
+        with patch.object(UPDATER.sys, 'argv', ['update-oscar.py', '--latest-jar']), \
+                patch.object(UPDATER, '_api', side_effect=OSError('offline')), \
+                patch.object(UPDATER, '_update') as update, \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                UPDATER.main()
+            self.assertEqual(raised.exception.code, 1)
+            update.assert_not_called()
+
     def setUp(self):
         """Create a disposable checkout and a valid synthetic OSCAR release."""
         self.temporary = tempfile.TemporaryDirectory()

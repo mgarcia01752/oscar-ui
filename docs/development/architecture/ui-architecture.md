@@ -522,7 +522,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.5.2 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.6.0 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -813,3 +813,12 @@ open; completed saves remain saved. Successful installer launch explicitly permi
 shutdown after that review. No automatic session restore or secret persistence is
 introduced. Compare Files remains deferred. See the
 [design and acceptance plan](../todo/multi-file-workspace.md).
+
+## Developer dependency release selection
+
+`tools/development/update-oscar.py` accepts either an explicit `--version` or
+`--latest-jar`, which resolves GitHub's latest published stable OSCAR tag. Both
+feed the same verified thin-JAR installation, reference update, build and rollback
+path. Latest selection is developer tooling, not an automatic application update.
+Malformed tags, missing assets and downgrades fail without selecting an older
+release. See the [dependency update guide](../build/oscar-dependency-updates.md).

@@ -22,14 +22,23 @@ POM_NAMESPACE = {'m': 'http://maven.apache.org/POM/4.0.0'}
 
 
 def main():
-    """Parse the release selection and report failures without publishing anything."""
+    """Select an explicit or latest stable release and run the verified updater.
+
+    Exactly one release option is required. Dry runs verify temporary downloads;
+    ordinary runs update pins and build locally. Failures exit nonzero without
+    publishing anything, using the updater's existing rollback behavior.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--version', required=True, help='Published version, e.g. 3.2.1 (no v prefix)')
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument('--version', help='Published version, e.g. 3.2.1 (no v prefix)')
+    selection.add_argument('--latest-jar', action='store_true',
+                           help="Use GitHub's latest published stable OSCAR release")
     parser.add_argument('--dry-run', action='store_true',
                         help='Download and verify in temporary storage; do not install or edit')
     args = parser.parse_args()
     try:
-        _update(ROOT, args.version, args.dry_run)
+        version = _latest_version() if args.latest_jar else args.version
+        _update(ROOT, version, args.dry_run)
     except (RuntimeError, OSError, ValueError, KeyError, ET.ParseError,
             zipfile.BadZipFile, subprocess.CalledProcessError) as error:
         parser.exit(1, f'ERROR: {error}\n')
@@ -47,6 +56,18 @@ def _fetch(url):
 
 def _api(path):
     return json.loads(_fetch(f'{API}/{path}'))
+
+
+def _latest_version():
+    """Resolve GitHub's latest stable tag; reject malformed or unpublished metadata."""
+    _progress('Resolving latest published OSCAR release...')
+    release = _api('releases/latest')
+    tag = release['tag_name']
+    if release['draft'] or release['prerelease'] or not isinstance(tag, str):
+        raise RuntimeError('Latest OSCAR release must be published and stable.')
+    if not re.fullmatch(f'v{VERSION_PATTERN}', tag):
+        raise RuntimeError('Latest OSCAR release tag must be vMAJOR.MINOR.PATCH.')
+    return tag[1:]
 
 
 def _resolve(version):

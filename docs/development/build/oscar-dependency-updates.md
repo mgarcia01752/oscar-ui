@@ -12,7 +12,19 @@ Use Python 3 and Java 21. Run from the OSCAR-UI checkout; the script resolves
 project paths from its own location. No GitHub CLI is required. Public GitHub
 API rate limits apply; an unavailable release or failed request stops the update.
 
-For example, after OSCAR 3.2.1 has been published:
+To use the release designated latest by GitHub:
+
+```bash
+python3 tools/development/update-oscar.py --latest-jar --dry-run
+python3 tools/development/update-oscar.py --latest-jar
+```
+
+Choose exactly one of `--latest-jar` and `--version`. Latest selection requires
+a published stable `vMAJOR.MINOR.PATCH` tag and uses the same asset checks,
+downgrade protection, Maven verification, and rollback as explicit selection.
+It does not fall back to an older release if the latest release's JAR is missing.
+
+To select a specific published version, for example:
 
 ```bash
 python3 tools/development/update-oscar.py --version 3.2.1 --dry-run

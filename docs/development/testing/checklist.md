@@ -26,6 +26,10 @@ unfinished functionality lives in TODO rather than duplicated feature lists.
 | Native launch | `scripts/unix/desktop.sh smoke` | Qt startup, menus, tree/text agreement, clipboard |
 | Tooling | `tools/git`, `tools/development`, `scripts/tests` | Safe tags/pushes, verified dependency update/rollback, source bundling, DEB maintainer scripts |
 
+For dependency-updater changes, test `--latest-jar` and `--version` selection,
+dry-run forwarding, conflicting options, invalid latest tags and failed lookup.
+Both selections must retain the existing checksum, rollback and downgrade checks.
+
 Java and native tests are under [src/test/java](../../../src/test/java/io/oscarui).
 Use the commands in the [development guide](../README.md#verification); use the
 [script index](../../../scripts/README.md) for platform entry points.

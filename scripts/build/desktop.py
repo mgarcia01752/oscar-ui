@@ -60,7 +60,7 @@ def build():
         for helper in ('ubuntu-update.py', 'ubuntu-uninstall.py'):
             shutil.copy2(ROOT / 'scripts/unix' / helper, app / helper)
     # Keep the pinned original Oscar attribution alongside its unmodified library.
-    upstream = ROOT / '.tools/oscar-3.5.2'
+    upstream = ROOT / '.tools/oscar-3.6.0'
     if not (upstream / 'LICENSE').exists():
         raise RuntimeError('Run bootstrap-oscar first to provide the pinned release and notices.')
     shutil.copy2(upstream / 'LICENSE', app / 'licenses/Oscar-LICENSE.txt')
