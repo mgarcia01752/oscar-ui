@@ -779,3 +779,11 @@ GitHub. The application performs no issue API request and needs no GitHub token.
 It does not collect configuration contents, secrets, logs, usernames, or paths.
 Tests check query encoding, metadata defaults, exclusion of private properties,
 and the About link without submitting an issue or launching a browser.
+
+## Proposed multi-file workspace
+
+The current workspace still owns one document. The proposed
+[multi-file plan](../todo/multi-file-workspace.md) introduces per-document sessions,
+text-panel tabs, unsaved italics, directory context, and synchronized active
+TLV tree/Text-Binary status. It also covers asynchronous result ownership and
+multi-document close/update handling. This is planned behavior, not implemented.
