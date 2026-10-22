@@ -4,7 +4,7 @@
 
 - [ ] Implement [document tabs and synchronized workspace sessions](multi-file-workspace.md).
   Keep separate unsaved state, active TLV tree, and Text/Binary indicator per file.
-  Confirm the reference image's directory presentation before visual implementation.
+  Use the supplied two-row filename-tab and directory-breadcrumb layout.
 
 
 [Development guide](../README.md) · [Architecture](../architecture/ui-architecture.md) · [Verification checklist](../testing/checklist.md)

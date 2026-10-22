@@ -11,11 +11,17 @@ Status: proposed; implementation has not started.
   Italic means unsaved: a new draft or modifications since the last successful
   save. Use normal text after successful save; do not italicize merely because
   a tab is inactive. Add an accessible unsaved indication in the tooltip.
-- Show the active file's parent directory as a breadcrumb/path below the tabs.
-  Full path is also available in the tab tooltip. Untitled documents show Unsaved.
-  Disambiguate identical filenames using the shortest distinguishing parent path.
-  This directory presentation is provisional: the referenced example image was
-  not present in the request. Confirm against that image before layout work.
+- Match the supplied editor example with two rows above the text preview:
+  filename tabs with close buttons, then a breadcrumb row for the active file.
+  Show directory segments followed by the filename, for example
+  `configs > docsis > customer.cfg`. There is no project root in this app, so
+  use the active file's actual parent path, shortening leading segments with an
+  ellipsis when space is limited. Always retain the filename; expose the full
+  absolute path in a tooltip. Untitled documents show `Unsaved > Untitled 1`.
+  Disambiguate identical tab filenames with the shortest distinguishing parent
+  path. Breadcrumbs are informational in this first phase, not folder navigation.
+  Do not copy the example's Markdown headings or editor-specific toolbar controls;
+  retain OSCAR-UI's Update/layout controls and lower-right Text/Binary indicator.
 - Switching tabs synchronizes the TLV tree, text, actions, inspection context,
   and bottom-right Text/Binary indicator in one UI-thread activation step.
   Preserve each tab's tree expansion, selected TLV occurrence, and text/tree
@@ -118,5 +124,5 @@ workers or launch an installer until outstanding operations and saves settle.
 No directory browser, recursive folder import, drag-and-drop, session restore,
 Save All command, or direct editable text mode in the initial implementation.
 The current text pane remains a synchronized preview. These can be separate work
-items if requested. Confirm the missing reference image's directory layout before
-finalizing visual design.
+items if requested. The supplied editor screenshot confirms the two-row
+filename-tab and directory-breadcrumb layout.
