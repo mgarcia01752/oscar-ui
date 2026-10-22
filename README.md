@@ -16,7 +16,7 @@
 [![Java 21](https://img.shields.io/badge/Java-21-007396)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-A desktop editor for Comcast Oscar configuration files on Ubuntu, Windows, and macOS (experimental).
+A desktop editor for DOCSIS configuration based on Oscar configuration files on Ubuntu, Windows, and macOS (experimental).
 
 ![OSCAR-UI main window in dark mode](docs/images/user-guide/workspace-dark.png)
 
