@@ -126,3 +126,12 @@ See [Windows update architecture](../docs/development/architecture/windows-updat
 `scripts/build/macos-release.py` builds, ad-hoc signs, and verifies the DMG.
 Use `python3 scripts/build/build-image.py --macos` after bootstrap/setup.
 See [macOS packaging](../docs/development/build/packaging.md#experimental-macos-dmg).
+
+## Clean development output
+
+`./scripts/unix/clean.sh --dry-run` previews removal of `target/` and `dist/`.
+Omit `--dry-run` to remove them, or select `--target` / `--dist` individually.
+The wrapper resolves the repository from its own location. The shared helper
+`python tools/development/clean.py` also works without Bash on Windows.
+Dependencies and user configuration are preserved. See
+[cleanup shortcuts](../docs/development/short-cuts.md#clean-generated-builds-and-installer-images).

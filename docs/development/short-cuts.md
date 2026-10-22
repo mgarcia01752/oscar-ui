@@ -118,3 +118,27 @@ python3 scripts/build/build-image.py --linux
 
 This does not install, push, or publish. `--all` builds only the current OS;
 Windows MSI builds require Windows. [Local installer guide](build/build-images.md).
+
+## Clean generated builds and installer images
+
+Preview first, then remove `target/` and `dist/` (including old installer images):
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+./scripts/unix/clean.sh --dry-run
+```
+
+```bash
+cd /home/dev01/Projects/oscar-ui &&
+./scripts/unix/clean.sh
+```
+
+Use `--dist` for installers only or `--target` for build output only; either
+can be combined with `--dry-run`. On Windows, use
+`python tools/development/clean.py` with the same options.
+Close running development instances and wait for builds to finish first.
+These directories are removed in full, including test reports and generated
+screenshots. Rebuild before running the development app again. Keep personal
+files outside these output directories. Dependency caches (`.tools/`, `.m2/`),
+configuration files, and tracked documentation screenshots are preserved.
+Cleanup refuses tracked output files and symlinked output roots.

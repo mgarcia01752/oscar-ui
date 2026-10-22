@@ -295,3 +295,10 @@ Review every PNG in `target/user-guide-images/` for clipping and readability.
 Copy approved images to `docs/images/user-guide/` and update the corresponding
 `docs/ui/` guide links in the same change. Captures omit operating-system window
 frames; captions identify each view. About shows the current build versions.
+
+## Clean development output
+
+Use `./scripts/unix/clean.sh --dry-run` to preview, then omit `--dry-run` to
+remove generated builds and installer images from `target/` and `dist/`.
+Dependency caches are retained. See the [cleanup shortcuts](short-cuts.md#clean-generated-builds-and-installer-images)
+for selection options and the Windows command.
