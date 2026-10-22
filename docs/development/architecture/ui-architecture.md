@@ -80,6 +80,15 @@ All TLVs calls `ConfigurationFileExport.EXPORT_DEFAULT_TLV` on the worker and
 retains a reference-template marker for reopening unmapped placeholders as
 read-only entries. The adapter substitutes the selected supported PacketCable
 header for the exporter's placeholder header; the body remains upstream output.
+Recognized valueless entries such as `NetworkAccess;` are editing placeholders:
+OSCAR validates the name but assigns no value and emits no corresponding binary
+TLV. Explicit values such as `NetworkAccess 0;` remain real values. An explicitly
+quoted empty string is subject to datatype/length rules, not this placeholder
+rule. Unknown names are not made valid by omitting their values. The UI delegates
+encoding to OSCAR rather than stripping entries or inventing defaults itself.
+A required placeholder does not satisfy complete-file minimum checks; successful
+text parsing or saving a draft does not guarantee binary compilation will succeed.
+
 Empty drafts and templates are unsaved and do not establish valid deployment
 values. Successful New/Open offers Add TLV once; cancellation and generation
 failure preserve the previous document. Queue Add directly from successful
