@@ -91,11 +91,46 @@ public final class AppearanceSettingsStore {
      * @throws IOException if settings cannot be written or replaced
      */
     public void save(Appearance appearance, boolean obfuscateSnmpSecrets) throws IOException {
+        save(appearance, obfuscateSnmpSecrets, loadDisableTemplateBanner());
+    }
+
+    /**
+     * Loads the compact-template preference, defaulting to the full banner.
+     *
+     * @return true when only SPDX and authors should appear
+     * @throws IOException if stored settings are invalid
+     */
+    public boolean loadDisableTemplateBanner() throws IOException {
+        load();
+        if (Files.notExists(settingsPath)) {
+            return false;
+        }
+        var value = mapper.readTree(settingsPath.toFile()).get("disableTemplateBanner");
+        if (value == null) {
+            return false;
+        }
+        if (!value.isBoolean()) {
+            throw new IOException("Invalid template banner preference.");
+        }
+        return value.booleanValue();
+    }
+
+    /**
+     * Saves global appearance, masking, and template preferences together.
+     *
+     * @param appearance non-null appearance selection
+     * @param obfuscateSnmpSecrets whether to mask displayed secrets
+     * @param disableTemplateBanner whether new templates use SPDX and authors only
+     * @throws IOException if settings cannot be saved
+     */
+    public void save(Appearance appearance, boolean obfuscateSnmpSecrets, boolean disableTemplateBanner)
+            throws IOException {
         Objects.requireNonNull(appearance);
         var settings = mapper.createObjectNode();
         settings.put("version", SCHEMA_VERSION);
         settings.put("appearance", appearance.name().toLowerCase(Locale.ROOT));
         settings.put("obfuscateSnmpSecrets", obfuscateSnmpSecrets);
+        settings.put("disableTemplateBanner", disableTemplateBanner);
         Files.createDirectories(settingsPath.getParent());
         Path temporaryPath = Files.createTempFile(settingsPath.getParent(), ".settings-", ".json");
         try {

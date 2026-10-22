@@ -13,6 +13,35 @@ import org.junit.jupiter.api.io.TempDir;
 class AppearanceSettingsStoreTest {
     @TempDir Path temporary;
 
+    @Test void templateBannerPreferenceDefaultsAndSurvivesOtherSettingsChanges() throws Exception {
+        var path = temporary.resolve("banner.json");
+        var store = new AppearanceSettingsStore(path);
+        assertFalse(store.loadDisableTemplateBanner());
+        Files.writeString(path, "{\"version\":1,\"appearance\":\"system\"}");
+        assertFalse(store.loadDisableTemplateBanner());
+        store.save(Appearance.DARK, false, true);
+        new AppearanceSettingsStore(path).save(Appearance.LIGHT, true);
+        assertTrue(store.loadDisableTemplateBanner());
+        store.save(Appearance.SYSTEM, false, false);
+        assertFalse(store.loadDisableTemplateBanner());
+    }
+
+    @Test void referenceTemplatesUseSelectedBannerWithoutChangingTlvs() throws Exception {
+        var service = new OscarDocumentService();
+        for (var type : service.types()) {
+            var full = service.create(type, true).text();
+            var compact = service.create(type, true,
+                    com.comcast.oscar.configurationfile.TemplateBannerLevel.SPDX_AUTHOR).text();
+            assertTrue(full.contains("Snmp11 OID DataType Value"));
+            assertFalse(compact.contains("Snmp11 OID DataType Value"));
+            assertTrue(compact.contains("SPDX-License-Identifier: Apache-2.0"));
+            assertTrue(compact.contains("Author: Maurice Garcia"));
+            assertTrue(compact.contains("Author: Allen Flickinger"));
+            assertEquals(full.substring(full.indexOf(type.header() + " {")),
+                    compact.substring(compact.indexOf(type.header() + " {")));
+        }
+    }
+
     @Test void missingSettingsDefaultToSystemAndChoicesSurviveReload() throws Exception {
         Path settingsPath = temporary.resolve("preferences/settings.json");
         var store = new AppearanceSettingsStore(settingsPath);
@@ -22,7 +51,7 @@ class AppearanceSettingsStoreTest {
             store.save(appearance);
             assertEquals(appearance, new AppearanceSettingsStore(settingsPath).load());
             var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(settingsPath.toFile());
-            assertEquals(3, json.size());
+            assertEquals(4, json.size());
             assertEquals(1, json.get("version").intValue());
         }
         try (var files = Files.list(settingsPath.getParent())) {

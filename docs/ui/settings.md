@@ -6,6 +6,11 @@
 
 Open **Settings → Global** to choose:
 
+- **Disable template banner (keep SPDX and authors)**: unchecked by default.
+  Check it to omit version and format instructions from newly created **All TLVs**
+  templates while retaining copyright, SPDX, and both authors. Saved across restarts
+  and updates; existing documents are unchanged.
+
 | Option | Behavior |
 | --- | --- |
 | User Defined Common TLVs | Choose the top-level entries shown by the Add dialog for each file type. |

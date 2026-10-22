@@ -746,3 +746,10 @@ chip first, then exclusive tree-only, text-only and both-panel buttons. It chang
 pane visibility without recreating widgets or documents. Both panels are the
 startup default; split widths are retained within the session. Icon painting uses
 the active palette. Layout selection is not persisted across application restarts.
+
+## Template banner preference
+
+Global settings persist `disableTemplateBanner` in the per-user settings file,
+defaulting to false for new and older files. New All TLVs templates use OSCAR
+`TemplateBannerLevel.FULL` unless disabled, then `SPDX_AUTHOR`. Existing documents
+and TLV comment visibility are unaffected.

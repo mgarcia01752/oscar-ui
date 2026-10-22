@@ -5,6 +5,7 @@
 package io.oscarui.service;
 
 import com.comcast.oscar.configurationfile.ConfigurationFileExport;
+import com.comcast.oscar.configurationfile.TemplateBannerLevel;
 import static com.comcast.oscar.cablelabsdefinitions.Constants.CM_MIC;
 import static com.comcast.oscar.cablelabsdefinitions.Constants.CMTS_MIC;
 import static com.comcast.oscar.cablelabsdefinitions.Constants.L2VPN_MAC_AGING_ENC;
@@ -277,13 +278,30 @@ public final class OscarDocumentService {
      * @throws InspectionException if the configuration type or generated template is unsupported
      */
     public Document create(FileType configurationType, boolean allTlvs) throws InspectionException {
+        return create(configurationType, allTlvs, TemplateBannerLevel.FULL);
+    }
+
+    /**
+     * Creates a draft with the requested OSCAR template banner.
+     *
+     * @param configurationType supported file type
+     * @param allTlvs whether to include reference TLVs
+     * @param bannerLevel non-null banner selection, used for reference templates
+     * @return unsaved parsed document
+     * @throws InspectionException if template generation fails
+     */
+    public Document create(FileType configurationType, boolean allTlvs, TemplateBannerLevel bannerLevel)
+            throws InspectionException {
+        Objects.requireNonNull(bannerLevel);
         if (!types().contains(configurationType)) {
             throw new InspectionException("Unsupported configuration type.");
         }
         try {
             String text = configurationType.header() + " {\n}\n";
             if (allTlvs) {
-                String exported = new ConfigurationFileExport(configurationType.id()).toPrettyPrint(ConfigurationFileExport.EXPORT_DEFAULT_TLV);
+                var exporter = new ConfigurationFileExport(configurationType.id());
+                exporter.setTemplateBannerLevel(bannerLevel);
+                String exported = exporter.toPrettyPrint(ConfigurationFileExport.EXPORT_DEFAULT_TLV);
                 Token header = parser(exported).getTokenStream().LT(1);
                 text = REFERENCE_MARKER + "\n" + exported.substring(0, header.getStartIndex()) + configurationType.header()
                         + exported.substring(header.getStopIndex() + 1);

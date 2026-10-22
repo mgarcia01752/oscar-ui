@@ -330,3 +330,10 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 - [x] Verify Update is first, layout buttons are exclusive, and each mode shows
   the intended panes; returning to both restores previous splitter sizes.
+
+## Template banner preference
+
+- [ ] Verify Global defaults to the full template banner.
+- [ ] Disable it, restart, and create All TLVs: retain SPDX and authors only.
+- [ ] Cancel settings without changing the preference; re-enable for full help.
+- [ ] Confirm existing documents and TLV contents are unchanged.
