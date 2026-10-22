@@ -337,3 +337,12 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [ ] Uncheck it, restart, and create All TLVs: omit the OSCAR banner.
 - [ ] Cancel settings without changing the preference; re-enable for SPDX and authors.
 - [ ] Confirm existing documents and TLV contents are unchanged.
+
+## Multi-file workspace
+
+- [x] Local native tests: mixed Text/Binary tabs and active tree/status sync.
+- [x] Repeated TLV selection restoration, duplicate path reuse, and dirty isolation.
+- [x] Background save ownership, failure retention, and open-destination collision.
+- [x] Dirty close cancellation, all-document save review, and last-tab clearing.
+- [x] Tab-row context menu reuses File actions, including an empty workspace.
+- [ ] Confirm tab overflow, keyboard context menu, and desktop rendering on Windows/macOS.

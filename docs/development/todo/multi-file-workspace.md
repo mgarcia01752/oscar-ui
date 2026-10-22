@@ -1,6 +1,6 @@
 # Multi-file workspace plan
 
-Status: proposed; implementation has not started.
+Status: implemented locally; native Windows/macOS confirmation remains with CI.
 
 ## User-visible behavior
 
@@ -48,7 +48,7 @@ Status: proposed; implementation has not started.
 
 ## Ownership and model
 
-Introduce a focused DocumentSession model and WorkspaceSessionController rather
+Use `WorkspaceSessions.Session` and the `WorkspaceSessions` controller rather
 than adding more unrelated state to MainWindow. A session owns a stable ID,
 immutable OSCAR document snapshot, revision, saved revision/dirty state, canonical
 file identity, explicit Text/Binary enum, binary origin/save metadata, view state,
@@ -77,7 +77,7 @@ originating session ID, document revision, format, destination, and needed optio
 Results update that session only, even if another tab is now active. A successful
 save marks only its captured revision saved; newer edits remain dirty. A failed
 save preserves dirty state and the original destination/format. Closed-session
-results are discarded. Disable conflicting actions on a busy session while
+results are discarded. Disable document mutations and closing while any operation runs, while
 allowing tab selection; never retarget a queued operation to the active tab.
 
 New/Open inserts a session only after successful generation/parsing; failures

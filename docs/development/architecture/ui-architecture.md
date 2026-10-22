@@ -113,7 +113,7 @@ is unsigned validation; it does not sign or write a deployment binary.
 
 Save uses the active format and destination; new drafts ask for a text path.
 Save As chooses Text/Binary and destination. Only a successful write changes the
-active format/path, clears modified, and completes pending New/Open/Exit actions.
+active format/path, clears modified, and completes pending tab-close/Exit actions.
 Text saves preserve formatting without implicit signing. Binary saves compile
 original values through OSCAR with the session shared secret when required,
 validate the decoded/re-encoded payloads before replacement, and refresh the
@@ -780,10 +780,36 @@ It does not collect configuration contents, secrets, logs, usernames, or paths.
 Tests check query encoding, metadata defaults, exclusion of private properties,
 and the About link without submitting an issue or launching a browser.
 
-## Proposed multi-file workspace
+## Multi-file workspace
 
-The current workspace still owns one document. The proposed
-[multi-file plan](../todo/multi-file-workspace.md) introduces per-document sessions,
-text-panel tabs, unsaved italics, directory context, and synchronized active
-TLV tree/Text-Binary status. It also covers asynchronous result ownership and
-multi-document close/update handling. This is planned behavior, not implemented.
+`WorkspaceSessions` owns stable typed session IDs, immutable document snapshots,
+per-document revisions/dirty state, file identity, format, and view/status state.
+`DocumentTabs` owns filename tabs, per-tab unsaved italics, path breadcrumbs,
+close buttons, and a right-click menu reusing File Open/New actions. The shared
+`ConfigurationTreePane` and `ConfigurationTextPane` display the active session;
+selection, expansion, and scrolling are captured before switching and restored
+for that document. Repeated TLVs use source offsets plus their TLV path, scoped
+to the owning session, rather than a globally ambiguous numeric path.
+
+New/Open adds a session only after successful generation/parsing. Existing path
+aliases activate their existing tab; duplicate basenames get distinguishing parent
+paths. Save As refuses another open tab's destination. A typed Text/Binary status
+is derived from the session's source metadata and changes only after a successful
+format-changing save. It is never inferred from the displayed text or extension.
+The tab strip aligns with the text panel in split mode and remains available in
+tree-only mode. Empty workspaces clear document state and disable file actions.
+
+OSCAR work remains serialized. While any operation runs, document mutations and
+closing are disabled, but tab selection remains available. Worker results capture
+the originating session and revision; stale/closed owners are ignored. Completion
+is applied in its owner's UI context and restores the user's selected tab afterward;
+New/Open intentionally selects its resulting tab. Saves and inspections do not
+accidentally target the tab selected after the operation began. Shared secrets
+remain session-memory application settings and are captured for binary saves.
+
+Tab closing offers Save/Discard/Cancel. Exit/update/uninstall collect choices for
+all dirty tabs before saving or proceeding. Cancel or save failure leaves tabs
+open; completed saves remain saved. Successful installer launch explicitly permits
+shutdown after that review. No automatic session restore or secret persistence is
+introduced. Compare Files remains deferred. See the
+[design and acceptance plan](../todo/multi-file-workspace.md).

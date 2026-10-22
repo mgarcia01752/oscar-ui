@@ -37,7 +37,7 @@ Shown from a development build; installed packages also show the uninstall butto
 ## Install an Ubuntu update
 
 After **Check for updates** finds a newer verified Ubuntu release, click
-**Update on Ubuntu**. Save or discard unsaved work, wait for the download and
+**Update on Ubuntu**. Review and save or discard unsaved work in every tab, wait for the download and
 verification, then choose **Close and install**. The app closes; Ubuntu requests
 administrator approval. A separate progress window reports the result and offers
 to reopen OSCAR-UI. Canceling before installation does not change the package.
@@ -49,7 +49,7 @@ This is available for installed Ubuntu x64 DEB packages. Development runs retain
 
 Choose **Help → About**. In a supported installed package, the
 **Uninstall OSCAR-UI…** button is below **Release updates**, above **Close**.
-Confirm, then save or discard unsaved changes; Cancel keeps the application open.
+Confirm, then save or discard unsaved changes in every tab; Cancel keeps the application open.
 On Ubuntu the UI closes, administrator approval appears, and a separate progress
 window reports removal. On Windows the UI closes and Installed apps opens;
 select OSCAR-UI and choose Uninstall there.
@@ -91,7 +91,7 @@ hidden when up to date, running a newer development build, or offline.
 
 ## Install a Windows update
 
-A compatible release enables **Update on Windows**. Save or discard changes,
+A compatible release enables **Update on Windows**. Save or discard changes in every tab,
 confirm closing the app, then follow the download and administrator prompts.
 The app restarts after success; a reboot requirement is reported separately.
 Cancel or failure offers to reopen it.

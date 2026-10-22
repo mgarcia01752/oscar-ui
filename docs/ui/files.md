@@ -5,12 +5,14 @@
 ## New
 
 Choose **File → New** and select the configuration type and starting template.
+The new draft opens in its own tab; existing files remain open.
 An All TLVs template is a reference for available fields, not a ready-to-deploy
 configuration. Enter values and remove unwanted entries before saving.
 
 ## Open
 
-Choose **File → Open** and select a text or binary file. Contents determine the
+Choose **File → Open** and select a text or binary file to open in a new tab.
+You can also right-click the tab row for Open or New. Contents determine the
 format; changing the filename extension does not convert a file. OSCAR-UI selects
 a compatible catalog automatically. Shared DOCSIS encodings do not uniquely
 identify the modem's version; supported D4.0-only fields select the D4.0 catalog.
@@ -39,8 +41,10 @@ validation. Encoding errors preserve the destination and unsaved document.
 
 Save As confirms overwrites. Changes made externally are checked before replacing
 files. Cross-format saves cannot overwrite the source in the other format;
-choose another destination. New, Open and Exit offer Save/Discard/Cancel when
-there are unsaved changes.
+choose another destination. Save As also refuses destinations already open in
+another tab. New and Open preserve other tabs without discard prompts. Closing a
+dirty tab offers Save/Discard/Cancel; Exit reviews every unsaved tab. Cancel or a
+failed save aborts closing and leaves tabs open.
 
 ## Check Config and current limits
 

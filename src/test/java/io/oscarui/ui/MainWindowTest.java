@@ -19,6 +19,227 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void tabsTrackBinaryTextDuplicatePathsAndRepeatedTlvSelection() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path text = Files.writeString(temporary.resolve("flows.txt"), "Docsis { "
+                    + "UpstreamServiceFlow { ServiceFlowReference 1; } "
+                    + "UpstreamServiceFlow { ServiceFlowReference 2; } }");
+            window.openFile(text);
+            await(() -> window.completed() && window.succeeded());
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.topLevelItem(0).child(1).setExpanded(true);
+            tree.setCurrentItem(tree.topLevelItem(0).child(1).child(0));
+            var first = window.currentDocument();
+            Path binary = Files.write(temporary.resolve("modem.bin"), java.util.HexFormat.of().parseHex("030101ff00"));
+            window.openFile(binary);
+            await(() -> window.completed() && window.succeeded());
+            assertEquals(2, tabs.count());
+            assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
+            tabs.setCurrentIndex(0);
+            assertSame(first, window.currentDocument());
+            assertEquals("Text", window.findChild(QLabel.class, "documentType").text());
+            assertEquals("2", tree.currentItem().text(2));
+            assertSame(tree.topLevelItem(0).child(1).child(0), tree.currentItem());
+            assertTrue(window.findChild(QLabel.class, "documentBreadcrumb").toolTip().endsWith("flows.txt"));
+            window.openFile(text.getParent().resolve("./flows.txt"));
+            assertEquals(2, tabs.count());
+            assertSame(first, window.currentDocument());
+            action(window, "nextDocumentTab").trigger();
+            assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
+            action(window, "fileCloseTab").trigger();
+            assertEquals(1, tabs.count());
+            assertSame(first, window.currentDocument());
+            action(window, "fileCloseTab").trigger();
+            assertEquals(0, tabs.count());
+            assertNull(window.currentDocument());
+            assertEquals("", window.findChild(QLabel.class, "documentType").text());
+            assertEquals(0, tree.topLevelItemCount());
+            assertFalse(action(window, "fileSaveAs").isEnabled());
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void saveCompletionStaysWithOriginatingTabAndDirtyStateIsIndependent() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path firstPath = Files.writeString(temporary.resolve("a.txt"), "Docsis { NetworkAccess 1; }");
+            Path secondPath = Files.writeString(temporary.resolve("b.txt"), "Docsis { NetworkAccess 1; }");
+            window.openFile(firstPath);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            respond(window, dialog -> {
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("0");
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
+            assertCallback();
+            window.openFile(secondPath);
+            await(() -> window.completed() && window.succeeded());
+            var second = window.currentDocument();
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            assertTrue(tabs.tabToolTip(0).contains("Unsaved"));
+            assertFalse(action(window, "fileSave").isEnabled());
+            tabs.setCurrentIndex(0);
+            assertTrue(action(window, "fileSave").isEnabled());
+            action(window, "fileSave").trigger();
+            tabs.setCurrentIndex(1);
+            await(() -> window.completed() && !tabs.tabToolTip(0).contains("Unsaved"));
+            assertSame(second, window.currentDocument());
+            assertTrue(Files.readString(firstPath).contains("NetworkAccess 0"));
+            assertTrue(Files.readString(secondPath).contains("NetworkAccess 1"));
+            tabs.setCurrentIndex(0);
+            assertFalse(action(window, "fileSave").isEnabled());
+            assertTrue(window.currentDocument().text().contains("NetworkAccess 0"));
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void failedSavePreservesDirtyTabAndRejectsOtherOpenDestination() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            Path firstPath = Files.writeString(temporary.resolve("first.txt"), "Docsis { NetworkAccess 1; }");
+            Path otherPath = Files.writeString(temporary.resolve("other.txt"), "Docsis { NetworkAccess 1; }");
+            window.openFile(firstPath);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.setCurrentItem(tree.topLevelItem(0).child(0));
+            respond(window, dialog -> {
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("0");
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
+            window.openFile(otherPath);
+            await(() -> window.completed() && window.succeeded());
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            tabs.setCurrentIndex(0);
+            var original = window.currentDocument();
+            respond(window, chooser -> {
+                chooser.findChild(QLineEdit.class, "fileNameEdit").setText(otherPath.toString());
+                chooser.accept();
+            });
+            action(window, "fileSaveAs").trigger();
+            assertCallback();
+            assertSame(original, window.currentDocument());
+            assertTrue(window.findChild(QLabel.class, "operationStatus").text().contains("already open"));
+            Files.writeString(firstPath, "Docsis { NetworkAccess 1; } /* external edit */");
+            action(window, "fileSave").trigger();
+            tabs.setCurrentIndex(1);
+            await(() -> window.completed() && !window.succeeded());
+            assertEquals(otherPath, window.currentDocument().path());
+            assertTrue(tabs.tabToolTip(0).contains("Unsaved"));
+            tabs.setCurrentIndex(0);
+            assertSame(original, window.currentDocument());
+            assertTrue(action(window, "fileSave").isEnabled());
+            tabs.setCurrentIndex(1);
+            assertTrue(window.findChild(QLabel.class, "operationStatus").isHidden());
+            tabs.setCurrentIndex(0);
+            var proceeded = new java.util.concurrent.atomic.AtomicBoolean();
+            respond(window, prompt -> ((QMessageBox) prompt).button(QMessageBox.StandardButton.Save).click());
+            window.withAllDocumentsPermission(() -> proceeded.set(true));
+            await(() -> window.completed() && !window.succeeded());
+            assertCallback();
+            assertFalse(proceeded.get());
+            assertEquals(2, tabs.count());
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void allDocumentReviewSavesEveryDirtyFileBeforeProceeding() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            for (String name : new String[]{"first.txt", "second.txt"}) {
+                window.openFile(Files.writeString(temporary.resolve(name), "Docsis { NetworkAccess 1; }"));
+                await(() -> window.completed() && window.succeeded());
+                var tree = window.findChild(QTreeWidget.class, "configurationTree");
+                tree.setCurrentItem(tree.topLevelItem(0).child(0));
+                respond(window, dialog -> {
+                    dialog.findChild(QLineEdit.class, "tlvValue").setText("0");
+                    dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+                });
+                action(window, "editTlv").trigger();
+                await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 0"));
+                assertCallback();
+            }
+            var proceeded = new java.util.concurrent.atomic.AtomicBoolean();
+            respond(window, prompt -> {
+                ((QMessageBox) prompt).button(QMessageBox.StandardButton.Save).click();
+                respond(window, next -> ((QMessageBox) next).button(QMessageBox.StandardButton.Save).click());
+            });
+            window.withAllDocumentsPermission(() -> proceeded.set(true));
+            await(proceeded::get);
+            assertCallback();
+            assertTrue(Files.readString(temporary.resolve("first.txt")).contains("NetworkAccess 0"));
+            assertTrue(Files.readString(temporary.resolve("second.txt")).contains("NetworkAccess 0"));
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            assertFalse(tabs.tabToolTip(0).contains("Unsaved"));
+            assertFalse(tabs.tabToolTip(1).contains("Unsaved"));
+            assertEquals(1, tabs.currentIndex());
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void dirtyTabCloseAndAllDocumentReviewRespectCancel() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            var type = new OscarDocumentService().types().getFirst();
+            window.createDocument(type, false);
+            await(() -> window.completed() && window.succeeded());
+            window.createDocument(type, false);
+            await(() -> window.completed() && window.succeeded());
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            assertEquals(2, tabs.count());
+            assertNotEquals(tabs.tabText(0), tabs.tabText(1));
+            respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Cancel).click());
+            action(window, "fileCloseTab").trigger();
+            assertCallback();
+            assertEquals(2, tabs.count());
+            var proceeded = new java.util.concurrent.atomic.AtomicBoolean();
+            respond(window, dialog -> {
+                ((QMessageBox) dialog).button(QMessageBox.StandardButton.Discard).click();
+                respond(window, next -> ((QMessageBox) next).button(QMessageBox.StandardButton.Cancel).click());
+            });
+            window.withAllDocumentsPermission(() -> proceeded.set(true));
+            assertCallback();
+            assertFalse(proceeded.get());
+            assertEquals(2, tabs.count());
+            assertTrue(tabs.tabToolTip(0).contains("Unsaved"));
+            assertTrue(tabs.tabToolTip(1).contains("Unsaved"));
+            respond(window, dialog -> ((QMessageBox) dialog).button(QMessageBox.StandardButton.Discard).click());
+            action(window, "fileCloseTab").trigger();
+            assertCallback();
+            assertEquals(1, tabs.count());
+        } finally { window.close(); window.dispose(); }
+    }
+
+    @Test void tabContextMenuReusesFileActionsWhenWorkspaceIsEmpty() {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            var checked = new java.util.concurrent.atomic.AtomicBoolean();
+            QTimer.singleShot(0, () -> {
+                var menu = (QMenu) QApplication.activePopupWidget();
+                try {
+                    assertEquals(java.util.List.of(action(window, "fileOpen"), action(window, "fileNew")), menu.actions());
+                    checked.set(true);
+                } catch (Throwable error) {
+                    callbackFailure = error;
+                } finally {
+                    menu.close();
+                }
+            });
+            tabs.customContextMenuRequested.emit(new QPoint(5, 5));
+            assertCallback();
+            assertTrue(checked.get());
+        } finally { window.close(); window.dispose(); }
+    }
+
     @Test void templateBannerCheckboxDefaultsToIncludedAndCanBeDisabled() {
         var dialog = new GlobalSettingsDialog(null, false, true, io.oscarui.service.Appearance.SYSTEM);
         try {
@@ -1853,18 +2074,17 @@ class MainWindowTest {
             });
             action(window, "editTlv").trigger();
             await(() -> window.completed() && window.currentDocument().text().contains("NetworkAccess 1"));
-            respond(window, prompt -> {
-                assertInstanceOf(QMessageBox.class, prompt);
-                ((QMessageBox) prompt).button(QMessageBox.StandardButton.Save).click();
-                respond(window, next -> {
-                    assertInstanceOf(NewDocumentDialog.class, next);
-                    next.reject();
-                });
+            // New no longer discards or saves the current tab.
+            respond(window, next -> {
+                assertInstanceOf(NewDocumentDialog.class, next);
+                next.reject();
             });
             action(window, "fileNew").trigger();
-            await(() -> window.completed() && !action(window, "fileSave").isEnabled());
-            await(() -> QApplication.activeModalWidget() == null);
+            await(() -> window.completed() && QApplication.activeModalWidget() == null);
             assertCallback();
+            assertTrue(action(window, "fileSave").isEnabled());
+            action(window, "fileSave").trigger();
+            await(() -> window.completed() && !action(window, "fileSave").isEnabled());
             assertArrayEquals(new byte[]{3, 1, 1}, java.util.Arrays.copyOf(Files.readAllBytes(output), 3));
             saved = window.currentDocument();
             Path other = Files.write(temporary.resolve("other.bin"), new byte[]{1});

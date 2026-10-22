@@ -51,6 +51,58 @@ class UserGuideScreenshotsTest {
         }
     }
 
+    @Test void captureMultiFileWorkspace() throws Exception {
+        QApplication.initialize(new String[0]);
+        QApplication.setQuitOnLastWindowClosed(false);
+        Path images = Path.of("target/user-guide-images");
+        Files.createDirectories(images);
+        var window = new MainWindow(false);
+        try {
+            window.resize(1200, 580);
+            window.show();
+            Path examples = Files.createDirectories(temporary.resolve("configs/docsis"));
+            window.openFile(Files.writeString(examples.resolve("lab.txt"), """
+                    Docsis {
+                        NetworkAccess 1;
+                        MaxCPEAllowed 3;
+                        DownstreamServiceFlow {
+                            ServiceFlowReference 1;
+                            MaxSubstainedTrafficRate 1000000000;
+                        }
+                        UpstreamServiceFlow {
+                            ServiceFlowReference 2;
+                            MaxSubstainedTrafficRate 100000000;
+                        }
+                    }
+                    """));
+            waitForDocument(window);
+            window.openFile(Files.write(examples.resolve("modem.bin"), java.util.HexFormat.of().parseHex("030101ff00")));
+            waitForDocument(window);
+            var type = new OscarDocumentService().types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
+            window.createDocument(type, false);
+            waitForDocument(window);
+            var tabs = window.findChild(QTabBar.class, "documentTabBar");
+            assertEquals(3, tabs.count());
+            assertTrue(tabs.tabToolTip(2).contains("Unsaved"));
+            tabs.setCurrentIndex(0);
+            window.findChild(QTreeWidget.class, "configurationTree").expandAll();
+            window.findChild(QSplitter.class).setSizes(java.util.List.of(500, 700));
+            window.findChild(UpgradeChip.class, "upgradeChip").setAvailable(true);
+            DesktopTheme.apply(Appearance.DARK);
+            capture(window, images.resolve("workspace-dark.png"));
+            DesktopTheme.apply(Appearance.LIGHT);
+            capture(window, images.resolve("workspace-light.png"));
+            DesktopTheme.apply(Appearance.DARK);
+            tabs.setCurrentIndex(1);
+            assertEquals("Binary", window.findChild(QLabel.class, "documentType").text());
+            capture(window, images.resolve("workspace-binary-tabs-dark.png"));
+        } finally {
+            window.close();
+            window.dispose();
+            QApplication.shutdown();
+        }
+    }
+
     @Test void captureDarkUserGuide() throws Exception {
         QApplication.initialize(new String[0]);
         QApplication.setQuitOnLastWindowClosed(false);
@@ -85,10 +137,6 @@ class UserGuideScreenshotsTest {
             tree.setColumnWidth(1, 90);
             // Show a synthetic available-update state without a network lookup.
             window.findChild(UpgradeChip.class, "upgradeChip").setAvailable(true);
-            capture(window, images.resolve("workspace-dark.png"));
-            DesktopTheme.apply(Appearance.LIGHT);
-            capture(window, images.resolve("workspace-light.png"));
-            DesktopTheme.apply(Appearance.DARK);
             var service = new OscarDocumentService();
             var types = service.types();
             var create = new NewDocumentDialog(window, types);

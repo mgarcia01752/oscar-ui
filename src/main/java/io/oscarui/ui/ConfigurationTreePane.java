@@ -64,6 +64,33 @@ final class ConfigurationTreePane extends QTreeWidget {
         setCurrentItem(rootItem);
     }
 
+    record ViewState(Node selected, List<Node> expanded, int vertical, int horizontal) {}
+
+    ViewState rememberView() {
+        return new ViewState(selectedTlv(), tlvsByItem.entrySet().stream()
+                .filter(entry -> entry.getKey().isExpanded()).map(Map.Entry::getValue).toList(),
+                verticalScrollBar().value(), horizontalScrollBar().value());
+    }
+
+    void restoreView(ViewState state) {
+        if (state == null) {
+            return;
+        }
+        tlvsByItem.forEach((item, node) -> item.setExpanded(state.expanded().stream()
+                .anyMatch(previous -> previous.sourceStartOffset() == node.sourceStartOffset()
+                        && previous.tlvPath().equals(node.tlvPath()))));
+        selectCorresponding(state.selected());
+        verticalScrollBar().setValue(state.vertical());
+        horizontalScrollBar().setValue(state.horizontal());
+    }
+
+    void clearDocument() {
+        tlvsByItem.clear();
+        parentsByTlv.clear();
+        documentRoot = null;
+        clear();
+    }
+
     Node selectedTlv() {
         return tlvsByItem.get(currentItem());
     }

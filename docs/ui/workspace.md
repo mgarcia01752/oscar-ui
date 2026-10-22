@@ -20,6 +20,29 @@ layout uses the theme's highlight color.
 
 [View the workspace in light mode](../images/user-guide/workspace-light.png).
 
+## File tabs and directory breadcrumbs
+
+Each New/Open adds a tab above the text panel. Select a tab to switch the shared
+TLV tree, text preview, inspection actions, and bottom-right **Text/Binary** label.
+An *italic* tab name means a new or modified document has not been saved; a
+successful save restores normal lettering. Each file keeps its own tree selection,
+expanded nodes, and scroll position.
+
+The row below the tabs shows directory segments and the active filename. Long
+paths shorten on the left; hover for the full path. Identical filenames in different
+directories include enough parent context to distinguish their tabs. Opening the
+same file again activates its existing tab, preserving unsaved edits.
+
+Right-click a tab or blank space on the tab row for **Open** and **New**. These
+use the same dialogs as the File menu. Tab controls remain accessible in tree-only
+mode. Compare Files is not included in this version.
+
+Use a tab's close button or **File → Close Tab** to close it. Unsaved tabs offer
+Save / Discard / Cancel. Closing the last tab leaves an empty workspace. Exit,
+application updates, and uninstall review all unsaved tabs before proceeding.
+During a background operation you can select another tab; file-changing actions
+and closing tabs wait until the serialized operation completes.
+
 ## Configuration tree
 
 The **Configuration**, **TLV**, and **Value** columns show the name, dotted TLV
@@ -54,6 +77,8 @@ These are the standard Linux/Windows shortcuts; the menus reflect the platform.
 | Open | Ctrl+O |
 | Save | Ctrl+S |
 | Save As | Ctrl+Shift+S |
+| Close tab | Ctrl+W |
+| Next / previous tab | Ctrl+Tab / Ctrl+Shift+Tab |
 | Copy selected text | Ctrl+C |
 | Select all preview text | Ctrl+A |
 
@@ -67,3 +92,7 @@ See [Files](files.md), [TLV editing](tlv-editing.md), and [Settings](settings.md
 
 A green **Update** chip appears at the upper-right of the menu bar when a
 newer stable release is available. Select it for [update options](about.md#upgrade-indicator).
+
+**Binary tab selected: tree and status follow the active file**
+
+![Binary tab selected](../images/user-guide/workspace-binary-tabs-dark.png)

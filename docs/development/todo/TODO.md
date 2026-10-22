@@ -1,8 +1,8 @@
 # Development TODO
 
-## Multi-file workspace (planned)
+## Multi-file workspace
 
-- [ ] Implement [document tabs and synchronized workspace sessions](multi-file-workspace.md).
+- [x] Implement [document tabs and synchronized workspace sessions](multi-file-workspace.md).
   Keep separate unsaved state, active TLV tree, and Text/Binary indicator per file.
   Use the supplied two-row filename-tab and directory-breadcrumb layout.
 

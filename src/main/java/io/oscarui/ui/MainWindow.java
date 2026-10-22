@@ -52,6 +52,8 @@ public final class MainWindow extends QMainWindow {
 
     private final QAction open = action("&Open...", "fileOpen", QKeySequence.StandardKey.Open);
 
+    private final QAction closeTab = action("&Close Tab", "fileCloseTab", QKeySequence.StandardKey.Close);
+
     private final QAction save = action("&Save", "fileSave", QKeySequence.StandardKey.Save);
 
     private final QAction saveAs = action("&Text...", "fileSaveAs", null);
@@ -96,6 +98,11 @@ public final class MainWindow extends QMainWindow {
 
     private final QMetaObject.Connection systemAppearanceConnection;
 
+    private final WorkspaceSessions workspace = new WorkspaceSessions();
+    private final DocumentTabs documentTabs = new DocumentTabs(this::activateSession, this::closeSession);
+    private final QWidget tabSpacer = new QWidget();
+    private QSplitter workspaceSplitter;
+    private boolean closeApproved;
     private Document document;
 
     private boolean modified;
@@ -104,6 +111,7 @@ public final class MainWindow extends QMainWindow {
     private boolean includeTemplateBanner = true;
 
     private Future<Runnable> pending;
+    private WorkspaceSessions.Session pendingOwner;
 
     private boolean completed;
 
@@ -155,7 +163,18 @@ public final class MainWindow extends QMainWindow {
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
         status.setVisible(false);
+        var tabRow = new QHBoxLayout();
+        tabRow.setContentsMargins(0, 0, 0, 0);
+        tabRow.setSpacing(0);
+        tabRow.addWidget(tabSpacer);
+        tabRow.addWidget(documentTabs, 1);
+        layout.addLayout(tabRow);
         var splitter = new QSplitter(Qt.Orientation.Horizontal);
+        workspaceSplitter = splitter;
+        splitter.installEventFilter(this);
+        configurationTreePane.installEventFilter(this);
+        configurationTextPane.installEventFilter(this);
+        splitter.splitterMoved.connect((position, index) -> alignTabs());
         splitter.addWidget(configurationTreePane);
         splitter.addWidget(configurationTextPane);
         splitter.setStretchFactor(0, 1);
@@ -165,6 +184,7 @@ public final class MainWindow extends QMainWindow {
         layout.addWidget(status);
         setCentralWidget(central);
         buildMenus();
+        documentTabs.configureMenu(open, newFile);
         viewTlvHex.triggered.connect(this::showSelectedTlvHex);
         configurationTreePane.currentItemChanged.connect((current, previous) -> {
             configurationTextPane.highlight(configurationTreePane.selectedTlv());
@@ -254,12 +274,15 @@ public final class MainWindow extends QMainWindow {
         if (pending != null) {
             return;
         }
+        if (activateExisting(configurationPath)) {
+            return;
+        }
         submit(() -> binaryService.openAuto(configurationPath), loaded -> {
-            display(loaded, false);
+            addSession(loaded, false);
             if (interactive) {
                 chooseTlv();
             }
-        });
+        }, true);
     }
 
     /**
@@ -275,12 +298,15 @@ public final class MainWindow extends QMainWindow {
         if (pending != null) {
             return;
         }
+        if (activateExisting(configurationPath)) {
+            return;
+        }
         submit(() -> binaryService.open(configurationPath, configurationType), loaded -> {
-            display(loaded, false);
+            addSession(loaded, false);
             if (interactive) {
                 chooseTlv();
             }
-        });
+        }, true);
     }
 
     /**
@@ -295,11 +321,11 @@ public final class MainWindow extends QMainWindow {
     public void createDocument(FileType configurationType, boolean includeAllTlvs) {
         var bannerLevel = includeTemplateBanner ? TemplateBannerLevel.SPDX_AUTHOR : TemplateBannerLevel.DISABLE;
         submit(() -> documentService.create(configurationType, includeAllTlvs, bannerLevel), created -> {
-            display(created, true);
+            addSession(created, true);
             if (interactive) {
                 chooseTlv();
             }
-        });
+        }, true);
     }
 
     /**
@@ -343,6 +369,10 @@ public final class MainWindow extends QMainWindow {
      * @return true when the Inspect tooltip was handled, otherwise Qt's result
      */
     @Override public boolean eventFilter(QObject watched, QEvent event) {
+        if ((watched == workspaceSplitter || watched == configurationTreePane || watched == configurationTextPane)
+                && (event.type() == QEvent.Type.Resize || event.type() == QEvent.Type.Show || event.type() == QEvent.Type.Hide)) {
+            QTimer.singleShot(0, this::alignTabs);
+        }
         if (watched == menuBar() && event.type() == QEvent.Type.ToolTip
                 && event instanceof QHelpEvent helpEvent && inspectMenu != null
                 && menuBar().actionAt(helpEvent.pos()) == inspectMenu.menuAction()) {
@@ -371,9 +401,9 @@ public final class MainWindow extends QMainWindow {
             showStatus("Wait for the current operation to finish.");
             return;
         }
-        if (interactive && modified) {
+        if (interactive && !closeApproved && workspace.all().stream().anyMatch(WorkspaceSessions.Session::modified)) {
             event.ignore();
-            withDiscardPermission(() -> { modified = false; QTimer.singleShot(0, () -> close()); });
+            withAllDocumentsPermission(() -> { closeApproved = true; QTimer.singleShot(0, () -> close()); });
             return;
         }
         QObject.disconnect(systemAppearanceConnection);
@@ -385,6 +415,27 @@ public final class MainWindow extends QMainWindow {
         upgradeChip.stop();
         secrets.close();
         super.closeEvent(event);
+    }
+
+    void withAllDocumentsPermission(Runnable proceed) {
+        var toSave = new ArrayList<WorkspaceSessions.Session>();
+        var selected = workspace.active();
+        for (var session : workspace.all()) {
+            if (!session.modified()) {
+                continue;
+            }
+            var answer = QMessageBox.question(this, "Unsaved changes", "Save changes to " + session.name() + "?",
+                    new QMessageBox.StandardButtons(QMessageBox.StandardButton.Save,
+                            QMessageBox.StandardButton.Discard, QMessageBox.StandardButton.Cancel),
+                    QMessageBox.StandardButton.Cancel);
+            if (answer == QMessageBox.StandardButton.Cancel) {
+                return;
+            }
+            if (answer == QMessageBox.StandardButton.Save) {
+                toSave.add(session);
+            }
+        }
+        saveReviewedDocuments(toSave, selected, proceed);
     }
 
     private QAction action(String label, String name, QKeySequence.StandardKey shortcut) {
@@ -407,12 +458,20 @@ public final class MainWindow extends QMainWindow {
         addAction(saveAsShortcut);
         saveAsShortcut.triggered.connect(this::chooseSaveFormat);
         binarySaveAs.triggered.connect(() -> saveBinary(true, () -> {}));
+        closeTab.triggered.connect(() -> closeSession(workspace.active()));
+        file.addAction(closeTab);
+        var nextTab = action("Next Tab", "nextDocumentTab", QKeySequence.StandardKey.NextChild);
+        nextTab.triggered.connect(() -> documentTabs.cycle(workspace, 1));
+        addAction(nextTab);
+        var previousTab = action("Previous Tab", "previousDocumentTab", QKeySequence.StandardKey.PreviousChild);
+        previousTab.triggered.connect(() -> documentTabs.cycle(workspace, -1));
+        addAction(previousTab);
         file.addAction(configChecks);
         configChecks.triggered.connect(this::checkBinary);
         file.addSeparator();
         var exit = action("E&xit", "fileExit", QKeySequence.StandardKey.Quit);
         file.addAction(exit);
-        newFile.triggered.connect(() -> withDiscardPermission(this::chooseNew));
+        newFile.triggered.connect(this::chooseNew);
         open.triggered.connect(this::chooseFile);
         save.triggered.connect(() -> saveCurrent(() -> {}));
         saveAs.triggered.connect(() -> saveDocument(true, () -> {}));
@@ -527,9 +586,9 @@ public final class MainWindow extends QMainWindow {
         if (uninstallRequested && pending == null) {
             confirmUninstall();
         } else if (windowsInstaller != null && pending == null) {
-            withDiscardPermission(() -> installWindowsUpdate(windowsInstaller));
+            withAllDocumentsPermission(() -> installWindowsUpdate(windowsInstaller));
         } else if (installer != null && pending == null) {
-            withDiscardPermission(() -> installUbuntuUpdate(installer));
+            withAllDocumentsPermission(() -> installUbuntuUpdate(installer));
         }
     }
 
@@ -543,10 +602,10 @@ public final class MainWindow extends QMainWindow {
                 QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
             return;
         }
-        withDiscardPermission(() -> {
+        withAllDocumentsPermission(() -> {
             try {
                 new io.oscarui.service.UninstallService().launch();
-                modified = false;
+                closeApproved = true;
                 close();
             } catch (java.io.IOException exception) {
                 QMessageBox.warning(this, "Uninstall could not start", exception.getMessage());
@@ -564,7 +623,7 @@ public final class MainWindow extends QMainWindow {
         }
         try {
             new io.oscarui.service.WindowsUpdateService().launch(installer);
-            modified = false;
+            closeApproved = true;
             close();
         } catch (java.io.IOException exception) {
             QMessageBox.warning(this, "Update could not start", exception.getMessage());
@@ -578,7 +637,7 @@ public final class MainWindow extends QMainWindow {
             if (download.exec() == QDialog.DialogCode.Accepted.value()) {
                 try {
                     service.launch(installer, download.downloadedPackage());
-                    modified = false;
+                    closeApproved = true;
                     close();
                 } catch (java.io.IOException exception) {
                     service.discard(download.downloadedPackage());
@@ -637,13 +696,11 @@ public final class MainWindow extends QMainWindow {
         if (pending != null) {
             return;
         }
-        withDiscardPermission(() -> {
-            var selection = QFileDialog.getOpenFileName(this, "Open configuration", "",
-                    "Configuration files (*.txt *.conf *.cfg *.bin *.cm *.mta);;All files (*)");
-            if (selection != null && selection.result != null && !selection.result.isEmpty()) {
-                openFile(Path.of(selection.result));
-            }
-        });
+        var selection = QFileDialog.getOpenFileName(this, "Open configuration", "",
+                "Configuration files (*.txt *.conf *.cfg *.bin *.cm *.mta);;All files (*)");
+        if (selection != null && selection.result != null && !selection.result.isEmpty()) {
+            openFile(Path.of(selection.result));
+        }
     }
 
     private void chooseNew() {
@@ -657,7 +714,97 @@ public final class MainWindow extends QMainWindow {
         });
     }
 
+    private void alignTabs() {
+        if (workspaceSplitter != null && !workspaceSplitter.isDisposed()) {
+            int width = !configurationTreePane.isHidden() && !configurationTextPane.isHidden()
+                    ? workspaceSplitter.sizes().getFirst() + workspaceSplitter.handleWidth() : 0;
+            tabSpacer.setFixedWidth(width);
+        }
+    }
+
+    private boolean activateExisting(Path path) {
+        var existing = workspace.forPath(path);
+        if (existing == null) {
+            return false;
+        }
+        activateSession(existing);
+        completed = true;
+        succeeded = true;
+        return true;
+    }
+
+    private void rememberSession() {
+        if (workspace.active() != null) {
+            workspace.active().remember(configurationTreePane.rememberView(),
+                    configurationTextPane.verticalScrollBar().value(), configurationTextPane.horizontalScrollBar().value());
+        }
+    }
+
+    private void addSession(Document loaded, boolean changed) {
+        var existing = workspace.forPath(loaded.path() != null ? loaded.path() : loaded.origin() == null ? null : loaded.origin().path());
+        activateSession(existing == null ? workspace.add(loaded, changed) : existing);
+    }
+
+    private void activateSession(WorkspaceSessions.Session session) {
+        if (session == workspace.active()) {
+            return;
+        }
+        rememberSession();
+        workspace.activate(session);
+        renderSession();
+    }
+
+    private void renderSession() {
+        var session = workspace.active();
+        document = session == null ? null : session.document();
+        modified = session != null && session.modified();
+        if (session == null) {
+            configurationTreePane.clearDocument();
+            configurationTextPane.clear();
+        } else {
+            configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
+            configurationTreePane.displayRoot(document.root(), documentService.hasBinaryTree(document));
+            configurationTreePane.applyMask(secrets.masking());
+            configurationTreePane.restoreView(session.treeState());
+            updateMicVisibility();
+            configurationTextPane.verticalScrollBar().setValue(session.textScroll());
+            configurationTextPane.horizontalScrollBar().setValue(session.textHorizontalScroll());
+        }
+        String savedStatus = session == null ? "" : session.status();
+        updateDocumentLabels();
+        showStatus(savedStatus);
+        updateActions();
+    }
+
+    private void closeSession(WorkspaceSessions.Session session) {
+        if (session == null || pending != null) {
+            return;
+        }
+        activateSession(session);
+        Runnable remove = () -> {
+            workspace.remove(session);
+            renderSession();
+        };
+        withDiscardPermission(remove);
+    }
+
+    private void saveReviewedDocuments(List<WorkspaceSessions.Session> toSave,
+                                       WorkspaceSessions.Session selected, Runnable proceed) {
+        if (toSave.isEmpty()) {
+            if (selected != null) {
+                activateSession(selected);
+            }
+            proceed.run();
+            return;
+        }
+        activateSession(toSave.getFirst());
+        saveCurrent(() -> saveReviewedDocuments(toSave.subList(1, toSave.size()), selected, proceed));
+    }
+
     private void display(Document current, boolean changed) {
+        if (workspace.active() != null) {
+            workspace.active().replace(current, changed);
+        }
         document = current;
         modified = changed;
         configurationTextPane.displayDocument(current, showTextTlvNumbers, secrets.masking());
@@ -676,11 +823,16 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void updateDocumentLabels() {
-        typeLabel.setText(document.path() == null && document.origin() != null ? "Binary" : "Text");
+        typeLabel.setText(workspace.active() == null ? ""
+                : workspace.active().format() == WorkspaceSessions.Format.BINARY ? "Binary" : "Text");
+        documentTabs.refresh(workspace);
         showStatus("");
     }
 
     private void showStatus(String message) {
+        if (workspace.active() != null) {
+            workspace.active().status(message);
+        }
         status.setText(message);
         status.setVisible(!message.isEmpty());
     }
@@ -870,6 +1022,11 @@ public final class MainWindow extends QMainWindow {
             destination = Path.of(selection.result).toAbsolutePath().normalize();
         }
         Path target = destination;
+        var occupied = workspace.forPath(target);
+        if (occupied != null && occupied != workspace.active()) {
+            showStatus("That destination is already open in another tab. Close that tab or choose another path.");
+            return;
+        }
         String sharedSecret = secrets.sharedValue();
         submit(() -> documentService.destinationHash(target), observedHash -> {
             if (pickedDestination && observedHash != null && QMessageBox.question(this, "Replace file?",
@@ -922,6 +1079,11 @@ public final class MainWindow extends QMainWindow {
             destination = Path.of(selection.result).toAbsolutePath().normalize();
         }
         Path target = destination;
+        var occupied = workspace.forPath(target);
+        if (occupied != null && occupied != workspace.active()) {
+            showStatus("That destination is already open in another tab. Close that tab or choose another path.");
+            return;
+        }
         Document original = document;
         submit(() -> documentService.destinationHash(target), observedHash -> {
             if (pickedDestination && observedHash != null && QMessageBox.question(this, "Replace file?",
@@ -932,10 +1094,7 @@ public final class MainWindow extends QMainWindow {
             }
             String expected = target.equals(original.path()) ? original.diskHash() : observedHash;
             submit(() -> documentService.save(original, target, expected), saved -> {
-                document = saved;
-                modified = false;
-                updateDocumentLabels();
-                updateActions();
+                display(saved, false);
                 afterSave.run();
             });
         });
@@ -946,7 +1105,7 @@ public final class MainWindow extends QMainWindow {
             proceed.run();
             return;
         }
-        var answer = QMessageBox.question(this, "Unsaved changes", "Save changes to the current configuration?",
+        var answer = QMessageBox.question(this, "Unsaved changes", "Save changes to " + workspace.active().name() + "?",
                 new QMessageBox.StandardButtons(QMessageBox.StandardButton.Save,
                         QMessageBox.StandardButton.Discard, QMessageBox.StandardButton.Cancel),
                 QMessageBox.StandardButton.Cancel);
@@ -959,14 +1118,36 @@ public final class MainWindow extends QMainWindow {
     }
 
     private <Result> void submit(Callable<Result> operation, Consumer<Result> apply) {
+        submit(operation, apply, false);
+    }
+
+    private <Result> void submit(Callable<Result> operation, Consumer<Result> apply, boolean selectNewSession) {
         if (pending != null) {
             return;
         }
         completed = false;
         succeeded = false;
+        var owner = workspace.active();
+        pendingOwner = owner;
+        long revision = owner == null ? 0 : owner.revision();
         pending = worker.submit(() -> {
             Result result = operation.call();
-            return () -> apply.accept(result);
+            return () -> {
+                if (owner != null && (workspace.find(owner.id()) == null || owner.revision() != revision)) {
+                    return;
+                }
+                var selected = workspace.active();
+                if (!selectNewSession && owner != null) {
+                    activateSession(owner);
+                }
+                try {
+                    apply.accept(result);
+                } finally {
+                    if (!selectNewSession && selected != owner && selected != null && workspace.find(selected.id()) != null) {
+                        activateSession(selected);
+                    }
+                }
+            };
         });
         showStatus("Working...");
         updateActions();
@@ -976,18 +1157,17 @@ public final class MainWindow extends QMainWindow {
         if (pending == null || !pending.isDone()) {
             return;
         }
+        var operationOwner = pendingOwner;
         try {
             Runnable apply = pending.get();
             pending = null;
             completed = true;
             succeeded = true;
             updateActions();
-            if (document != null) {
-                updateDocumentLabels();
+            if (operationOwner != null && operationOwner.status().equals("Working...")) {
+                operationOwner.status("");
             }
-            else {
-                showStatus("");
-            }
+            showStatus(workspace.active() == null ? "" : workspace.active().status());
             apply.run();
         } catch (ExecutionException | RuntimeException error) {
             pending = null;
@@ -1000,7 +1180,19 @@ public final class MainWindow extends QMainWindow {
             if (secrets.masking().enabled() && !(cause instanceof InspectionException)) {
                 message = "The document operation failed. Details are hidden while SNMP obfuscation is enabled.";
             }
-            showStatus(message);
+            if (operationOwner != null) {
+                operationOwner.status(message);
+                if (operationOwner != workspace.active()) {
+                    message = operationOwner.name() + ": " + message;
+                }
+            }
+            if (operationOwner != null && operationOwner != workspace.active()) {
+                // Report the background failure without storing it on an unrelated tab.
+                status.setText(message);
+                status.setVisible(true);
+            } else {
+                showStatus(message);
+            }
             if (interactive) {
                 if (cause instanceof InspectionException inspection && inspection.binaryReport() != null) {
                     var dialog = new BinaryFailureDialog(this, inspection.binaryReport());
@@ -1027,6 +1219,7 @@ public final class MainWindow extends QMainWindow {
         boolean idle = pending == null;
         newFile.setEnabled(idle);
         open.setEnabled(idle);
+        closeTab.setEnabled(idle && document != null);
         save.setEnabled(idle && document != null && modified);
         saveAs.setEnabled(idle && document != null);
         saveAsMenu.setEnabled(idle && document != null);
