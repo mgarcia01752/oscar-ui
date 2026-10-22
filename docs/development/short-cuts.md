@@ -97,12 +97,12 @@ success. [Status helper details](../../tools/git/README.md#check-release-status)
 
 ## Update the OSCAR dependency
 
-Replace `X.Y.Z` with the published OSCAR version, without a `v` prefix.
+Resolve the latest published OSCAR release with GitHub CLI (`gh`).
 Wait until the upstream release JAR assets are available.
 
 ```bash
 cd /home/dev01/Projects/oscar-ui &&
-python3 tools/development/update-oscar.py --version X.Y.Z
+python3 tools/development/update-oscar.py --version "$(gh api repos/Comcast/Oscar/releases/latest --jq '.tag_name | ltrimstr("v")')"
 ```
 
 This downloads the JAR, updates local references, and runs Maven verification.
