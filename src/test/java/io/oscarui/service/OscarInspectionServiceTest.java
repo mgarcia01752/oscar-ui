@@ -152,8 +152,9 @@ class OscarInspectionServiceTest {
         for (var configurationType : documents.types()) {
             var template = documents.create(configurationType, true);
             assertTrue(template.reference());
-            String exported = new com.comcast.oscar.configurationfile.ConfigurationFileExport(configurationType.id())
-                    .toPrettyPrint(com.comcast.oscar.configurationfile.ConfigurationFileExport.EXPORT_DEFAULT_TLV);
+            var exporter = new com.comcast.oscar.configurationfile.ConfigurationFileExport(configurationType.id());
+            exporter.setTemplateBannerLevel(com.comcast.oscar.configurationfile.TemplateBannerLevel.SPDX_AUTHOR);
+            String exported = exporter.toPrettyPrint(com.comcast.oscar.configurationfile.ConfigurationFileExport.EXPORT_DEFAULT_TLV);
                 var lexer = new com.comcast.oscar.parser.tlvLexer(new org.antlr.v4.runtime.ANTLRInputStream(exported));
                 var header = lexer.nextToken();
                 String normalized = exported.substring(0, header.getStartIndex()) + configurationType.header()

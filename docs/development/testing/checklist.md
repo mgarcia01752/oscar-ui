@@ -333,7 +333,7 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 ## Template banner preference
 
-- [ ] Verify Global defaults to the full template banner.
-- [ ] Disable it, restart, and create All TLVs: retain SPDX and authors only.
-- [ ] Cancel settings without changing the preference; re-enable for full help.
+- [ ] Verify Include template banner defaults to checked (SPDX and authors).
+- [ ] Uncheck it, restart, and create All TLVs: omit the OSCAR banner.
+- [ ] Cancel settings without changing the preference; re-enable for SPDX and authors.
 - [ ] Confirm existing documents and TLV contents are unchanged.

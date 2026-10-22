@@ -36,6 +36,9 @@ class UserGuideScreenshotsTest {
             captureDialog(dialog, images.resolve("common-tlv-settings-dark.png"));
             captureDialog(new GlobalSettingsDialog(null, false, true, Appearance.DARK, service),
                     images.resolve("global-settings-dark.png"));
+            var withoutBanner = new GlobalSettingsDialog(null, false, true, Appearance.DARK, service);
+            withoutBanner.setIncludeTemplateBanner(false);
+            captureDialog(withoutBanner, images.resolve("global-settings-no-banner-dark.png"));
             var type = service.types().stream().filter(entry -> entry.header().equals("Docsis")).findFirst().orElseThrow();
             var document = service.create(type, false);
             var add = new TlvEditorDialog(null, service, document, document.root(), service.addDefinitions(document, document.root()));

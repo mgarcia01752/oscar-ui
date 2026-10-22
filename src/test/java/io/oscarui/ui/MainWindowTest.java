@@ -19,6 +19,21 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void templateBannerCheckboxDefaultsToIncludedAndCanBeDisabled() {
+        var dialog = new GlobalSettingsDialog(null, false, true, io.oscarui.service.Appearance.SYSTEM);
+        try {
+            var checkbox = dialog.findChild(QCheckBox.class, "includeTemplateBannerCheckbox");
+            assertEquals("Include template banner", checkbox.text());
+            assertTrue(dialog.includeTemplateBanner());
+            checkbox.click();
+            assertFalse(dialog.includeTemplateBanner());
+            dialog.setIncludeTemplateBanner(true);
+            assertTrue(dialog.includeTemplateBanner());
+        } finally {
+            dialog.dispose();
+        }
+    }
+
     @Test void workspaceLayoutsKeepUpdateFirstAndRestoreBothPanes() {
         var window = new MainWindow(false);
         window.show();

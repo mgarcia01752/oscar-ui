@@ -101,7 +101,7 @@ public final class MainWindow extends QMainWindow {
     private boolean modified;
 
     private boolean showTextTlvNumbers = true;
-    private boolean disableTemplateBanner;
+    private boolean includeTemplateBanner = true;
 
     private Future<Runnable> pending;
 
@@ -187,7 +187,7 @@ public final class MainWindow extends QMainWindow {
         if (appearanceSettings != null) {
             try {
                 appearance = appearanceSettings.load();
-                disableTemplateBanner = appearanceSettings.loadDisableTemplateBanner();
+                includeTemplateBanner = appearanceSettings.loadIncludeTemplateBanner();
                 secrets.replace("", appearanceSettings.loadObfuscateSnmpSecrets());
             } catch (IOException exception) {
                 showStatus("Could not read appearance settings; using System. Save a preference in Settings > Global to replace them.");
@@ -293,7 +293,7 @@ public final class MainWindow extends QMainWindow {
      * @param includeAllTlvs true for a reference template, false for a new draft
      */
     public void createDocument(FileType configurationType, boolean includeAllTlvs) {
-        var bannerLevel = disableTemplateBanner ? TemplateBannerLevel.SPDX_AUTHOR : TemplateBannerLevel.FULL;
+        var bannerLevel = includeTemplateBanner ? TemplateBannerLevel.SPDX_AUTHOR : TemplateBannerLevel.DISABLE;
         submit(() -> documentService.create(configurationType, includeAllTlvs, bannerLevel), created -> {
             display(created, true);
             if (interactive) {
@@ -446,15 +446,15 @@ public final class MainWindow extends QMainWindow {
         global.triggered.connect(() -> {
             var dialog = new GlobalSettingsDialog(this, showMicTlvs.isChecked(), showTextTlvNumbers, appearance, documentService,
                     document == null ? null : document.configurationType());
-            dialog.setDisableTemplateBanner(disableTemplateBanner);
+            dialog.setIncludeTemplateBanner(includeTemplateBanner);
             try {
                 if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                     try {
                         if (appearanceSettings != null) {
-                            appearanceSettings.save(dialog.appearance(), secrets.obfuscateSnmpSecrets(), dialog.disableTemplateBanner());
+                            appearanceSettings.save(dialog.appearance(), secrets.obfuscateSnmpSecrets(), dialog.includeTemplateBanner());
                         }
                         appearance = dialog.appearance();
-                        disableTemplateBanner = dialog.disableTemplateBanner();
+                        includeTemplateBanner = dialog.includeTemplateBanner();
                         showMicTlvs.setChecked(dialog.showMicTlvs());
                         DesktopTheme.apply(appearance);
                         showTextTlvNumbers = dialog.showTextTlvNumbers();

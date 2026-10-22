@@ -12,7 +12,7 @@ import io.qt.widgets.*;
 final class GlobalSettingsDialog extends QDialog {
     private final QCheckBox showMicTlvsCheckbox = new QCheckBox("Show CM/CMTS MIC TLVs");
     private final QCheckBox showTextTlvNumbersCheckbox = new QCheckBox("Show TLV comments in configuration text");
-    private final QCheckBox disableTemplateBannerCheckbox = new QCheckBox("Disable template banner (keep SPDX and authors)");
+    private final QCheckBox includeTemplateBannerCheckbox = new QCheckBox("Include template banner");
     private final QComboBox appearanceSelector = new QComboBox();
 
     GlobalSettingsDialog(QWidget parent, boolean showMic, boolean showTextTlvNumbers, Appearance appearance) {
@@ -37,8 +37,9 @@ final class GlobalSettingsDialog extends QDialog {
         showTextTlvNumbersCheckbox.setObjectName("showTextTlvNumbersCheckbox");
         showTextTlvNumbersCheckbox.setChecked(showTextTlvNumbers);
         layout.addWidget(showTextTlvNumbersCheckbox);
-        disableTemplateBannerCheckbox.setObjectName("disableTemplateBannerCheckbox");
-        layout.addWidget(disableTemplateBannerCheckbox);
+        includeTemplateBannerCheckbox.setObjectName("includeTemplateBannerCheckbox");
+        includeTemplateBannerCheckbox.setChecked(true);
+        layout.addWidget(includeTemplateBannerCheckbox);
         appearanceSelector.setObjectName("appearanceMode");
         appearanceSelector.addItem("System");
         appearanceSelector.addItem("Light");
@@ -70,8 +71,8 @@ final class GlobalSettingsDialog extends QDialog {
         layout.addWidget(buttons);
     }
 
-    void setDisableTemplateBanner(boolean disabled) { disableTemplateBannerCheckbox.setChecked(disabled); }
-    boolean disableTemplateBanner() { return disableTemplateBannerCheckbox.isChecked(); }
+    void setIncludeTemplateBanner(boolean disabled) { includeTemplateBannerCheckbox.setChecked(disabled); }
+    boolean includeTemplateBanner() { return includeTemplateBannerCheckbox.isChecked(); }
     boolean showMicTlvs() { return showMicTlvsCheckbox.isChecked(); }
     boolean showTextTlvNumbers() { return showTextTlvNumbersCheckbox.isChecked(); }
     Appearance appearance() { return Appearance.values()[appearanceSelector.currentIndex()]; }

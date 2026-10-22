@@ -513,7 +513,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.5.1 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.5.2 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -749,7 +749,9 @@ the active palette. Layout selection is not persisted across application restart
 
 ## Template banner preference
 
-Global settings persist `disableTemplateBanner` in the per-user settings file,
-defaulting to false for new and older files. New All TLVs templates use OSCAR
-`TemplateBannerLevel.FULL` unless disabled, then `SPDX_AUTHOR`. Existing documents
-and TLV comment visibility are unaffected.
+Global settings persist `includeTemplateBanner` in the per-user settings file,
+defaulting to true for new and older files. The earlier `disableTemplateBanner`
+key selected between two visible banners, so either legacy value migrates to
+included. New All TLVs templates explicitly use OSCAR `SPDX_AUTHOR` when checked
+and `DISABLE` when unchecked. OSCAR's own default remains `FULL`. Existing
+documents, the reference-template warning, and TLV comments are unaffected.

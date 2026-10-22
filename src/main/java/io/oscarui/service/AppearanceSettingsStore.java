@@ -91,23 +91,23 @@ public final class AppearanceSettingsStore {
      * @throws IOException if settings cannot be written or replaced
      */
     public void save(Appearance appearance, boolean obfuscateSnmpSecrets) throws IOException {
-        save(appearance, obfuscateSnmpSecrets, loadDisableTemplateBanner());
+        save(appearance, obfuscateSnmpSecrets, loadIncludeTemplateBanner());
     }
 
     /**
-     * Loads the compact-template preference, defaulting to the full banner.
+     * Loads the template-banner preference, defaulting to included for new and older settings.
      *
-     * @return true when only SPDX and authors should appear
+     * @return true to include copyright, SPDX, and authors; false to omit the banner
      * @throws IOException if stored settings are invalid
      */
-    public boolean loadDisableTemplateBanner() throws IOException {
+    public boolean loadIncludeTemplateBanner() throws IOException {
         load();
         if (Files.notExists(settingsPath)) {
-            return false;
+            return true;
         }
-        var value = mapper.readTree(settingsPath.toFile()).get("disableTemplateBanner");
+        var value = mapper.readTree(settingsPath.toFile()).get("includeTemplateBanner");
         if (value == null) {
-            return false;
+            return true;
         }
         if (!value.isBoolean()) {
             throw new IOException("Invalid template banner preference.");
@@ -120,17 +120,17 @@ public final class AppearanceSettingsStore {
      *
      * @param appearance non-null appearance selection
      * @param obfuscateSnmpSecrets whether to mask displayed secrets
-     * @param disableTemplateBanner whether new templates use SPDX and authors only
+     * @param includeTemplateBanner whether new templates use SPDX and authors only
      * @throws IOException if settings cannot be saved
      */
-    public void save(Appearance appearance, boolean obfuscateSnmpSecrets, boolean disableTemplateBanner)
+    public void save(Appearance appearance, boolean obfuscateSnmpSecrets, boolean includeTemplateBanner)
             throws IOException {
         Objects.requireNonNull(appearance);
         var settings = mapper.createObjectNode();
         settings.put("version", SCHEMA_VERSION);
         settings.put("appearance", appearance.name().toLowerCase(Locale.ROOT));
         settings.put("obfuscateSnmpSecrets", obfuscateSnmpSecrets);
-        settings.put("disableTemplateBanner", disableTemplateBanner);
+        settings.put("includeTemplateBanner", includeTemplateBanner);
         Files.createDirectories(settingsPath.getParent());
         Path temporaryPath = Files.createTempFile(settingsPath.getParent(), ".settings-", ".json");
         try {

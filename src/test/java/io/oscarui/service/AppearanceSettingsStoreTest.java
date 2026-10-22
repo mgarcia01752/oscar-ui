@@ -16,24 +16,33 @@ class AppearanceSettingsStoreTest {
     @Test void templateBannerPreferenceDefaultsAndSurvivesOtherSettingsChanges() throws Exception {
         var path = temporary.resolve("banner.json");
         var store = new AppearanceSettingsStore(path);
-        assertFalse(store.loadDisableTemplateBanner());
+        assertTrue(store.loadIncludeTemplateBanner());
         Files.writeString(path, "{\"version\":1,\"appearance\":\"system\"}");
-        assertFalse(store.loadDisableTemplateBanner());
+        assertTrue(store.loadIncludeTemplateBanner());
         store.save(Appearance.DARK, false, true);
         new AppearanceSettingsStore(path).save(Appearance.LIGHT, true);
-        assertTrue(store.loadDisableTemplateBanner());
+        assertTrue(store.loadIncludeTemplateBanner());
         store.save(Appearance.SYSTEM, false, false);
-        assertFalse(store.loadDisableTemplateBanner());
+        assertFalse(store.loadIncludeTemplateBanner());
     }
 
     @Test void referenceTemplatesUseSelectedBannerWithoutChangingTlvs() throws Exception {
         var service = new OscarDocumentService();
         for (var type : service.types()) {
-            var full = service.create(type, true).text();
+            var full = service.create(type, true,
+                    com.comcast.oscar.configurationfile.TemplateBannerLevel.FULL).text();
             var compact = service.create(type, true,
                     com.comcast.oscar.configurationfile.TemplateBannerLevel.SPDX_AUTHOR).text();
             assertTrue(full.contains("Snmp11 OID DataType Value"));
             assertFalse(compact.contains("Snmp11 OID DataType Value"));
+            assertEquals(compact, service.create(type, true).text());
+            var disabled = service.create(type, true,
+                    com.comcast.oscar.configurationfile.TemplateBannerLevel.DISABLE).text();
+            assertFalse(disabled.contains("SPDX-License-Identifier"));
+            assertFalse(disabled.contains("Author:"));
+            assertFalse(disabled.contains("Snmp11 OID DataType Value"));
+            assertEquals(compact.substring(compact.indexOf(type.header() + " {")),
+                    disabled.substring(disabled.indexOf(type.header() + " {")));
             assertTrue(compact.contains("SPDX-License-Identifier: Apache-2.0"));
             assertTrue(compact.contains("Author: Maurice Garcia"));
             assertTrue(compact.contains("Author: Allen Flickinger"));

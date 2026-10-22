@@ -278,7 +278,7 @@ public final class OscarDocumentService {
      * @throws InspectionException if the configuration type or generated template is unsupported
      */
     public Document create(FileType configurationType, boolean allTlvs) throws InspectionException {
-        return create(configurationType, allTlvs, TemplateBannerLevel.FULL);
+        return create(configurationType, allTlvs, TemplateBannerLevel.SPDX_AUTHOR);
     }
 
     /**

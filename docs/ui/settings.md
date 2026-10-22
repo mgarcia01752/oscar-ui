@@ -6,10 +6,10 @@
 
 Open **Settings → Global** to choose:
 
-- **Disable template banner (keep SPDX and authors)**: unchecked by default.
-  Check it to omit version and format instructions from newly created **All TLVs**
-  templates while retaining copyright, SPDX, and both authors. Saved across restarts
-  and updates; existing documents are unchanged.
+- **Include template banner**: checked by default. New **All TLVs** templates
+  include copyright, SPDX, and both authors without version or format instructions.
+  Uncheck it to omit the OSCAR banner. The separate reference-template warning
+  remains. Saved across restarts and updates; existing documents are unchanged.
 
 | Option | Behavior |
 | --- | --- |
@@ -22,7 +22,11 @@ Choose **OK** to apply or **Cancel** to retain the previous choices. Appearance
 is saved between runs in the application's settings JSON. MIC visibility and
 TLV-comment visibility are session choices.
 
-![Global settings in dark mode](../images/user-guide/global-settings-dark.png)
+![Global settings with template banner included](../images/user-guide/global-settings-dark.png)
+
+**Banner disabled for new templates:**
+
+![Global settings with template banner unchecked](../images/user-guide/global-settings-no-banner-dark.png)
 
 ## User Defined Common TLVs
 
