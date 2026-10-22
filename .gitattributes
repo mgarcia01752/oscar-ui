@@ -1,3 +1,5 @@
 # Shell entry points and Git hooks must stay executable with Git for Windows.
 *.sh text eol=lf
 tools/git/hooks/pre-push text eol=lf
+mvnw text eol=lf
+mvnw.cmd text eol=crlf

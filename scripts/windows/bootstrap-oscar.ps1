@@ -15,5 +15,5 @@ Move-Item -Force "$Release/oscar-thin.jar.download" "$Release/oscar-thin.jar"
 foreach ($Name in @('LICENSE', 'NOTICE')) {
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Comcast/Oscar/$Commit/$Name" -OutFile "$Release/$Name"
 }
-& "$Root/mvnw.cmd" -B "-Dmaven.repo.local=$Root/.m2" org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file "-Dfile=$Release/oscar-thin.jar"
+& "$Root/mvnw.cmd" -B "-Dmaven.repo.local=$Root/.m2" -f "$Root/pom.xml" install:install-file "-Dfile=$Release/oscar-thin.jar"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

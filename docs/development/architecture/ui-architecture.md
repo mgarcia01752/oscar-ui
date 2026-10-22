@@ -822,3 +822,20 @@ feed the same verified thin-JAR installation, reference update, build and rollba
 path. Latest selection is developer tooling, not an automatic application update.
 Malformed tags, missing assets and downgrades fail without selecting an older
 release. See the [dependency update guide](../build/oscar-dependency-updates.md).
+
+## Maven build toolchain security
+
+The Apache Maven wrapper version, distribution URL and SHA-256 are owned by
+`.mvn/wrapper/maven-wrapper.properties`. Local builds and CI use that wrapper;
+the system Maven installation is not replaced. `pom.xml` owns plugin versions,
+including the Install plugin used by bootstrap and dependency-update helpers.
+Bootstrap passes the project POM explicitly so invocation from another directory
+still uses the same plugin pin.
+
+The Clean and Resources plugins temporarily override Plexus Utils for
+CVE-2025-67030; the Dependency plugin overrides BeanUtils for CVE-2025-48734.
+Remove overrides only after upstream plugins resolve patched versions and a fresh
+audit verifies them. These are build dependencies, separate from shipped JARs.
+The unused Maven Site lifecycle is disabled in `.mvn/jvm.config`; explicitly
+invoking a Site plugin goal is still possible and requires a separate review.
+Java runtime, Qt and Qt Jambi updates are independent of this build-tool change.

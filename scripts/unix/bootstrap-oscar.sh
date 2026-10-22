@@ -19,4 +19,4 @@ mv "$RELEASE/oscar-thin.jar.download" "$RELEASE/oscar-thin.jar"
 for name in LICENSE NOTICE; do
   curl --fail --location --retry 2 "https://raw.githubusercontent.com/Comcast/Oscar/${COMMIT}/${name}" -o "$RELEASE/$name"
 done
-"${ROOT}/mvnw" -B "-Dmaven.repo.local=${ROOT}/.m2" org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file "-Dfile=$RELEASE/oscar-thin.jar"
+"${ROOT}/mvnw" -B "-Dmaven.repo.local=${ROOT}/.m2" -f "${ROOT}/pom.xml" install:install-file "-Dfile=$RELEASE/oscar-thin.jar"

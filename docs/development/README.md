@@ -10,6 +10,12 @@ Run development commands from the repository root. Use Java 21 and the
 project-local bootstrap tools; no machine-specific checkout location is required.
 Keep personal configuration files in the ignored `test-config/` directory.
 
+Use `./mvnw` (`./mvnw.cmd` in Windows PowerShell). The wrapper's distribution
+URL and SHA-256 in `.mvn/wrapper/maven-wrapper.properties` pin the build tool;
+first use downloads it into the user Maven cache without replacing system Maven.
+Unix hosts need unzip and sha256sum or shasum for the pinned ZIP download.
+Plugin versions are owned by `pom.xml`, including bootstrap's Install plugin.
+
 | Area | Documents |
 | --- | --- |
 | Daily commands | [CLI shortcuts](short-cuts.md) |

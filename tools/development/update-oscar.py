@@ -181,7 +181,7 @@ def _apply(root, staging, originals, updates, version):
             if (cache / name).exists() and (cache / name).read_bytes() != (staging / name).read_bytes():
                 raise RuntimeError(f'Existing release cache differs: {cache / name}. Refusing to overwrite.')
     _progress('Installing verified JAR into the project-local Maven repository...')
-    _maven(root, 'org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file',
+    _maven(root, 'install:install-file',
            f'-Dfile={staging / "oscar-thin.jar"}')
     cache.mkdir(parents=True, exist_ok=True)
     for name in ('oscar-thin.jar', 'LICENSE', 'NOTICE'):

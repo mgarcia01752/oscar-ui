@@ -66,6 +66,7 @@ and changing pins for the currently selected version are rejected.
 
 The verified JAR is installed through the same Maven install-file plugin used
 by bootstrap, with its embedded POM, into the project's `.m2` repository.
+All three entry points resolve the Install plugin version from `pom.xml`.
 The JAR, LICENSE, and NOTICE are cached under the versioned `.tools/oscar-*`
 directory. Previous versions are retained. Conflicting cached release files are
 not overwritten. The helper does not download the JAR a second time to install it.

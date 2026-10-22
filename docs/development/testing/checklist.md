@@ -52,6 +52,10 @@ Use the commands in the [development guide](../README.md#verification); use the
 
 ## Before publishing a release
 
+- [ ] For Maven changes, verify wrapper checksum/version, resolved plugin
+  dependencies, bootstrap installation and unchanged shipped dependency JARs.
+  Run local service/native Qt tests, then the CI OS and installer matrix.
+
 - [ ] Enable the [local pre-push gate](pre-push-checks.md) for this checkout and
   resolve any local failure before uploading a branch or tag.
 
