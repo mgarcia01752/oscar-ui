@@ -367,3 +367,7 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [ ] Run native dialog and launch checks on the oldest supported Ubuntu; run
   Windows/macOS and full installer checks in CI before publication.
 - [ ] Review Qt advisories separately from the Maven dependency audit.
+
+### Packaging text encoding
+
+- [ ] Run packaging Python tests with `-X warn_default_encoding -W error::EncodingWarning`; preserve UTF-8 metadata and unrelated files through DEB normalization and maintainer scripts.

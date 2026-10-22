@@ -21,7 +21,7 @@ def normalize(package):
         payload = workspace / 'payload'
         subprocess.run(['dpkg-deb', '-R', str(package), str(payload)], check=True)
         control = payload / 'DEBIAN/control'
-        original = control.read_text()
+        original = control.read_text(encoding='utf-8')
         match = re.search(r'^Depends: (.*(?:\n[ \t]+.*)*)$', original, re.MULTILINE)
         if not match:
             raise ValueError('DEB has no Depends field')
@@ -39,13 +39,13 @@ def normalize(package):
             if not is_elf:
                 continue
             dynamic = subprocess.run(['readelf', '-d', str(binary)], check=True,
-                                     capture_output=True, text=True).stdout
+                                     capture_output=True, text=True, encoding='utf-8').stdout
             if re.search(r'\(NEEDED\).*\[libpcre\.so\.', dynamic):
                 raise ValueError(f'Payload directly requires PCRE1: {binary.relative_to(payload)}')
         dependencies = [entry for entry in dependencies
                         if not re.fullmatch(r'libpcre3(?: \([^)]*\))?', entry)]
         control.write_text(original[:match.start()] + 'Depends: ' + ', '.join(dependencies)
-                           + original[match.end():])
+                           + original[match.end():], encoding='utf-8')
         rebuilt = workspace / 'normalized.deb'
         subprocess.run(['dpkg-deb', '--root-owner-group', '-b', str(payload), str(rebuilt)], check=True)
         rebuilt.replace(package)

@@ -18,20 +18,28 @@ SPEC.loader.exec_module(MODULE)
                      'Linux DEB and compiler tools required')
 class DebDependenciesTest(unittest.TestCase):
     def setUp(self):
+        """Create an isolated UTF-8 package payload.
+
+        Register cleanup so generated files are removed even after failures.
+        """
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.payload = self.root / 'payload'
         (self.payload / 'DEBIAN').mkdir(parents=True)
         (self.payload / 'opt').mkdir()
-        (self.payload / 'opt/keep.txt').write_text('preserve payload\n')
+        (self.payload / 'opt/keep.txt').write_text('preserve café payload\n', encoding='utf-8')
         self.package = self.root / 'test.deb'
 
     def build(self, dependencies):
+        """Build a disposable DEB with the supplied dependency field.
+
+        Preserve non-ASCII metadata and fail if dpkg-deb rejects the fixture.
+        """
         (self.payload / 'DEBIAN/control').write_text(
             'Package: oscar-ui\nVersion: 1.0\nArchitecture: amd64\n'
-            'Maintainer: Test <test@example.com>\nDescription: Synthetic test\n'
-            f'Depends: {dependencies}\n')
+            'Maintainer: Test <test@example.com>\nDescription: Synthetic café test\n'
+            f'Depends: {dependencies}\n', encoding='utf-8')
         subprocess.run(['dpkg-deb', '--root-owner-group', '-b', str(self.payload),
                         str(self.package)], check=True, capture_output=True)
 
@@ -39,11 +47,13 @@ class DebDependenciesTest(unittest.TestCase):
         self.build('libc6, libglib2.0-0 (>= 2.0), libpcre3 (>= 8.0), libpcre2-8-0')
         MODULE.normalize(self.package)
         dependencies = subprocess.check_output(
-            ['dpkg-deb', '-f', str(self.package), 'Depends'], text=True)
+            ['dpkg-deb', '-f', str(self.package), 'Depends'], text=True, encoding='utf-8')
         self.assertEqual(dependencies.strip(), 'libc6, libglib2.0-0 (>= 2.0), libpcre2-8-0')
         extracted = self.root / 'extracted'
         subprocess.run(['dpkg-deb', '-x', str(self.package), str(extracted)], check=True)
-        self.assertEqual((extracted / 'opt/keep.txt').read_text(), 'preserve payload\n')
+        self.assertEqual((extracted / 'opt/keep.txt').read_text(encoding='utf-8'), 'preserve café payload\n')
+        self.assertIn('Synthetic café test', subprocess.check_output(
+            ['dpkg-deb', '-f', str(self.package), 'Description'], encoding='utf-8'))
         before = self.package.read_bytes()
         MODULE.normalize(self.package)
         self.assertEqual(self.package.read_bytes(), before)
@@ -57,12 +67,12 @@ class DebDependenciesTest(unittest.TestCase):
 
     def test_direct_pcre_dependency_keeps_original_package(self):
         source = self.root / 'library.c'
-        source.write_text('int synthetic_pcre(void) { return 0; }\n')
+        source.write_text('int synthetic_pcre(void) { return 0; }\n', encoding='utf-8')
         library = self.root / 'libpcre.so.3'
         subprocess.run(['cc', '-shared', '-fPIC', '-Wl,-soname,libpcre.so.3',
                         str(source), '-o', str(library)], check=True)
         source.write_text('extern int synthetic_pcre(void);\n'
-                          'int main(void) { return synthetic_pcre(); }\n')
+                          'int main(void) { return synthetic_pcre(); }\n', encoding='utf-8')
         subprocess.run(['cc', str(source), str(library), '-o',
                         str(self.payload / 'opt/probe')], check=True)
         self.build('libglib2.0-0, libpcre3')

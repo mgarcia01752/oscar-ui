@@ -2,9 +2,9 @@
 
 ## Python test encoding follow-up
 
-- [ ] Add explicit UTF-8 in existing DEB dependency and maintainer test fixtures.
-  An additional strict-encoding run found eight fixture setup errors; the normal
-  packaging suite passes. Extend strict encoding coverage after those fixes.
+- [x] Add explicit UTF-8 in DEB fixtures and dependency normalization.
+  Preserve non-ASCII payload and metadata in regression tests; enforce strict
+  encoding across the packaging suite in the local gate and Unix CI.
 
 ## Qt downloader follow-up
 

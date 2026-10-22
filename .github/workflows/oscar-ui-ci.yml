@@ -61,7 +61,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tools/git -p 'test_*.py'
           python3 -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s tools/development -p 'test_*.py'
-          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+          python3 -X warn_default_encoding -W error::EncodingWarning -m unittest discover -s scripts/tests -p 'test_*.py'
       - name: Bootstrap pinned Oscar release
         run: ./scripts/unix/bootstrap-oscar.sh
       - name: Build JAR and run Java tests
