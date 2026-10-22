@@ -755,3 +755,18 @@ key selected between two visible banners, so either legacy value migrates to
 included. New All TLVs templates explicitly use OSCAR `SPDX_AUTHOR` when checked
 and `DISABLE` when unchecked. OSCAR's own default remains `FULL`. Existing
 documents, the reference-template warning, and TLV comments are unaffected.
+
+## User-reviewed issue reports
+
+About's Report an issue link calls `IssueReportService` to create an encoded
+GitHub `/issues/new` URL with a title and Markdown body. UI, OSCAR, and bundled
+Qt/Qt Jambi versions come from existing filtered build metadata; Java version,
+OS name/version, and architecture come from an explicit JVM-property allowlist.
+Missing values appear as unknown. No release version is hard-coded.
+
+The browser opens only on user activation. Users review and complete reproduction,
+expected/actual behavior, and optional screenshots before submitting through
+GitHub. The application performs no issue API request and needs no GitHub token.
+It does not collect configuration contents, secrets, logs, usernames, or paths.
+Tests check query encoding, metadata defaults, exclusion of private properties,
+and the About link without submitting an issue or launching a browser.

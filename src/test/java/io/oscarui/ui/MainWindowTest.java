@@ -805,6 +805,11 @@ class MainWindowTest {
                     .anyMatch(label -> label.text().contains("https://github.com/Comcast/Oscar")));
             assertTrue(dialog.findChildren(QLabel.class).stream()
                     .anyMatch(label -> label.text().contains("https://github.com/mgarcia01752/oscar-ui")));
+            var report = dialog.findChild(QLabel.class, "reportIssueLink");
+            assertTrue(report.openExternalLinks());
+            assertTrue(report.text().contains("/issues/new?title="));
+            assertTrue(report.text().contains("&amp;body="));
+            assertTrue(report.text().contains("Steps+to+reproduce"));
             var licenseLink = dialog.findChild(QLabel.class, "applicationLicenseLink");
             assertTrue(licenseLink.openExternalLinks());
             assertTrue(licenseLink.text().contains("https://github.com/mgarcia01752/oscar-ui/blob/main/LICENSE"));

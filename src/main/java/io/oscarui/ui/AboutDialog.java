@@ -86,9 +86,9 @@ final class AboutDialog extends QDialog {
         var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
         layout.addWidget(license);
-        var reportIssue = link("Report an issue with OSCAR-UI", ReleaseUpdateService.UI_PROJECT + "/issues/new/choose");
+        var reportIssue = link("Report an issue with OSCAR-UI", io.oscarui.service.IssueReportService.issueUrl(build, System.getProperties()));
         reportIssue.setObjectName("reportIssueLink");
-        reportIssue.setToolTip("Open the OSCAR-UI issue tracker on GitHub");
+        reportIssue.setToolTip("Open a GitHub issue draft with application and platform versions; review before submitting");
         layout.addWidget(reportIssue);
         var updates = new QGroupBox("Release updates");
         var updateLayout = new QVBoxLayout(updates);
@@ -245,7 +245,7 @@ final class AboutDialog extends QDialog {
     }
 
     private static QLabel link(String caption, String address) {
-        var label = new QLabel("<a href=\"" + address + "\">" + caption + "</a>");
+        var label = new QLabel("<a href=\"" + address.replace("&", "&amp;") + "\">" + caption + "</a>");
         label.setOpenExternalLinks(true);
         return label;
     }

@@ -9,7 +9,11 @@ in your default browser. This requires an internet connection.
 Choose **Help → About** to see installed component versions in the
 **Package | Version | Link** table. Project links open OSCAR-UI and OSCAR on GitHub. The license link opens OSCAR-UI's license in its repository.
 **Report an issue with OSCAR-UI** opens the project's GitHub issue form in your
-browser.
+browser with OSCAR-UI, OSCAR, bundled Qt/Qt Jambi, Java, OS version, and
+architecture already filled in. Describe the reproduction steps, expected result,
+and actual result; optionally add screenshots. Review the draft and submit it
+on GitHub (sign-in may be required). The app does not submit reports or attach
+configuration files, secrets, usernames, paths, or logs automatically.
 
 Choose **Help → About → Check for updates** for a manual online check against the latest
 published stable OSCAR-UI release. Draft releases are not offered. The check does
