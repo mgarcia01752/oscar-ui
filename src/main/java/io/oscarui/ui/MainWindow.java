@@ -100,8 +100,6 @@ public final class MainWindow extends QMainWindow {
 
     private final WorkspaceSessions workspace = new WorkspaceSessions();
     private final DocumentTabs documentTabs = new DocumentTabs(this::activateSession, this::closeSession);
-    private final QWidget tabSpacer = new QWidget();
-    private QSplitter workspaceSplitter;
     private boolean closeApproved;
     private Document document;
 
@@ -163,18 +161,8 @@ public final class MainWindow extends QMainWindow {
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
         status.setVisible(false);
-        var tabRow = new QHBoxLayout();
-        tabRow.setContentsMargins(0, 0, 0, 0);
-        tabRow.setSpacing(0);
-        tabRow.addWidget(tabSpacer);
-        tabRow.addWidget(documentTabs, 1);
-        layout.addLayout(tabRow);
+        layout.addWidget(documentTabs);
         var splitter = new QSplitter(Qt.Orientation.Horizontal);
-        workspaceSplitter = splitter;
-        splitter.installEventFilter(this);
-        configurationTreePane.installEventFilter(this);
-        configurationTextPane.installEventFilter(this);
-        splitter.splitterMoved.connect((position, index) -> alignTabs());
         splitter.addWidget(configurationTreePane);
         splitter.addWidget(configurationTextPane);
         splitter.setStretchFactor(0, 1);
@@ -369,10 +357,6 @@ public final class MainWindow extends QMainWindow {
      * @return true when the Inspect tooltip was handled, otherwise Qt's result
      */
     @Override public boolean eventFilter(QObject watched, QEvent event) {
-        if ((watched == workspaceSplitter || watched == configurationTreePane || watched == configurationTextPane)
-                && (event.type() == QEvent.Type.Resize || event.type() == QEvent.Type.Show || event.type() == QEvent.Type.Hide)) {
-            QTimer.singleShot(0, this::alignTabs);
-        }
         if (watched == menuBar() && event.type() == QEvent.Type.ToolTip
                 && event instanceof QHelpEvent helpEvent && inspectMenu != null
                 && menuBar().actionAt(helpEvent.pos()) == inspectMenu.menuAction()) {
@@ -712,14 +696,6 @@ public final class MainWindow extends QMainWindow {
             }
             dialog.dispose();
         });
-    }
-
-    private void alignTabs() {
-        if (workspaceSplitter != null && !workspaceSplitter.isDisposed()) {
-            int width = !configurationTreePane.isHidden() && !configurationTextPane.isHidden()
-                    ? workspaceSplitter.sizes().getFirst() + workspaceSplitter.handleWidth() : 0;
-            tabSpacer.setFixedWidth(width);
-        }
     }
 
     private boolean activateExisting(Path path) {

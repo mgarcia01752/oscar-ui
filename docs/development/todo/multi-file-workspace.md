@@ -6,7 +6,7 @@ Status: implemented locally; native Windows/macOS confirmation remains with CI.
 
 - New and Open create/select a tab instead of replacing the current document.
   Opening another file does not prompt to discard the current file.
-- Put tabs immediately above the text panel. Keep one shared TLV tree on the left.
+- Put left-aligned tabs immediately above both workspace panels. Keep one shared TLV tree on the left.
 - Right-click anywhere on the tab row (a tab or unused space) opens a context
   menu with **Open File...** and **New File...**. Reuse the File menu actions and
   their existing dialogs; each successful operation creates/selects a tab without
@@ -19,7 +19,7 @@ Status: implemented locally; native Windows/macOS confirmation remains with CI.
   Italic means unsaved: a new draft or modifications since the last successful
   save. Use normal text after successful save; do not italicize merely because
   a tab is inactive. Add an accessible unsaved indication in the tooltip.
-- Match the supplied editor example with two rows above the text preview:
+- Match the supplied editor example with two rows spanning the workspace above both panels:
   filename tabs with close buttons, then a breadcrumb row for the active file.
   Show directory segments followed by the filename, for example
   `configs > docsis > customer.cfg`. There is no project root in this app, so

@@ -796,8 +796,8 @@ aliases activate their existing tab; duplicate basenames get distinguishing pare
 paths. Save As refuses another open tab's destination. A typed Text/Binary status
 is derived from the session's source metadata and changes only after a successful
 format-changing save. It is never inferred from the displayed text or extension.
-The tab strip aligns with the text panel in split mode and remains available in
-tree-only mode. Empty workspaces clear document state and disable file actions.
+The tabs and breadcrumbs start at the left workspace edge above both panels,
+span the workspace width, and remain available in tree-only mode. Empty workspaces clear document state and disable file actions.
 
 OSCAR work remains serialized. While any operation runs, document mutations and
 closing are disabled, but tab selection remains available. Worker results capture

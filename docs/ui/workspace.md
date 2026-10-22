@@ -22,7 +22,9 @@ layout uses the theme's highlight color.
 
 ## File tabs and directory breadcrumbs
 
-Each New/Open adds a tab above the text panel. Select a tab to switch the shared
+Tabs and breadcrumbs start at the left workspace edge above both panels.
+
+Each New/Open adds a tab above the workspace panels. Select a tab to switch the shared
 TLV tree, text preview, inspection actions, and bottom-right **Text/Binary** label.
 An *italic* tab name means a new or modified document has not been saved; a
 successful save restores normal lettering. Each file keeps its own tree selection,
