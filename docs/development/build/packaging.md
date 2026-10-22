@@ -104,17 +104,25 @@ bump or commit; existing tags are never moved. Use a new version for new code.
 
 ## CI-gated platform workflows
 
-- **Windows release** (`windows-release.yml`) builds the MSI from the complete application image, then verifies
+Exactly two workflow files are maintained:
+
+- `oscar-ui-ci.yml`: main/master pushes, pull requests and manual validation;
+  CodeQL runs once, followed by parallel OS checks. Also reusable by release CI.
+- `release.yml`: version tags only; invokes that same validation, then parallel
+  Windows, Ubuntu and macOS image builds and installer tests, then publication.
+
+
+- **Windows package jobs** in `release.yml` builds the MSI from the complete application image, then verifies
   silent install, Start menu/desktop shortcuts, uninstaller registration, native
   launch without developer tools on PATH, and silent uninstall.
-- **Ubuntu release** (`ubuntu-release.yml`) builds on Ubuntu 22.04 and checks
+- **Ubuntu package jobs** in `release.yml` builds on Ubuntu 22.04 and checks
   installation, X11 launch under Xvfb, and APT removal on Ubuntu 22.04, 24.04, and 26.04.
   Both platforms verify that a user configuration outside the installation
   directory survives removal. Installer logs are retained as CI artifacts.
 
 `release.yml` handles version-tag pushes and manual runs selected on a tag.
 It first calls `oscar-ui-ci.yml` for the exact tagged commit, running the full
-Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, and macOS 15 matrix. Both platform jobs declare
+Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, macOS 15, and Windows 11 ARM checks in parallel. All three image-build jobs declare
 `needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
 A passing branch build or an older tag does not satisfy this gate.
 Release publishing remains gated by the coordinator. Manual runs on branches
@@ -396,9 +404,9 @@ baseline-family MSI/MSPs for mandatory chained repair tests.
 See [Windows updates](../architecture/windows-updates.md) for compatibility,
 first-baseline migration and native validation still required.
 
-For packaging fixes, manually run **Windows release** on `main` to validate the
-normal MSI before creating a new tag. This dispatch does not publish a release;
-see [pre-release validation](../architecture/windows-updates.md#shortcut-validation-and-pre-release-build).
+For packaging fixes, use the local native build helper before tagging. GitHub
+image builds start only through the tagged release pipeline after CodeQL and
+all OS checks pass; there is no independent package-workflow dispatch.
 
 ### Draft publication lookup
 
@@ -430,9 +438,10 @@ assets are not the final public release. Failure or cancellation blocks publicat
 
 ```mermaid
 flowchart TD
-    Tag[Release tag] --> Security[CodeQL Java analysis]
-    Security --> CI[Java and tooling checks]
-    CI --> Platforms[Ubuntu 22.04 / 24.04 / 26.04<br/>macOS 15 / Windows 11 ARM]
+    Branch[Main/master push or PR] --> Security[CodeQL Java analysis]
+    Tag[Release tag] --> Security
+    Security --> Platforms[Parallel OS checks: Ubuntu + macOS + Windows]
+    Platforms -->|Branch or PR| Done[Validation complete; no images or release]
     Platforms --> MSI[Build candidate x64 MSI on Windows Server 2022]
     Platforms --> DEB[Build candidate DEB on Ubuntu 22.04]
     Platforms --> Mac[Experimental Apple Silicon DMG]
@@ -455,7 +464,7 @@ adds native DMG validation. See GitHub's [runner reference](https://docs.github.
 
 ### CodeQL before platform checks
 
-`security.yml` is called by OSCAR-UI CI before either OS test job starts,
+CodeQL is the first job inside `oscar-ui-ci.yml`, before either OS test job starts,
 including when release CI runs against a tag. It builds Java with the pinned
 OSCAR dependency, analyzes it, and uploads results to GitHub code scanning.
 A failed or cancelled analysis blocks OS tests and downstream release jobs.
@@ -476,7 +485,7 @@ a macOS app version whose first component is zero. Packaging therefore derives
 `CFBundleShortVersionString` back to the actual POM version. The About dialog,
 JAR and DMG names retain the actual release version; no second version is maintained.
 
-`macos-release.yml` builds on an Apple Silicon macOS 15 runner. The macOS Maven
+The macOS job in `release.yml` builds on an Apple Silicon macOS 15 runner. The macOS Maven
 profile supplies Qt Jambi's universal native framework JAR. The focused
 `scripts/build/macos-release.py` reuses Java build/attribution staging, extracts
 JNI frameworks, invokes Qt's `macdeployqt` for Qt frameworks and Cocoa plugins,
@@ -496,8 +505,9 @@ This is not proof of interactive Gatekeeper approval on a downloaded package.
 
 Release publication now waits for Windows, Ubuntu, and macOS package jobs.
 The final publisher attaches the verified DMG before making the release public.
-Manual workflow dispatch builds a downloadable Actions artifact without publishing.
-Until a native run succeeds, macOS packaging is implemented but unverified.
+Manual release dispatch must select a version tag and follows the same gates.
+Native DMG validation passed in run 39674156576; interactive Gatekeeper approval
+on a downloaded package remains a separate user check.
 
 Local Apple Silicon build (after OSCAR bootstrap and Java 21 setup):
 

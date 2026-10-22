@@ -167,7 +167,7 @@ if (!$Rejected) { throw 'External metadata path was accepted' }
                        capture_output=True, text=True, encoding='utf-8', check=True)
         source = script.read_text(encoding='utf-8')
         self.assertEqual(1, source.count('Invoke-RestMethod'))
-        workflow = (repository / '.github/workflows/windows-release.yml').read_text(encoding='utf-8')
+        workflow = (repository / '.github/workflows/release.yml').read_text(encoding='utf-8')
         build_step = workflow.split('- name: Build MSI and test application image', 1)[1].split('- name:', 1)[0]
         self.assertIn('GH_TOKEN: ${{ github.token }}', build_step)
 

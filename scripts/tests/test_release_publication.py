@@ -70,7 +70,8 @@ else:
 ''', encoding='utf-8')
             gh.chmod(0o755)
             workflow = (ROOT / '.github/workflows/release.yml').read_text(encoding='utf-8')
-            script = textwrap.dedent(workflow.split('        run: |\n', 1)[1])
+            publication = workflow.split('      - name: Verify installers and publish\n', 1)[1]
+            script = textwrap.dedent(publication.split('        run: |\n', 1)[1])
             environment = dict(os.environ, PATH=str(root / 'bin') + os.pathsep + os.environ['PATH'],
                                GH_REPO='example/project', RELEASE_TAG='v1.0.0')
             result = subprocess.run(['bash', '-c', script], cwd=root, env=environment,

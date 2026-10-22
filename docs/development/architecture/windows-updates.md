@@ -111,14 +111,9 @@ type; the package remains per-machine and retains Start menu/Desktop shortcuts
 and uninstall cleanup. See Microsoft's [ICE43](https://learn.microsoft.com/en-us/windows/win32/msi/ice43).
 Portable authoring tests cover this contract; they do not execute MSI validation.
 
-Run the normal **Windows release** workflow on `main` before creating another
-release tag. It builds and tests the production MSI, without publishing a release
-or running the additional synthetic patch prototype:
-
-```bash
-cd /home/dev01/Projects/oscar-ui &&
-gh workflow run windows-release.yml --ref main
-```
+Use the local Windows build helper for pre-tag packaging checks. On GitHub,
+`release.yml` builds and verifies the MSI after tagged CodeQL and all OS checks
+pass. Package jobs are no longer independently dispatchable on `main`.
 
 A passing native build/install/launch/uninstall job is required before claiming
 this fix is Windows-validated. Dispatching on `main` does not bump the version.

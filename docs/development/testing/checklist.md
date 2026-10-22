@@ -221,8 +221,8 @@ and broader interoperability work is tracked in [TODO](../todo/TODO.md#verificat
 
 - [ ] Verify non-advertised Start menu/Desktop shortcuts have an HKCU registry
   key path and uninstall cleanup while the MSI remains per-machine.
-- [ ] Run **Windows release** manually on `main` before tagging packaging fixes;
-  require native WiX validation and MSI install/launch/uninstall to pass.
+- [ ] Verify branch CI stops after CodeQL and parallel OS checks. Tagged release
+  jobs must also pass native WiX validation and MSI install/launch/uninstall.
 
 - [ ] Check production UI property ownership: `WixUI_InstallDir` supplies
   `ARPNOMODIFY`; the standalone prototype retains its own copy. Require a

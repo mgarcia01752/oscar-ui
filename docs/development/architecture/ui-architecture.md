@@ -707,10 +707,12 @@ unfiltered. No document values or shared secrets are stored in the overlay.
 
 CodeQL Java analysis must complete successfully before any OS test job starts.
 Release publication requires reusable Java/tooling CI on Ubuntu 22.04/24.04/26.04,
-macOS 15, and Windows 11 ARM, followed by Windows and Ubuntu installer checks.
+macOS 15, and Windows 11 ARM in parallel, followed by Windows, Ubuntu and macOS
+image builds and installer checks. Only `oscar-ui-ci.yml` and `release.yml` remain;
+branch validation never builds images, and packaging does not repeat CodeQL.
 Build the x64 MSI on Windows Server 2022 and test that same artifact on Windows
 11 ARM under x64 emulation. Preserve the existing production MSP checks.
-Publish only after both installer workflows succeed and metadata is verified;
+Publish only after all installer jobs succeed and metadata is verified;
 do not rebuild the tested installers. See the
 [release flow diagram](../build/packaging.md#release-validation-gate).
 
