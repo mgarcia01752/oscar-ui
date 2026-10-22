@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Exercise cleanup in isolated repositories, never the real build workspace."""
 from pathlib import Path
+import os
+import sys
+from unittest.mock import patch
 import shutil
 import subprocess
 import tempfile
@@ -26,24 +29,41 @@ class CleanupTest(unittest.TestCase):
         subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
 
     def run_clean(self, *args):
-        return subprocess.run(['bash', str(self.root / 'scripts/unix/clean.sh'), *args],
+        return subprocess.run([sys.executable, str(self.root / 'tools/development/clean.py'), *args],
                               cwd=self.temporary.name, encoding='utf-8', capture_output=True)
 
+    def test_shared_helper_uses_current_python_without_bash(self):
+        with patch('subprocess.run') as run:
+            self.run_clean('--dry-run')
+        self.assertEqual(sys.executable, run.call_args.args[0][0])
+        self.assertEqual(str(self.root / 'tools/development/clean.py'), run.call_args.args[0][1])
+
+    @unittest.skipIf(os.name == 'nt', 'Unix wrapper; Windows uses the Python helper')
+    def test_unix_wrapper_from_other_directory(self):
+        result = subprocess.run(['bash', str(self.root / 'scripts/unix/clean.sh'), '--dry-run'],
+                                cwd=self.temporary.name, encoding='utf-8', capture_output=True)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertTrue((self.root / 'target/app').exists())
+
+    def assert_clean_succeeds(self, *args):
+        result = self.run_clean(*args)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_preview_then_clean_from_other_directory_preserves_inputs(self):
-        self.assertEqual(0, self.run_clean('--dry-run').returncode)
+        self.assert_clean_succeeds('--dry-run')
         self.assertTrue((self.root / 'target/app').exists())
         self.assertTrue((self.root / 'dist/image.msi').exists())
-        self.assertEqual(0, self.run_clean().returncode)
+        self.assert_clean_succeeds()
         self.assertFalse((self.root / 'target').exists())
         self.assertFalse((self.root / 'dist').exists())
         for name in ('.tools/qt', '.m2/cache', 'cm-config/customer.cfg', 'docs/images/guide.png'):
             self.assertTrue((self.root / name).exists())
-        self.assertEqual(0, self.run_clean().returncode)
+        self.assert_clean_succeeds()
 
     def test_dist_only_and_invalid_option(self):
         self.assertNotEqual(0, self.run_clean('--unknown').returncode)
         self.assertTrue((self.root / 'dist').exists())
-        self.assertEqual(0, self.run_clean('--dist').returncode)
+        self.assert_clean_succeeds('--dist')
         self.assertTrue((self.root / 'target/app').exists())
 
     def test_refuses_tracked_content_before_any_removal(self):
