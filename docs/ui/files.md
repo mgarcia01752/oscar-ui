@@ -99,3 +99,8 @@ normal error messages.
 **Choose a save format**
 
 ![Choose a save format in OSCAR-UI dark mode](../images/user-guide/save-format-dark.png)
+
+## Repair invalid text
+
+Text files are checked before import. Problems open a separate
+[repair editor](text-repair.md) with live diagnostics and safe save choices.

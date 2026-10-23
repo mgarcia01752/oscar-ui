@@ -262,7 +262,8 @@ public final class MainWindow extends QMainWindow {
      * Starts opening a configuration with automatic format detection.
      *
      * <p>Call on the Qt UI thread. An active operation causes this request to
-     * be ignored; failures retain the current document and update the status.
+     * be ignored. Text lint/import findings open a separate repair dialog;
+     * other failures retain the current document and update the status.
      *
      * @param configurationPath non-null path of the configuration to open
      */
@@ -273,10 +274,24 @@ public final class MainWindow extends QMainWindow {
         if (activateExisting(configurationPath)) {
             return;
         }
-        submit(() -> binaryService.openAuto(configurationPath), loaded -> {
-            addSession(loaded, false);
-            if (interactive) {
-                chooseTlv();
+        var repairService = new io.oscarui.service.TextRepairService(documentService);
+        submit(() -> repairService.open(configurationPath), opening -> {
+            if (opening.document() != null) {
+                addSession(opening.document(), false);
+                if (interactive) {
+                    chooseTlv();
+                }
+            } else {
+                succeeded = false;
+                showStatus("Text needs repair before opening.");
+                var repair = new TextRepairDialog(this, repairService, opening.source(), opening.validation(),
+                        loaded -> {
+                            addSession(loaded, false);
+                            succeeded = true;
+                            showStatus("");
+                        }, target -> workspace.forPath(target) == null);
+                repair.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, true);
+                repair.show();
             }
         }, true);
     }
