@@ -1,5 +1,8 @@
 # Global settings and secrets
 
+Click the OSCAR-UI icon immediately left of **File** to open **Settings**.
+Its tooltip is **Settings**; choose **Global** or **Secrets** from the menu.
+
 [User guide](README.md)
 
 ## Global

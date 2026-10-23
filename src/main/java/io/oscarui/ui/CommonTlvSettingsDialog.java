@@ -52,7 +52,7 @@ final class CommonTlvSettingsDialog extends QDialog {
         layout.addWidget(search);
         var tree = new QTreeWidget();
         tree.setObjectName("commonTlvCheckboxes");
-        tree.setHeaderLabels(List.of("Common / TLV", "Name", "Status"));
+        tree.setHeaderLabels(List.of("Common / Type", "Name", "Status"));
         tree.setRootIsDecorated(false);
         tree.setStyleSheet("QTreeView::indicator:unchecked { border: 1px solid palette(mid); "
                 + "border-radius: 2px; background: palette(base); }");

@@ -28,7 +28,7 @@ Both views support searching by name, dotted path, description and codec.
 For child containers, both views show all defined children. The Common list is
 a saved display preference; it does not change OSCAR's supported TLVs or rules.
 
-The chooser has **TLV**, **Name**, and **Status** columns. Click TLV or Name to
+The chooser has **Type**, **Name**, and **Status** columns. Click Type or Name to
 sort by numeric path or name. Disabled rows show their restriction in Status
 and a tooltip: instance limit reached, generated automatically, or editing not
 supported. To change a singleton already present, select it in the main tree

@@ -47,7 +47,7 @@ and closing tabs wait until the serialized operation completes.
 
 ## Configuration tree
 
-The **Configuration**, **TLV**, and **Value** columns show the name, dotted TLV
+The **Configuration**, **Type**, and **Value** columns show the name, dotted TLV
 path, and current value. Expand a Parent TLV to see its children. For example,
 `25.1` identifies a child of TLV `25`; repeated instances can share the same path.
 Selecting an entry highlights its corresponding text. Selection alone does not
@@ -106,3 +106,5 @@ The tabs and path row span both panels in either theme. In these examples,
 **Binary tab selected: tree and status follow the active file**
 
 ![Binary tab selected](../images/user-guide/workspace-binary-tabs-dark.png)
+
+The icon left of **File** opens the **Settings** menu (Global and Secrets).

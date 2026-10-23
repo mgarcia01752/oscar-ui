@@ -262,6 +262,14 @@ class MainWindowTest {
             assertFalse(window.menuBar().isNativeMenuBar());
             var icon = window.menuBar().cornerWidget(Qt.Corner.TopLeftCorner);
             assertEquals("workspaceAppIcon", icon.objectName());
+            var settingsButton = assertInstanceOf(QToolButton.class, icon);
+            assertEquals("Settings", settingsButton.accessibleName());
+            assertEquals("settingsMenu", settingsButton.menu().objectName());
+            assertEquals(QToolButton.ToolButtonPopupMode.InstantPopup, settingsButton.popupMode());
+            assertTrue(settingsButton.menu().actions().stream()
+                    .anyMatch(action -> action.objectName().equals("globalSettings")));
+            assertTrue(window.menuBar().actions().stream()
+                    .noneMatch(action -> action.text().replace("&", "").equals("Settings")));
             assertTrue(icon.isVisible());
             assertFalse(QApplication.windowIcon().isNull());
             await(() -> icon.geometry().right()
@@ -1117,7 +1125,7 @@ class MainWindowTest {
         var window = new MainWindow(false);
         window.show();
         try {
-            assertEquals(java.util.List.of("&File", "&Edit", "&Settings", "&Inspect", "&Tools", "&Help"),
+            assertEquals(java.util.List.of("&File", "&Edit", "&Inspect", "&Tools", "&Help"),
                     window.menuBar().actions().stream().map(QAction::text).toList());
             var helpActions = window.menuBar().actions().getLast().menu().actions();
             assertEquals(java.util.List.of("userGuide", "aboutOscar"),
@@ -1402,7 +1410,7 @@ class MainWindowTest {
             dialog.show();
             dialog.findChild(QRadioButton.class, "allTlvs").click();
             var table = dialog.findChild(QTreeWidget.class, "tlvChoices");
-            assertEquals("TLV", table.headerItem().text(0));
+            assertEquals("Type", table.headerItem().text(0));
             assertEquals("Name", table.headerItem().text(1));
             assertEquals(java.util.List.of("1", "2", "18"),
                     java.util.stream.IntStream.range(0, 3).mapToObj(i -> table.topLevelItem(i).text(0)).toList());

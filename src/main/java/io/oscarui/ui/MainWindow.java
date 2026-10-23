@@ -216,7 +216,7 @@ public final class MainWindow extends QMainWindow {
         }
         upgradeChip = new UpgradeChip(() -> showAbout(true));
         int menuInset = layout.contentsMargins().left();
-        var menuIcon = new QWidget() {
+        var menuIcon = new QToolButton() {
             /** Reserve menu-bar space for the icon and its horizontal padding. */
             @Override public io.qt.core.QSize sizeHint() {
                 return new io.qt.core.QSize(menuInset + 14, 26);
@@ -238,8 +238,11 @@ public final class MainWindow extends QMainWindow {
             }
         };
         menuIcon.setObjectName("workspaceAppIcon");
-        menuIcon.setAccessibleName("OSCAR-UI");
-        menuIcon.setToolTip("OSCAR-UI");
+        menuIcon.setAccessibleName("Settings");
+        menuIcon.setToolTip("Settings");
+        menuIcon.setAutoRaise(true);
+        menuIcon.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup);
+        menuIcon.setMenu(findChild(QMenu.class, "settingsMenu"));
         menuIcon.setFixedSize(menuInset + 14, 26);
         windowIconChanged.connect(icon -> menuIcon.update());
         menuBar().setCornerWidget(menuIcon, Qt.Corner.TopLeftCorner);
@@ -485,7 +488,7 @@ public final class MainWindow extends QMainWindow {
         selectAll.triggered.connect(configurationTextPane::selectAll);
         configurationTextPane.textChanged.connect(() -> selectAll.setEnabled(!configurationTextPane.toPlainText().isEmpty()));
         edit.addAction(selectAll);
-        var settings = menuBar().addMenu("&Settings");
+        var settings = new QMenu("Settings", this);
         settings.setObjectName("settingsMenu");
         var global = action("&Global...", "globalSettings", null);
         settings.addAction(global);

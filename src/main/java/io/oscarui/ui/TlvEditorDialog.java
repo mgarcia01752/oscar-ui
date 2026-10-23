@@ -109,7 +109,7 @@ final class TlvEditorDialog extends QDialog {
             layout.addWidget(availability);
         }
         list.setObjectName("tlvChoices");
-        list.setHeaderLabels(editing == null ? List.of("TLV", "Name", "Status") : List.of("TLV", "Name"));
+        list.setHeaderLabels(editing == null ? List.of("Type", "Name", "Status") : List.of("Type", "Name"));
         list.setRootIsDecorated(false);
         list.setColumnWidth(0, 90);
         list.setColumnWidth(1, 280);

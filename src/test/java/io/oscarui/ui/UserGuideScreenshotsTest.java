@@ -212,6 +212,7 @@ class UserGuideScreenshotsTest {
                 var dialog = new TlvEditorDialog(null, service, document, document.root(),
                         java.util.List.of(definition));
                 dialog.resize(760, 650);
+                dialog.findChild(QRadioButton.class, "allTlvs").setChecked(true);
                 dialog.findChild(QPlainTextEdit.class, "certificateText")
                         .setPlainText(name.equals("ManufacturerCVC") ? hex : pem);
                 assertTrue(dialog.findChild(QPushButton.class, "confirmAddTlv").isEnabled());
