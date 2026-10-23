@@ -27,7 +27,7 @@ final class ConfigurationTreePane extends QTreeWidget {
 
     ConfigurationTreePane() {
         setObjectName("configurationTree");
-        setHeaderLabels(List.of("Configuration", "TLV", "Value"));
+        setHeaderLabels(List.of("Configuration", "Type", "Value"));
         setMinimumWidth(240);
         setColumnWidth(0, 240);
         setColumnWidth(1, 100);
