@@ -12,7 +12,7 @@ import java.util.List;
 
 /** Update action followed by mutually exclusive workspace layout controls. */
 final class WorkspaceLayoutControls extends QWidget {
-    private enum Mode { TREE, TEXT, BOTH }
+    private enum Mode { TREE, BOTH, TEXT }
 
     private final QSplitter splitter;
     private final QWidget tree;

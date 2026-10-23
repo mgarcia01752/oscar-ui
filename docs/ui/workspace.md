@@ -11,7 +11,7 @@ The application and packaged launchers use the OSCAR-UI icon. macOS displays
 the application icon in the Dock; its standard title bar does not show that icon.
 
 The top-right row shows **Update** first when a newer release is available,
-followed by **Tree only**, **Text only**, and **Both panels** layout buttons.
+followed by **Tree only**, **Both panels**, and **Text only** layout buttons.
 Hover over an icon for its label. Both panels are shown at startup; switching
 back to both restores your previous split widths. Switching layouts preserves
 the document and selection, and the text preview continues updating while hidden.

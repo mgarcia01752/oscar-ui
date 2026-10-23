@@ -276,7 +276,7 @@ class MainWindowTest {
                     < window.menuBar().actionGeometry(window.menuBar().actions().getFirst()).left());
             var controls = window.findChild(QWidget.class, "workspaceLayoutControls");
             var row = (QHBoxLayout) controls.layout();
-            assertEquals(java.util.List.of("upgradeChip", "layoutTREE", "layoutTEXT", "layoutBOTH"),
+            assertEquals(java.util.List.of("upgradeChip", "layoutTREE", "layoutBOTH", "layoutTEXT"),
                     java.util.stream.IntStream.range(0, row.count())
                             .mapToObj(index -> row.itemAt(index).widget().objectName()).toList());
             var update = window.findChild(UpgradeChip.class, "upgradeChip");

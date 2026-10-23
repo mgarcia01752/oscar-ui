@@ -752,7 +752,7 @@ icon before File. Its instant-popup menu contains Global and Secrets, replacing
 the text Settings menu. The accessible name and tooltip are Settings. Branding
 remains visible when the native title bar omits icons and follows theme changes.
 The row places the Update
-chip first, then exclusive tree-only, text-only and both-panel buttons. It changes
+chip first, then exclusive tree-only, both-panel and text-only buttons. It changes
 pane visibility without recreating widgets or documents. Both panels are the
 startup default; split widths are retained within the session. Icon painting uses
 the active palette. Layout selection is not persisted across application restarts.
