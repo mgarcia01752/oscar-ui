@@ -11,6 +11,7 @@ import io.qt.widgets.QApplication;
 import io.qt.widgets.QPlainTextEdit;
 import io.qt.widgets.QTreeWidget;
 import io.qt.widgets.QSplitter;
+import io.qt.widgets.QToolButton;
 import io.qt.gui.QAction;
 import java.nio.file.Path;
 
@@ -72,13 +73,22 @@ public final class DesktopApplication {
             return false;
         }
         var menus = window.menuBar().actions();
-        if (menus.size() != 6
+        if (menus.size() != 5
             || !menus.get(0).text().equals("&File")
             || !menus.get(1).text().equals("&Edit")
-            || !menus.get(2).text().equals("&Settings")
-            || !menus.get(3).text().equals("&Inspect")
-            || !menus.get(4).text().equals("&Tools")
-            || !menus.get(5).text().equals("&Help")) {
+            || !menus.get(2).text().equals("&Inspect")
+            || !menus.get(3).text().equals("&Tools")
+            || !menus.get(4).text().equals("&Help")) {
+            return false;
+        }
+        var settingsButton = window.findChild(QToolButton.class, "workspaceAppIcon");
+        if (settingsButton == null || !settingsButton.isVisible() || !settingsButton.isEnabled()
+                || !settingsButton.accessibleName().equals("Settings")
+                || settingsButton.popupMode() != QToolButton.ToolButtonPopupMode.InstantPopup
+                || settingsButton.menu() == null
+                || !settingsButton.menu().objectName().equals("settingsMenu")
+                || settingsButton.menu().actions().stream()
+                        .noneMatch(action -> action.objectName().equals("globalSettings") && action.isEnabled())) {
             return false;
         }
         for (String name : new String[]{"fileNew", "fileOpen", "fileSaveAs", "addTlv", "aboutOscar", "userGuide", "checkSharedSecret"}) {

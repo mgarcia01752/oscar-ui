@@ -23,7 +23,7 @@ unfinished functionality lives in TODO rather than duplicated feature lists.
 | Shared-secret checker | `SharedSecretCheckServiceTest` | Correct/wrong key, standard/extended MICs, malformed or unsupported inputs |
 | About and descriptions | `ReleaseUpdateServiceTest`, `TlvDescriptionFormatterTest` | Version comparison, malformed metadata, prose/list/example formatting |
 | Native dialogs | `MainWindowTest` (opt-in) | Save shortcuts, popups, selection, overwrite races, masking/clipboard/hex, themes, About, held-eye masking, binary-only Inspect |
-| Native launch | `scripts/unix/desktop.sh smoke` | Qt startup, menus, tree/text agreement, clipboard |
+| Native launch | `scripts/unix/desktop.sh smoke` | Qt startup, text menus and Settings icon popup, tree/text agreement, clipboard |
 | Tooling | `tools/git`, `tools/development`, `scripts/tests` | Safe tags/pushes, verified dependency update/rollback, source bundling, DEB maintainer scripts |
 
 For dependency-updater changes, test `--latest-jar` and `--version` selection,
