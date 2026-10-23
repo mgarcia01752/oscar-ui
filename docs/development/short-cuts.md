@@ -2,7 +2,9 @@
 
 [Development guide](README.md) · [Git helpers](../../tools/git/README.md)
 
-Examples use `/home/dev01/Projects/oscar-ui`; adjust it for another checkout.
+Examples use `~/Projects/oscar-ui`; `~` expands to your home directory in Bash.
+Adjust the checkout location as needed. For quoted paths, use `"$HOME/Projects/oscar-ui"`
+instead of `"~/Projects/oscar-ui"`, because quoted tildes do not expand.
 
 ## Build and run on the VM desktop
 
@@ -16,7 +18,7 @@ ps -u "$(id -un)" -o args= | grep '[X]wayland'
 Replace `:0` and the `EXAMPLE` path below with those values, then run:
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 export DISPLAY=:0 &&
 export XAUTHORITY="/run/user/1000/.mutter-Xwaylandauth.EXAMPLE" &&
 xdpyinfo >/dev/null &&
@@ -31,7 +33,7 @@ inside the intended desktop instead. See [VM display troubleshooting](README.md#
 To run again without rebuilding, in the same terminal with those variables set:
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 ./scripts/unix/desktop.sh run
 ```
 
@@ -41,14 +43,14 @@ Review changes first; the helper stages **all non-ignored changes**.
 Replace the sample message and test result with what you actually changed.
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 git status --short &&
 git diff --stat &&
 git diff
 ```
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 tools/git/git-save.sh --commit-msg "Feature: Describe the change
 - Describe the implementation
 - Tests: State the checks performed"
@@ -57,7 +59,7 @@ tools/git/git-save.sh --commit-msg "Feature: Describe the change
 ## Push main only (no release)
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 tools/git/git-push.sh --master
 ```
 
@@ -68,17 +70,17 @@ Each runs checks, bumps the version, commits, tags, and pushes. GitHub CI builds
 and publishes the MSI and DEB only after the required checks pass.
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 tools/git/git-push.sh --tag-patch
 ```
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 tools/git/git-push.sh --tag-minor
 ```
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 tools/git/git-push.sh --tag-major
 ```
 
@@ -87,7 +89,7 @@ tools/git/git-push.sh --tag-major
 Requires authenticated GitHub CLI (`gh auth login`).
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 python3 tools/git/release-status.py
 ```
 
@@ -101,7 +103,7 @@ Resolve the latest published stable OSCAR release directly; no GitHub CLI is nee
 Wait until the upstream release JAR assets are available.
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 python3 tools/development/update-oscar.py --latest-jar
 ```
 
@@ -112,7 +114,7 @@ Review and commit the changes, then rebuild the UI.
 ## Build a local Ubuntu installer
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 python3 scripts/build/build-image.py --linux
 ```
 
@@ -124,12 +126,12 @@ Windows MSI builds require Windows. [Local installer guide](build/build-images.m
 Preview first, then remove `target/` and `dist/` (including old installer images):
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 ./scripts/unix/clean.sh --dry-run
 ```
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 ./scripts/unix/clean.sh
 ```
 

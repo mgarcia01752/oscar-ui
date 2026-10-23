@@ -203,7 +203,7 @@ OSCAR 3.2.4 and 3.2.5 and are not release-ready. Upstream ordering has not been
 modified. When resuming, review the patch and check it before applying:
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 git apply --check docs/development/todo/deferred-tlv-reordering.patch
 ```
 

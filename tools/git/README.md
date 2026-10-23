@@ -95,14 +95,14 @@ Requires GitHub CLI (`gh`) authenticated with `gh auth login`.
 Show the newest release workflow (including queued or failed releases):
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 python3 tools/git/release-status.py
 ```
 
 Select a specific tag:
 
 ```bash
-cd /home/dev01/Projects/oscar-ui &&
+cd ~/Projects/oscar-ui &&
 python3 tools/git/release-status.py --tag v0.4.0
 ```
 
