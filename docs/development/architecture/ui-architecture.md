@@ -522,7 +522,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.6.0 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.7.0 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -903,3 +903,61 @@ automatically upgrading dependencies or opening issues.
 For a local scan after OSCAR bootstrap, run
 `python3 tools/development/dependency-security.py`. Reports are written under
 `target/security-audit/`. The offline helper tests run in the developer test suite.
+
+## Text-file repair before workspace import
+
+The workspace remains a configuration editor, not a general-purpose source IDE.
+`MainWindow.openFile` delegates to `TextRepairService`: bounded UTF-8 text is
+checked with OSCAR's `TextLinter` API before the existing unsigned encoder and
+lossless import checks. Binary content retains its existing open path. Clean,
+importable text opens normally; lint or import failures open the dedicated
+`TextRepairDialog`. No partial or invalid document enters a workspace tab.
+
+```mermaid
+flowchart TD
+    Open[Open file] --> Detect{Text or binary?}
+    Detect -->|Binary| Binary[Existing binary import]
+    Detect -->|Text| Lint[OSCAR lint API]
+    Lint -->|Clean| Import[Existing text import checks]
+    Lint -->|Findings or incomplete| Repair[Separate repair editor]
+    Import -->|Failure| Repair
+    Import -->|Success| Workspace[Main workspace tab]
+    Repair --> Edit[Edit snapshot]
+    Edit --> Check[Background lint and import]
+    Check -->|Issues| Repair
+    Check -->|Pass| Continue[Continue]
+    Continue --> Choice{Save choice}
+    Choice -->|Back| Repair
+    Choice -->|Overwrite original or Save As| Save[Revalidate and save atomically]
+    Save -->|Conflict or failure| Repair
+    Save -->|Success| Workspace
+```
+
+The repair component owns its controls, line numbers, find, undo/redo, error
+navigation and red wave underlines. The service owns OSCAR calls and saving.
+Checking runs on one background worker after a 500 ms typing pause or an explicit
+Validate request. Each result belongs to an editor revision; stale results never
+update highlights or enable Continue. Qt widgets are accessed only on the UI
+thread. Timers stop and the worker is shut down when the dialog finishes.
+
+The UI uses OSCAR's UTF-16 source ranges. Qt normalizes editor line endings, so
+when the loaded text changes during that normalization it is rechecked against
+the exact displayed buffer. Missing-character diagnostics underline an adjacent
+character and retain the actual insertion column in the error list. Import errors
+without a source location appear in the list without inventing an underline.
+Syntax acceptance is not full registry, deployment, minimum-TLV or MIC validation;
+incomplete drafts remain supported by the normal unsigned import check.
+
+Continue offers Overwrite Original, Save As, or Back to Editing (the default).
+The original snapshot includes a fingerprint of the exact bytes read. Saving
+rechecks the destination fingerprint and uses the existing atomic writer; changed,
+read-only or unsafe destinations fail without falling back to destructive writes.
+Save As prompts before replacing an existing destination, and an already-open
+workspace destination is refused to preserve its unsaved session. The UI adds the
+saved document only after saving succeeds. Cancel does not write; closing modified
+text requires discard confirmation. The repair editor displays raw source text,
+including any secrets it contains, rather than the workspace's masked preview.
+
+The synthetic negative fixtures live under `src/test/resources/lint/`; tests copy
+inputs into temporary directories before editing or saving. Unix read-only bits
+on canonical fixtures are local protection, not a Git-persisted guarantee.

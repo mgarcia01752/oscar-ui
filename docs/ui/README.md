@@ -20,6 +20,7 @@ updates, and removal.
 | --- | --- |
 | Switch file tabs and use the tree, preview and status | [Workspace](workspace.md) |
 | Create, open, save or convert configurations | [Files](files.md) |
+| Repair syntax or value errors before opening text | [Text repair](text-repair.md) |
 | Add, edit, duplicate or delete TLVs | [TLV editing](tlv-editing.md) |
 | Load or paste manufacturer and co-signer certificates | [CVC input](tlv-editing.md#manufacturer-and-co-signer-certificates) |
 | View binary hex and TLV breakdowns | [Inspection](inspection.md) |

@@ -380,3 +380,17 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [ ] Check monthly scan findings and retained report; distinguish advisory matches
   from infrastructure failures. Review excluded native/runtime dependencies separately.
 - [ ] Test pagination, malformed responses and failure reports without network calls.
+
+## Text repair
+
+- Open malformed text: a separate repair editor appears without replacing the active tab.
+- Click findings and verify line/column navigation and visible red insertion-point marks.
+- Edit during an outstanding check: old results must not enable Continue.
+- Verify CRLF/Unicode positions against displayed text, both themes and scrolling line numbers.
+- Verify unknown names pass syntax lint but fail import and remain repairable.
+- Validate a corrected incomplete draft, then test overwrite and Save As.
+- Refuse external changes, read-only originals and already-open destinations.
+- Cancel/save failures must preserve original bytes; never edit canonical negative fixtures.
+- Run `TextRepairServiceTest` and opt-in `TextRepairDialogTest`; the latter captures
+  screenshots when `oscar.ui.screenshots=true`. Linux results do not prove native
+  Windows/macOS behavior.

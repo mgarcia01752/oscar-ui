@@ -1,0 +1,3 @@
+Docsis {
+    NetworkAccess 1;
+    /* Deliberately unterminated: the remaining text cannot be checked.

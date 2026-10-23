@@ -923,7 +923,12 @@ class MainWindowTest {
             assertFalse(window.succeeded());
             assertSame(original, window.currentDocument());
             assertEquals(displayed, window.findChild(QPlainTextEdit.class, "configurationText").toPlainText());
-            assertTrue(window.findChild(QLabel.class, "operationStatus").text().startsWith("OSCAR text compilation failed:"));
+            assertEquals("Text needs repair before opening.", window.findChild(QLabel.class, "operationStatus").text());
+            var repair = window.findChild(TextRepairDialog.class, "textRepairDialog");
+            assertNotNull(repair);
+            assertTrue(repair.findChild(QListWidget.class, "repairErrors").item(0).text().startsWith("Import:"));
+            assertFalse(repair.findChild(QPushButton.class, "repairContinue").isEnabled());
+            repair.reject();
         } finally {
             window.close();
             window.dispose();

@@ -1,0 +1,34 @@
+/* Synthetic negative lint fixture. Intentionally invalid; never deploy.
+ * Do not edit this original during repair-window tests: use a temporary copy.
+ */
+Docsis {
+    /* Signed integer overflow and nonnumeric value. */
+    Snmp11 1.3.6.1 Integer "2147483648";
+    Snmp11 1.3.6.1 Integer32 "abc";
+    /* Unsigned numeric type aliases and bounds. */
+    Snmp11 1.3.6.1 Counter "-1";
+    Snmp11 1.3.6.1 Counter32 "4294967296";
+    Snmp64 1.3.6.1 Gauge "1.5";
+    Snmp64 1.3.6.1 Gauge32 "-1";
+    Snmp64 1.3.6.1 TimeTicks "abc";
+    Snmp11 1.3.6.1 IpAddress "999.2.3.4";
+    Snmp64 1.3.6.1 HexString "0:zz";
+    /* Unsupported quoted escape. */
+    Snmp11 1.3.6.1 OctetString "bad\q";
+    /* Missing closing quote. */
+    Snmp11 1.3.6.1 OctetString "missing close;
+    /* Missing both quotes and unsupported datatype. */
+    Snmp11 1.3.6.1 Integer32 abc;
+    Snmp11 1.3.6.1 UnknownType "42";
+    /* Missing semicolon, followed by a valid leaf. */
+    MaxCPEAllowed 2
+    NetworkAccess 1;
+    /* Nested error for highlighting and ancestry tests. */
+    eSTBConfig {
+        Snmp11 1.3.6.1 Integer32 "bad";
+    }
+    /* Registry-name limitation: syntax lint accepts this placeholder. */
+    NetworkAccesss;
+    /* Valid final leaf proves recovery continued. */
+    Snmp11 1.3.6.1 OctetString "valid final value";
+    /* Root closing brace deliberately missing. */
