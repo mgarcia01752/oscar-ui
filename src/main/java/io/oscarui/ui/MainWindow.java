@@ -155,9 +155,13 @@ public final class MainWindow extends QMainWindow {
         maskingDivider.setObjectName("maskingDivider");
         maskingDivider.setFrameShape(QFrame.Shape.VLine);
         maskingDivider.setFrameShadow(QFrame.Shadow.Sunken);
-        statusBar().addPermanentWidget(maskingLabel);
-        statusBar().addPermanentWidget(maskingDivider);
-        statusBar().addPermanentWidget(typeLabel);
+        // Share the pane margins instead of the platform status bar's resize-grip inset.
+        var footer = new QHBoxLayout();
+        footer.setContentsMargins(0, 0, 0, 0);
+        footer.addStretch();
+        footer.addWidget(maskingLabel);
+        footer.addWidget(maskingDivider);
+        footer.addWidget(typeLabel);
         status.setWordWrap(true);
         status.setObjectName("operationStatus");
         status.setVisible(false);
@@ -170,6 +174,7 @@ public final class MainWindow extends QMainWindow {
         splitter.setSizes(List.of(380, 780));
         layout.addWidget(splitter, 1);
         layout.addWidget(status);
+        layout.addLayout(footer);
         setCentralWidget(central);
         buildMenus();
         documentTabs.configureMenu(open, newFile);

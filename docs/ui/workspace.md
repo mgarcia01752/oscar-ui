@@ -61,7 +61,8 @@ through OSCAR before being displayed. Unsupported or lossy imports are rejected.
 The text preview shows configuration statements. TLV comments can be shown with
 **Settings → Global → Show TLV comments in configuration text**.
 
-The bottom-right status identifies **Text** or **Binary**. With SNMP masking
+The bottom-right status identifies **Text** or **Binary**. Status labels align
+with the inner workspace panels and share their edge spacing. With SNMP masking
 enabled, **Masked** appears beside the type, separated by a vertical divider.
 Masking changes the display, not the stored configuration values.
 
