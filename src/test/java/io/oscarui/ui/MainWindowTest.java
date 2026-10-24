@@ -19,15 +19,39 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void welcomeButtonsReuseActionsAndTheirEnabledState() {
+        var newFile = new QAction("New");
+        var openFile = new QAction("Open");
+        var newCount = new java.util.concurrent.atomic.AtomicInteger();
+        var openCount = new java.util.concurrent.atomic.AtomicInteger();
+        newFile.triggered.connect(() -> newCount.incrementAndGet());
+        openFile.triggered.connect(() -> openCount.incrementAndGet());
+        var pane = new WorkspaceWelcomePane(newFile, openFile);
+        try {
+            pane.findChild(QPushButton.class, "welcomeNew").click();
+            pane.findChild(QPushButton.class, "welcomeOpen").click();
+            assertEquals(1, newCount.get());
+            assertEquals(1, openCount.get());
+            openFile.setEnabled(false);
+            assertFalse(pane.findChild(QPushButton.class, "welcomeOpen").isEnabled());
+        } finally {
+            pane.dispose();
+            newFile.dispose();
+            openFile.dispose();
+        }
+    }
+
     @Test void tabsTrackBinaryTextDuplicatePathsAndRepeatedTlvSelection() throws Exception {
         var window = new MainWindow(false);
         window.show();
         try {
+            assertTrue(window.findChild(QWidget.class, "workspaceWelcome").isVisible());
             Path text = Files.writeString(temporary.resolve("flows.txt"), "Docsis { "
                     + "UpstreamServiceFlow { ServiceFlowReference 1; } "
                     + "UpstreamServiceFlow { ServiceFlowReference 2; } }");
             window.openFile(text);
             await(() -> window.completed() && window.succeeded());
+            assertFalse(window.findChild(QWidget.class, "workspaceWelcome").isVisible());
             var tabs = window.findChild(QTabBar.class, "documentTabBar");
             var tree = window.findChild(QTreeWidget.class, "configurationTree");
             tree.topLevelItem(0).child(1).setExpanded(true);
@@ -54,6 +78,8 @@ class MainWindowTest {
             assertSame(first, window.currentDocument());
             action(window, "fileCloseTab").trigger();
             assertEquals(0, tabs.count());
+            assertTrue(window.findChild(QWidget.class, "workspaceWelcome").isVisible());
+            assertTrue(window.findChild(QPushButton.class, "welcomeOpen").isEnabled());
             assertNull(window.currentDocument());
             assertEquals("", window.findChild(QLabel.class, "documentType").text());
             assertEquals(0, tree.topLevelItemCount());
@@ -285,7 +311,7 @@ class MainWindowTest {
             assertTrue(update.width() >= update.minimumSizeHint().width());
             assertTrue(controls.x() + controls.width() <= window.menuBar().width());
             var tree = window.findChild(ConfigurationTreePane.class);
-            var text = window.findChild(ConfigurationTextPane.class);
+            var text = window.findChild(QStackedWidget.class, "workspaceTextPanel");
             var splitter = window.findChild(QSplitter.class);
             splitter.setSizes(java.util.List.of(400, 600));
             QApplication.processEvents();

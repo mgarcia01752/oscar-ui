@@ -23,6 +23,26 @@ class UserGuideScreenshotsTest {
     @TempDir Path temporary;
     private Throwable captureFailure;
 
+    @Test void captureWelcomeWorkspace() throws Exception {
+        QApplication.initialize(new String[0]);
+        QApplication.setQuitOnLastWindowClosed(false);
+        Path images = Path.of("target/user-guide-images");
+        Files.createDirectories(images);
+        var window = new MainWindow(false);
+        try {
+            window.resize(1200, 580);
+            window.show();
+            DesktopTheme.apply(Appearance.DARK);
+            capture(window, images.resolve("workspace-welcome-dark.png"));
+            DesktopTheme.apply(Appearance.LIGHT);
+            capture(window, images.resolve("workspace-welcome-light.png"));
+        } finally {
+            window.close();
+            window.dispose();
+            QApplication.shutdown();
+        }
+    }
+
     @Test void captureCommonTlvSettings() throws Exception {
         QApplication.initialize(new String[0]);
         QApplication.setQuitOnLastWindowClosed(false);

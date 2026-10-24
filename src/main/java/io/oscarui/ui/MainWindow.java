@@ -43,6 +43,7 @@ public final class MainWindow extends QMainWindow {
     private final QLabel typeLabel = new QLabel();
 
     private final ConfigurationTextPane configurationTextPane = new ConfigurationTextPane();
+    private final QStackedWidget textPanel = new QStackedWidget();
 
     private final ConfigurationTreePane configurationTreePane = new ConfigurationTreePane();
 
@@ -168,7 +169,12 @@ public final class MainWindow extends QMainWindow {
         layout.addWidget(documentTabs);
         var splitter = new QSplitter(Qt.Orientation.Horizontal);
         splitter.addWidget(configurationTreePane);
-        splitter.addWidget(configurationTextPane);
+        textPanel.setObjectName("workspaceTextPanel");
+        var welcome = new WorkspaceWelcomePane(newFile, open);
+        textPanel.addWidget(welcome);
+        textPanel.addWidget(configurationTextPane);
+        windowIconChanged.connect(ignored -> welcome.update());
+        splitter.addWidget(textPanel);
         splitter.setStretchFactor(0, 1);
         splitter.setStretchFactor(1, 2);
         splitter.setSizes(List.of(380, 780));
@@ -247,7 +253,7 @@ public final class MainWindow extends QMainWindow {
         windowIconChanged.connect(icon -> menuIcon.update());
         menuBar().setCornerWidget(menuIcon, Qt.Corner.TopLeftCorner);
         menuBar().setCornerWidget(new WorkspaceLayoutControls(upgradeChip, splitter,
-                configurationTreePane, configurationTextPane), Qt.Corner.TopRightCorner);
+                configurationTreePane, textPanel), Qt.Corner.TopRightCorner);
         if (interactive) {
             upgradeChip.check(() -> new ReleaseUpdateService().checkRelease(
                     AboutDialog.loadBuildInfo().getProperty("ui.version", "unknown")));
@@ -1216,6 +1222,7 @@ public final class MainWindow extends QMainWindow {
 
     private void updateActions() {
         boolean idle = pending == null;
+        textPanel.setCurrentIndex(document == null ? 0 : 1);
         newFile.setEnabled(idle);
         open.setEnabled(idle);
         closeTab.setEnabled(idle && document != null);

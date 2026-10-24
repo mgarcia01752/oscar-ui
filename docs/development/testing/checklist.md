@@ -394,3 +394,14 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - Run `TextRepairServiceTest` and opt-in `TextRepairDialogTest`; the latter captures
   screenshots when `oscar.ui.screenshots=true`. Linux results do not prove native
   Windows/macOS behavior.
+
+## Empty workspace welcome view
+
+- Start without a document: the text panel shows the muted OSCAR-UI icon,
+  New configuration and Open file with native shortcuts.
+- Check both buttons use the normal File actions and disable during work.
+- Open/create a document, switch tabs, and close the final tab: the welcome
+  view appears only when there is no active document.
+- Check Tree only, Text only and Both panels with and without a document.
+- Check light/dark themes and resize the window; the icon and actions stay
+  centered within the text panel.

@@ -20,6 +20,18 @@ layout uses the theme's highlight color.
 
 [View the workspace in light mode](../images/user-guide/workspace-light.png).
 
+## Welcome view
+
+When no files are open, the text panel displays the OSCAR-UI icon and
+**New configuration** and **Open file** buttons with the current keyboard
+shortcuts. Opening or creating a file replaces this view with its text. Closing
+the last tab restores it. The welcome view follows the light or dark theme
+and the selected panel layout.
+
+![Empty workspace in dark mode](../images/user-guide/workspace-welcome-dark.png)
+
+[Empty workspace in light mode](../images/user-guide/workspace-welcome-light.png).
+
 ## File tabs and directory breadcrumbs
 
 Tabs and breadcrumbs start at the left workspace edge above both panels.

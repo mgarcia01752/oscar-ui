@@ -961,3 +961,14 @@ including any secrets it contains, rather than the workspace's masked preview.
 The synthetic negative fixtures live under `src/test/resources/lint/`; tests copy
 inputs into temporary directories before editing or saving. Unix read-only bits
 on canonical fixtures are local protection, not a Git-persisted guarantee.
+
+### Empty workspace welcome view
+
+MainWindow owns a stacked text panel containing WorkspaceWelcomePane and the
+existing ConfigurationTextPane. With no active document, the welcome page shows
+the application icon and delegates New/Open buttons to the existing QActions,
+including their native shortcut text and enabled state. Opening or creating a
+document selects the preview; closing the final tab restores the welcome page.
+Panel layout controls operate on the stack so both pages follow the same layout.
+The icon follows application icon changes; controls use the current Qt palette.
+The welcome pane owns no document, parsing, saving, or background operations.
