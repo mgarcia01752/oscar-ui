@@ -49,7 +49,7 @@ final class BinaryTreeProjection {
                 decoded.addAll(documents.parseDecodedTree(decodedText, source.configurationType()).root().childTlvs());
                 byteOffset = endOffset;
             }
-            var children = bind(encoded, source.root().childTlvs(), decoded, registry);
+            var children = bind(encoded, source.root().childTlvs(), decoded, registry, source.configurationType());
             Node original = source.root();
             var root = new Node(original.tlvPath(), original.tlvName(), "", children,
                     original.sourceStartOffset(), original.sourceEndExclusive(), original.terminatorOffset(), true);
@@ -61,7 +61,7 @@ final class BinaryTreeProjection {
     }
 
     private List<Node> bind(byte[] encoded, List<Node> sourceNodes, List<Node> decodedNodes,
-                            TlvRegistry registry) throws InspectionException, TlvException {
+                            TlvRegistry registry, OscarDocumentService.FileType configurationType) throws InspectionException, TlvException {
         var remainingSource = new ArrayList<>(sourceNodes);
         var remainingDecoded = new ArrayList<>(decodedNodes);
         var result = new ArrayList<Node>();
@@ -72,7 +72,7 @@ final class BinaryTreeProjection {
                     .filter(candidate -> candidate.tlvPath().getLast() == tlvTypeCode).findFirst()
                     .orElseThrow(() -> new InspectionException("OSCAR returned an unmatched binary TLV."));
             remainingSource.remove(source);
-            var definition = registry.find(source.tlvPath());
+            var definition = OscarInstanceDefinitions.resolve(configurationType, registry, source);
             Node decoded = remainingDecoded.stream().filter(candidate -> candidate.tlvPath().equals(source.tlvPath()))
                     .findFirst().orElseThrow(() -> new InspectionException("OSCAR omitted a decoded TLV instance."));
             remainingDecoded.remove(decoded);
@@ -83,7 +83,7 @@ final class BinaryTreeProjection {
             List<Node> children = List.of();
             if (source.isContainer()) {
                 children = bind(TlvBuilder.getTlvValue(encoded, byteOffset, definition.lengthBytes()),
-                        source.childTlvs(), decoded.childTlvs(), registry);
+                        source.childTlvs(), decoded.childTlvs(), registry, configurationType);
             }
             result.add(new Node(decoded.tlvPath(), decoded.tlvName(), decoded.encodedValueText(), children,
                     source.sourceStartOffset(), source.sourceEndExclusive(), source.terminatorOffset(), source.isContainer()));

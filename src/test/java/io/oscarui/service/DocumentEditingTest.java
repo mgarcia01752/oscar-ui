@@ -24,7 +24,8 @@ class DocumentEditingTest {
             payload[index] = (byte) index;
         }
         String hex = CertificateInput.toOscarHex(payload);
-        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC",
+                "ManufacturerCVCChain", "Co-signerCVCChain")) {
             var definition = service.choices(document, document.root()).stream()
                     .filter(entry -> entry.name().equals(name)).findFirst().orElseThrow();
             assertTrue(CertificateInput.supports(definition));
@@ -35,7 +36,8 @@ class DocumentEditingTest {
         byte[] encoded = OscarTextCompileCheck.compile(document.text());
         var projected = service.openCompiledText(document.path(), document.text(),
                 document.text().getBytes(java.nio.charset.StandardCharsets.UTF_8), encoded);
-        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC",
+                "ManufacturerCVCChain", "Co-signerCVCChain")) {
             var node = projected.root().childTlvs().stream().filter(entry -> entry.tlvName().equals(name))
                     .findFirst().orElseThrow();
             assertArrayEquals(payload, CertificateInput.parse(node.encodedValueText()));
@@ -54,6 +56,13 @@ class DocumentEditingTest {
         var cosigner = edited.root().childTlvs().stream()
                 .filter(node -> node.tlvName().equals("Co-signerCVC")).findFirst().orElseThrow();
         assertArrayEquals(payload, CertificateInput.parse(cosigner.encodedValueText()));
+        var chain = edited.root().childTlvs().stream()
+                .filter(node -> node.tlvName().equals("ManufacturerCVCChain")).findFirst().orElseThrow();
+        var changedChain = service.replaceValue(edited, chain, "30:02:01:FF");
+        assertTrue(changedChain.text().contains("ManufacturerCVCChain 30:02:01:FF;"));
+        var untouchedChain = changedChain.root().childTlvs().stream()
+                .filter(node -> node.tlvName().equals("Co-signerCVCChain")).findFirst().orElseThrow();
+        assertArrayEquals(payload, CertificateInput.parse(untouchedChain.encodedValueText()));
     }
 
     @Test void duplicatesServiceFlowWithoutChangingOriginalOrSourceFile() throws Exception {

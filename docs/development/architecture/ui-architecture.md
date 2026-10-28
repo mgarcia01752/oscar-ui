@@ -522,7 +522,7 @@ reads the original file without compiling text, changing the file, or replacing
 the editor contents. The secret is not persisted and is cleared after checking
 or closing the dialog; worker-owned key bytes are cleared after verification.
 
-OSCAR 3.7.1 verifies the original bytes using compatible D3.1/D4.0 framing.
+OSCAR 3.7.5 verifies the original bytes using compatible D3.1/D4.0 framing.
 Common encodings cannot uniquely identify the DOCSIS edition. The supplied key
 is checked against all present supported keyed MICs, including extended MICs.
 The dialog displays **Correct Shared Secret** or **Incorrect Shared Secret**.
@@ -572,18 +572,29 @@ No purge, autoremove, restart, or deletion of external user configurations occur
 ## CVC input and fragment projection
 
 `CertificateValuePane` owns file selection and multiline HEX/PEM input for
-manufacturer and co-signer CVC add/edit. `CertificateInput` identifies these
-entries from OSCAR constants and codec metadata, decodes PEM/HEX to bytes,
+manufacturer and co-signer CVC and CVC-chain add/edit. `CertificateInput`
+recognizes top-level `multi_tlv_byte_array` entries from OSCAR registry metadata,
+including 32/33 and 81/82, without a second numeric TLV list. Nested fragmented
+byte fields are not certificate inputs. It decodes PEM/HEX to bytes,
 and formats OSCAR scalar HEX. DER is treated as opaque bytes; certificate
 trust and ASN.1 validity are not checked. No local file paths enter the document.
-`OscarDocumentService` permits these two previously unsupported codec entries
+`OscarDocumentService` permits these registry-defined certificate entries
 and validates their normalized text through OSCAR before insertion/replacement.
 
 `BinaryTreeProjection` passes each contiguous CVC fragment group to OSCAR as
 one logical instance and binds it to one source node. `SelectedTlvHexService`
 retains all fragments in the selected row. Binary opening also groups contiguous CVC fragments for export while retaining
 physical-fragment byte comparisons on reimport. Other TLVs retain their existing
-instance handling. OSCAR 3.3.0 owns fragmentation and adjacent-CVC export.
+instance handling. OSCAR owns fragmentation and adjacent-CVC export.
+
+The DOCSIS I25 additions come directly from the pinned OSCAR registry, including
+UNI, AQM, HQoS and SYNC children. Add All TLVs exposes supported entries; Common
+TLVs remains the user preference overlay. No UI catalog copy is introduced.
+Shared encodings such as 24.41 no longer imply DOCSIS 4.0 during binary detection;
+the compatible DOCSIS catalog is preferred unless a 4.0-only encoding is needed.
+Text headers and explicit format selection remain authoritative. Nested instance
+order and source offsets follow OSCAR's lossless output. TLV 88 stays opaque HEX;
+its registry does not define structured children.
 
 ## Update chip
 
@@ -972,3 +983,21 @@ document selects the preview; closing the final tab restores the welcome page.
 Panel layout controls operate on the stack so both pages follow the same layout.
 The icon follows application icon changes; controls use the current Qt palette.
 The welcome pane owns no document, parsing, saving, or background operations.
+
+
+### Opaque DOCSIS vendor-child integration
+
+`OscarInstanceDefinitions` adapts OSCAR's `DocsisVendorExtension.rawDefinition`
+API into UI metadata for instance-only children. OSCAR owns the numeric naming,
+codec, width, description and applicable parent rules. The UI does not append
+vendor children to the shared registry or invent vendor semantics.
+
+Text-tree resolution, binary projection, definition help and scalar editing use
+the same adapter. Name and path together identify opaque instances: a private
+`UnknownTLV1` must not resolve to the standard general-extension definition at 43.1,
+and raw bytes at a known container number must remain a scalar. Raw rows support
+editing/deletion and retain source offsets, repeated instances and original-file
+protection. Add remains a registry-based list; this change does not add arbitrary
+vendor-type creation controls. The existing structural failure report can still
+label an uncatalogued vendor type UNKNOWN_TYPE; that label alone is not evidence
+of invalid vendor semantics or an editable-import failure.

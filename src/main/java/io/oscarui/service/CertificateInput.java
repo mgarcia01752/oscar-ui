@@ -4,7 +4,6 @@
  */
 package io.oscarui.service;
 
-import com.comcast.oscar.cablelabsdefinitions.Constants;
 import com.comcast.oscar.datatype.DataTypeDictionaryReference;
 import com.comcast.oscar.dictionary.TlvDefinition;
 import java.nio.charset.StandardCharsets;
@@ -21,14 +20,12 @@ public final class CertificateInput {
     private CertificateInput() {}
 
     /**
-     * Identifies the two supported legacy CVC definitions using OSCAR constants.
+     * Identifies top-level fragmented certificate payloads from OSCAR codec metadata.
      * @param definition catalog entry, or null
-     * @return true for manufacturer or co-signer CVC
+     * @return true for a top-level multi-TLV byte payload; nested payloads are excluded
      */
     public static boolean supports(TlvDefinition definition) {
         return definition != null && definition.path().size() == 1
-                && (definition.path().getFirst().equals(Constants.MANUFACTURER_CVC)
-                    || definition.path().getFirst().equals(Constants.CO_SIGNER_CVC))
                 && definition.codec().equals(DataTypeDictionaryReference.DATA_TYPE_MULTI_TLV_BYTE_ARRAY);
     }
 

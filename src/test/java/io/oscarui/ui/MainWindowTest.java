@@ -19,6 +19,35 @@ import org.junit.jupiter.api.io.TempDir;
 
 @EnabledIfSystemProperty(named = "oscar.ui.tests", matches = "true")
 class MainWindowTest {
+    @Test void opensAndEditsOpaqueVendorChildInNativeDialog() throws Exception {
+        var window = new MainWindow(false);
+        window.show();
+        try {
+            byte[] bytes = java.util.HexFormat.of().parseHex("2b0808030005caf201ab");
+            Path file = Files.write(temporary.resolve("vendor.bin"), bytes);
+            window.openFile(file);
+            await(() -> window.completed() && window.succeeded());
+            var tree = window.findChild(QTreeWidget.class, "configurationTree");
+            tree.setCurrentItem(tree.topLevelItem(0).child(0).child(1));
+            assertTrue(action(window, "editTlv").isEnabled());
+            var original = window.currentDocument();
+            respond(window, dialog -> {
+                assertEquals("editTlvDialog", dialog.objectName());
+                dialog.findChild(QLineEdit.class, "tlvValue").setText("01:02");
+                assertTrue(dialog.findChild(QPushButton.class, "confirmEditTlv").isEnabled());
+                dialog.findChild(QPushButton.class, "confirmEditTlv").click();
+            });
+            action(window, "editTlv").trigger();
+            await(() -> window.completed() && window.currentDocument() != original);
+            assertCallback();
+            assertEquals("01:02", window.currentDocument().root().childTlvs().getFirst()
+                    .childTlvs().getLast().encodedValueText());
+            assertArrayEquals(bytes, Files.readAllBytes(file));
+        } finally {
+            window.dispose();
+        }
+    }
+
     @Test void welcomeButtonsReuseActionsAndTheirEnabledState() {
         var newFile = new QAction("New");
         var openFile = new QAction("Open");
@@ -79,7 +108,8 @@ class MainWindowTest {
             action(window, "fileCloseTab").trigger();
             assertEquals(0, tabs.count());
             assertTrue(window.findChild(QWidget.class, "workspaceWelcome").isVisible());
-            assertTrue(window.findChild(QPushButton.class, "welcomeOpen").isEnabled());
+            assertTrue(window.findChild(QPushButton.class, "welcomeOpen").isEnabled(),
+                    "Open action enabled=" + action(window, "fileOpen").isEnabled());
             assertNull(window.currentDocument());
             assertEquals("", window.findChild(QLabel.class, "documentType").text());
             assertEquals(0, tree.topLevelItemCount());
@@ -368,7 +398,8 @@ class MainWindowTest {
     @Test void certificateAddAndEditUseMultilineValidatedInput() throws Exception {
         var service = new OscarDocumentService();
         var document = service.open(Files.writeString(temporary.resolve("cert.txt"), "Docsis { NetworkAccess 1; }"));
-        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC")) {
+        for (String name : java.util.List.of("ManufacturerCVC", "Co-signerCVC",
+                "ManufacturerCVCChain", "Co-signerCVCChain")) {
             var definition = service.choices(document, document.root()).stream()
                     .filter(entry -> entry.name().equals(name)).findFirst().orElseThrow();
             var dialog = new TlvEditorDialog(null, service, document, document.root(), java.util.List.of(definition));

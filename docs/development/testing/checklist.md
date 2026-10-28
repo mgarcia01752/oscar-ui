@@ -405,3 +405,26 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - Check Tree only, Text only and Both panels with and without a document.
 - Check light/dark themes and resize the window; the icon and actions stay
   centered within the text panel.
+
+### DOCSIS I25 integration
+
+- Run `DocsisI25IntegrationTest`, `DocumentEditingTest`, and `CertificateInputTest`
+  against the updated OSCAR dependency. Check new Add choices and nested editors,
+  CVC-chain fragment grouping/hex/edit/save/reopen, and independent repeated rows.
+- `BinaryOpeningTest` distinguishes shared I25 fields from 4.0-only encodings.
+  `BinaryTreeProjectionTest` preserves input order and edit offsets.
+- Run the native `MainWindowTest` certificate dialog check for all four CVC types.
+  Raw chain transport does not establish certificate trust or device acceptance.
+
+
+### Opaque vendor-child UI integration
+
+- `VendorExtensionIntegrationTest`: open DOCSIS and DOCSIS 4.0 binary fragments
+  with private vendor children; edit an opaque value and compare exact bytes.
+  Verify repeated children, overlap with standard scalar/container identifiers,
+  zero-length opaque values and unchanged source files.
+- `MainWindowTest.opensAndEditsOpaqueVendorChildInNativeDialog`: open a synthetic
+  binary in the native workspace, select the opaque row, apply a hex edit and
+  verify that the original file stays unchanged.
+- The supplied local advanced DOCSIS configuration was checked read-only through
+  `OscarBinaryService.open`; it is not copied into tracked fixtures.

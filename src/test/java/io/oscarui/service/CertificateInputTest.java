@@ -39,4 +39,18 @@ class CertificateInputTest {
         assertThrows(IllegalArgumentException.class,
                 () -> CertificateInput.fromFile("garbage".getBytes(StandardCharsets.US_ASCII), "invalid.pem"));
     }
+    @Test void recognizesRegistryCertificateChainsWithoutTreatingNestedBytesAsCertificates() {
+        for (int tlvTypeCode : new int[] {32, 33, 81, 82}) {
+            var definition = new com.comcast.oscar.dictionary.TlvDefinition(
+                    java.util.List.of(tlvTypeCode), "Certificate", "multi_tlv_byte_array",
+                    0, 0, 1, "3.1", 1, "Synthetic registry certificate definition");
+            assertTrue(CertificateInput.supports(definition), "TLV " + tlvTypeCode);
+        }
+        var nested = new com.comcast.oscar.dictionary.TlvDefinition(
+                java.util.List.of(43, 5), "L2VPN", "multi_tlv_byte_array",
+                0, 0, 1, "3.1", 1, "Nested data is not a certificate");
+        assertFalse(CertificateInput.supports(nested));
+        assertFalse(CertificateInput.supports(null));
+    }
+
 }

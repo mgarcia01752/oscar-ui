@@ -47,10 +47,11 @@ final class WorkspaceWelcomePane extends QWidget {
         button.setFlat(true);
         Runnable refresh = () -> {
             button.setText(label + "    " + action.shortcut().toString(QKeySequence.SequenceFormat.NativeText));
-            button.setEnabled(action.isEnabled());
         };
         refresh.run();
+        button.setEnabled(action.isEnabled());
         action.changed.connect(refresh::run);
+        action.enabledChanged.connect(button::setEnabled);
         button.clicked.connect(action::trigger);
         layout.addWidget(button, 0, Qt.AlignmentFlag.AlignHCenter);
     }

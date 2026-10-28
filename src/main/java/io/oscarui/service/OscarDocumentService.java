@@ -394,7 +394,8 @@ public final class OscarDocumentService {
      * @return true when the registry contains child definitions
      */
     public boolean isContainer(FileType configurationType, TlvDefinition definition) {
-        return !catalogsByFamily.get(new RegistryFamily(configurationType.family())).registry().children(definition.path()).isEmpty();
+        var registry = catalogsByFamily.get(new RegistryFamily(configurationType.family())).registry();
+        return definition.equals(registry.find(definition.path())) && !registry.children(definition.path()).isEmpty();
     }
 
     /**
@@ -408,7 +409,12 @@ public final class OscarDocumentService {
      */
     public String editingIssue(FileType configurationType, TlvDefinition definition) {
         var registry = catalogsByFamily.get(new RegistryFamily(configurationType.family())).registry();
-        if (!definition.equals(registry.find(definition.path()))) {
+        if (definition == null) {
+            return "Unmapped catalog entry";
+        }
+        if (!definition.equals(registry.find(definition.path()))
+                && !definition.equals(OscarInstanceDefinitions.opaque(configurationType, registry,
+                        definition.parent(), definition.name()))) {
             return "Unmapped catalog entry";
         }
         if (configurationType.family().equals("docsis40")) {
@@ -605,7 +611,7 @@ public final class OscarDocumentService {
     }
 
     /**
-     * Looks up the catalog definition corresponding to a document node.
+     * Resolves the registry or OSCAR opaque-instance definition for a document node.
      *
      * <p>The catalog must already be loaded for the document configuration type.
      *
@@ -614,7 +620,8 @@ public final class OscarDocumentService {
      * @return matching definition, or null for an unmapped reference entry
      */
     public TlvDefinition definition(Document document, Node node) {
-        return catalogsByFamily.get(new RegistryFamily(document.configurationType().family())).registry().find(node.tlvPath());
+        var registry = catalogsByFamily.get(new RegistryFamily(document.configurationType().family())).registry();
+        return OscarInstanceDefinitions.resolve(document.configurationType(), registry, node);
     }
 
     /**
@@ -1013,8 +1020,7 @@ public final class OscarDocumentService {
     private Node node(ParserRuleContext context, List<Integer> parent, FileType configurationType, String text, boolean reference) {
         String name = context.getStart().getText();
         var registry = catalogsByFamily.get(new RegistryFamily(configurationType.family())).registry();
-        var definition = registry.children(parent).stream().filter(entry -> entry.name().equalsIgnoreCase(name))
-            .findFirst().orElse(null);
+        var definition = OscarInstanceDefinitions.resolve(configurationType, registry, parent, name);
         boolean namedPlaceholder = false;
         if (definition == null) {
             String statement = text.substring(context.getStart().getStartIndex(), context.getStop().getStopIndex()).strip();
@@ -1058,7 +1064,7 @@ public final class OscarDocumentService {
             value = "";
         }
         return new Node(resolvedPath, definition == null ? name : definition.name(), value, children, sourceStartOffset, sourceEndExclusive, terminatorOffset,
-            definition != null && !registry.children(resolvedPath).isEmpty());
+            definition != null && isContainer(configurationType, definition));
     }
 
     private List<TlvDefinition> scaffoldChildren(FileType configurationType, List<Integer> path) {

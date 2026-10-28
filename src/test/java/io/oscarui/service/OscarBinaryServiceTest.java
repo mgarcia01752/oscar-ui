@@ -17,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class OscarBinaryServiceTest {
     @Test void failedBinaryOpenIncludesSafeDiagnosticsAndPreservesBytes() throws Exception {
-        byte[] bytes = {45, 6, 83, 69, 67, 82, 69, 84, (byte) 255};
+        byte[] bytes = {(byte) 200, 6, 83, 69, 67, 82, 69, 84, (byte) 255};
         Path file = Files.write(temporary.resolve("unknown.bin"), bytes);
         var failure = assertThrows(InspectionException.class, () -> binary.openAuto(file));
         assertNotNull(failure.binaryReport());

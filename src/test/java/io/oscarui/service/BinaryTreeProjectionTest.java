@@ -38,10 +38,15 @@ class BinaryTreeProjectionTest {
         assertTrue(statements.get(8).encodedValueText().contains("private"));
     }
 
-    @Test void rejectsUpstreamLossOfRepeatedNestedInstances() throws Exception {
+    @Test void preservesRepeatedNestedInstancesWithoutLosingValues() throws Exception {
         Path file = Files.writeString(temporary.resolve("lossy.txt"),
                 "Docsis { DownstreamServiceFlow { MaxTrafficBurst 6; MaxTrafficBurst 8; } }");
-        assertThrows(InspectionException.class, () -> binary.openAuto(file));
+        var document = binary.openAuto(file);
+        var children = document.root().childTlvs().getFirst().childTlvs();
+        assertEquals(List.of("6", "8"), children.stream()
+                .map(OscarDocumentService.Node::encodedValueText).toList());
+        var edited = documents.replaceValue(document, children.getLast(), "9");
+        assertTrue(edited.text().contains("MaxTrafficBurst 6; MaxTrafficBurst 9;"));
     }
 
     @Test void binaryValuesAndNestedInstanceOrderRetainOriginalSourceOffsetsAfterEdits() throws Exception {
@@ -51,14 +56,14 @@ class BinaryTreeProjectionTest {
         var document = binary.openAuto(Files.writeString(temporary.resolve("ordered.txt"), source));
         assertEquals(source, document.text());
         var flow = document.root().childTlvs().getFirst();
-        assertEquals(List.of("ServiceFlowReference", "MaxTrafficBurst"),
+        assertEquals(List.of("MaxTrafficBurst", "ServiceFlowReference"),
                 flow.childTlvs().stream().map(OscarDocumentService.Node::tlvName).toList());
-        assertEquals(List.of("2", "6"),
+        assertEquals(List.of("6", "2"),
                 flow.childTlvs().stream().map(OscarDocumentService.Node::encodedValueText).toList());
         assertEquals("1", document.root().childTlvs().get(1).encodedValueText());
-        var edited = documents.replaceValue(document, flow.childTlvs().getLast(), "9");
+        var edited = documents.replaceValue(document, flow.childTlvs().getFirst(), "9");
         assertEquals(source.replace("0006", "9"), edited.text());
-        assertEquals("9", edited.root().childTlvs().getFirst().childTlvs().getLast().encodedValueText());
+        assertEquals("9", edited.root().childTlvs().getFirst().childTlvs().getFirst().encodedValueText());
         assertTrue(documents.hasBinaryTree(edited));
     }
 }

@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-VERSION=3.7.1
-COMMIT=d6f3e93c7695908bc56a80890b91ad62014561a5
-SHA256=89871c0158ce58e6c8603e2fa553914c74d38d888465ba7917b99818d6359852
+VERSION=3.7.5
+COMMIT=87102343d22cb50ea3586bef254b5eefdd07009e
+SHA256=7f02f429d55d8152735ce5d1e0b88325f2d2aae193011d8b31d40fdca835b4a7
 RELEASE="${ROOT}/.tools/oscar-${VERSION}"
 mkdir -p "$RELEASE"
 curl --fail --location --retry 2 "https://github.com/Comcast/Oscar/releases/download/v${VERSION}/oscar-thin.jar" -o "$RELEASE/oscar-thin.jar.download"

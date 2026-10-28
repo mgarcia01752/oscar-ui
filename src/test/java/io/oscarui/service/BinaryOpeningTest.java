@@ -49,11 +49,15 @@ class BinaryOpeningTest {
         assertEquals(text, binary.openAuto(text).path());
         Path common = Files.write(temporary.resolve("common.txt"), HexFormat.of().parseHex("030101ff00"));
         assertEquals("Docsis", binary.openAuto(common).configurationType().header());
-        // Existing Oscar catalog fixtures: top-level 97 and nested 24.41.
-        for (String hex : List.of("610101ff00", "1803290101ff00")) {
+        // Top-level 97 remains DOCSIS 4.0-only; 24.41 is shared with DOCSIS I25.
+        for (String hex : List.of("610101ff00")) {
             Path newer = Files.write(temporary.resolve("newer.txt"), HexFormat.of().parseHex(hex));
             assertEquals("Docsis-4.0", binary.openAuto(newer).configurationType().header());
         }
+        Path shared = Files.write(temporary.resolve("shared.bin"),
+                HexFormat.of().parseHex("1803290101ff00"));
+        assertEquals("Docsis", binary.openAuto(shared).configurationType().header());
+        assertEquals("Docsis-4.0", binary.open(shared, type("Docsis-4.0")).configurationType().header());
         for (String hex : List.of("03", "fa0101ff00", "1803290201ff00")) {
             Path broken = Files.write(temporary.resolve("broken.bin"), HexFormat.of().parseHex(hex));
             assertThrows(InspectionException.class, () -> binary.openAuto(broken));

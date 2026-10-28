@@ -13,6 +13,21 @@ hexadecimal payloads in regular DOCSIS files. Enter payload bytes only, without
 the outer type and length. OSCAR validates hex syntax and the 254-byte maximum;
 it does not interpret the embedded service contents.
 
+## Vendor-specific DOCSIS extensions
+
+When opening a binary file, vendor-defined children of TLV 43 appear as
+`UnknownTLV242`, for example, with their numeric Type and hexadecimal payload.
+Select an existing raw child and use **Edit TLV** to change its payload. Enter
+hex bytes such as `01:02:AB`; do not include the type or length. OSCAR preserves
+child order and repeated instances and validates the enclosing structure.
+It does not validate the vendor's meaning of those bytes.
+
+These rows use OSCAR's instance metadata and are not new entries in the standard
+registry or **Add TLV** list. Known general-extension fields under VendorId
+`FFFFFF` retain their standard definitions; private vendor fields do not borrow
+those definitions even when their numbers match. An explicit `""` is an empty
+raw payload; a valueless template entry is different.
+
 ## Add
 
 Select the parent or document root, then choose **Edit → Add TLV** or **Add TLV**
@@ -49,7 +64,9 @@ Search the catalog and enter a value when adding a TLV.
 ## Manufacturer and co-signer certificates
 
 At the document root, choose **Add TLV** and search for **ManufacturerCVC**
-(TLV 32) or **Co-signerCVC** (TLV 33). Choose a certificate file or paste its
+(TLV 32), **Co-signerCVC** (TLV 33), **ManufacturerCVCChain** (TLV 81), or
+**Co-signerCVCChain** (TLV 82). Select **All TLVs** if a field is not in your
+Common TLVs selection. Choose a certificate or encoded chain file, or paste its
 contents into the multiline input:
 
 - **DER**: select a binary `.der`, `.cer` or `.crt` file.
@@ -90,7 +107,10 @@ configuration; the file path is not saved as a reference.
 
 OSCAR handles encoding and certificate fragmentation. The tree shows one row
 per certificate, the text panel contains its HEX value, and its hex popup includes
-all encoded fragments. Both CVCs can be present together. Input validation does
+all encoded fragments, including chains longer than one physical TLV. Supply an
+already encoded chain as binary or HEX; the UI does not assemble certificate
+chains from multiple PEM blocks. Legacy CVCs and chains can be present together.
+Input validation does
 not verify ASN.1 certificate structure, signatures, trust, or device acceptance.
 
 ## Edit
