@@ -1087,14 +1087,15 @@ class MainWindowTest {
         var dialog = new AboutDialog(null, result::get);
         dialog.show();
         try {
-            var registry = dialog.findChild(QTableWidget.class, "registrySpecifications");
+            var registry = dialog.findChild(QGroupBox.class, "registrySpecifications");
+            assertNotNull(registry);
             var types = new OscarDocumentService().types();
-            assertEquals(types.size(), registry.rowCount());
-            assertEquals("TLV Registry", registry.horizontalHeaderItem(0).text());
-            assertEquals("Specification", registry.horizontalHeaderItem(1).text());
+            assertEquals(2 + types.size() * 2, registry.findChildren(QLabel.class).size());
             for (int row = 0; row < types.size(); row++) {
-                assertEquals(types.get(row).header(), registry.item(row, 0).text());
-                assertEquals(types.get(row).edition().replace(" + ", "\n"), registry.item(row, 1).text());
+                assertEquals(types.get(row).header(),
+                        registry.findChild(QLabel.class, "registryFileType" + row).text());
+                assertEquals(types.get(row).edition().replace(" + ", "\n"),
+                        registry.findChild(QLabel.class, "registryEdition" + row).text());
             }
             var uninstall = dialog.findChild(QPushButton.class, "uninstallButton");
             assertFalse(uninstall.isVisible());

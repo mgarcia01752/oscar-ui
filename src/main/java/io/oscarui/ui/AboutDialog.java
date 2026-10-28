@@ -196,37 +196,35 @@ final class AboutDialog extends QDialog {
     }
 
     private QWidget registrySpecifications() {
-        var table = new QTableWidget(this);
-        table.setObjectName("registrySpecifications");
-        table.setColumnCount(2);
-        table.setWordWrap(false);
-        table.setHorizontalHeaderLabels(java.util.List.of("TLV Registry", "Specification"));
-        table.verticalHeader().hide();
-        table.verticalHeader().setMinimumSectionSize(24);
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers);
-        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection);
-        table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents);
-        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch);
-        table.setMinimumHeight(300);
-        table.setToolTip("File types and source editions from the bundled OSCAR registry. "
+        var panel = new QGroupBox();
+        panel.setObjectName("registrySpecifications");
+        var grid = new QGridLayout(panel);
+        grid.setHorizontalSpacing(24);
+        grid.setVerticalSpacing(12);
+        grid.setColumnStretch(1, 1);
+        grid.addWidget(new QLabel("<b>TLV Registry</b>"), 0, 0);
+        grid.addWidget(new QLabel("<b>Specification</b>"), 0, 1);
+        panel.setToolTip("File types and source editions from the bundled OSCAR registry. "
                 + "Source provenance does not imply complete specification compliance.");
         try {
             var types = new io.oscarui.service.OscarDocumentService().types();
-            table.setRowCount(types.size());
             for (int row = 0; row < types.size(); row++) {
                 var type = types.get(row);
-                table.setItem(row, 0, new QTableWidgetItem(type.header()));
-                var edition = new QTableWidgetItem(type.edition().replace(" + ", "\n"));
+                var fileType = new QLabel(type.header());
+                fileType.setObjectName("registryFileType" + row);
+                fileType.setTextFormat(Qt.TextFormat.PlainText);
+                grid.addWidget(fileType, row + 1, 0);
+                var edition = new QLabel(type.edition().replace(" + ", "\n"));
+                edition.setObjectName("registryEdition" + row);
+                edition.setTextFormat(Qt.TextFormat.PlainText);
                 edition.setToolTip(type.edition());
-                table.setItem(row, 1, edition);
+                grid.addWidget(edition, row + 1, 1);
             }
-            table.resizeRowsToContents();
         } catch (io.oscarui.service.InspectionException exception) {
-            table.setRowCount(1);
-            table.setItem(0, 0, new QTableWidgetItem("Unavailable"));
-            table.setItem(0, 1, new QTableWidgetItem("Cannot read bundled registry metadata"));
+            grid.addWidget(new QLabel("Unavailable"), 1, 0);
+            grid.addWidget(new QLabel("Cannot read bundled registry metadata"), 1, 1);
         }
-        return table;
+        return panel;
     }
 
     private void requestWindowsUpdate() {
