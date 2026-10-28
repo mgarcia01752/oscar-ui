@@ -13,6 +13,8 @@ thread. Oscar parsing, validation, and serialization remain in the service layer
 
 | Component | Responsibility |
 | --- | --- |
+| `WorkspacePane` | Central splitter, welcome/text stack, tabs placement, and status/masking/type footer; no document operations or workers |
+| `ApplicationMaintenanceController` | About, update, and uninstall dialog flow; delegates unsaved-document approval and closing to the window |
 | `ConfigurationTreePane` | Tree rows, TLV-to-row mapping, parent lookup, selection, MIC visibility, and context menus |
 | `ConfigurationTextPane` | Read-only source preview and selection highlighting, including CRLF position conversion |
 | `TlvEditorDialog` | Shared Add/Edit controls, value help, validation, and delete confirmation |

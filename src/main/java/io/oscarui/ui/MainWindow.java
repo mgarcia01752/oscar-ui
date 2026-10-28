@@ -37,17 +37,11 @@ public final class MainWindow extends QMainWindow {
     });
 
     private UpgradeChip upgradeChip;
+    private ApplicationMaintenanceController maintenance;
 
-    private final QLabel maskingLabel = new QLabel("Masked");
-    private final QFrame maskingDivider = new QFrame();
-    private final QLabel typeLabel = new QLabel();
 
-    private final ConfigurationTextPane configurationTextPane = new ConfigurationTextPane();
-    private final QStackedWidget textPanel = new QStackedWidget();
 
-    private final ConfigurationTreePane configurationTreePane = new ConfigurationTreePane();
 
-    private final QLabel status = new QLabel();
 
     private final QAction newFile = action("&New...", "fileNew", QKeySequence.StandardKey.New);
 
@@ -99,6 +93,8 @@ public final class MainWindow extends QMainWindow {
 
     private final QMetaObject.Connection systemAppearanceConnection;
 
+    private final WorkspacePane workspacePane;
+
     private final WorkspaceSessions workspace = new WorkspaceSessions();
     private final DocumentTabs documentTabs = new DocumentTabs(this::activateSession, this::closeSession);
     private boolean closeApproved;
@@ -148,50 +144,18 @@ public final class MainWindow extends QMainWindow {
         menuBar().setNativeMenuBar(false);
 
         resize(1200, 780);
-        var central = new QWidget();
-        var layout = new QVBoxLayout(central);
-        typeLabel.setObjectName("documentType");
-        maskingLabel.setObjectName("maskingStatus");
-        maskingLabel.setToolTip("SNMP secrets are masked in text and hex displays. Saved values are unchanged.");
-        maskingDivider.setObjectName("maskingDivider");
-        maskingDivider.setFrameShape(QFrame.Shape.VLine);
-        maskingDivider.setFrameShadow(QFrame.Shadow.Sunken);
-        // Share the pane margins instead of the platform status bar's resize-grip inset.
-        var footer = new QHBoxLayout();
-        footer.setContentsMargins(0, 0, 0, 0);
-        footer.addStretch();
-        footer.addWidget(maskingLabel);
-        footer.addWidget(maskingDivider);
-        footer.addWidget(typeLabel);
-        status.setWordWrap(true);
-        status.setObjectName("operationStatus");
-        status.setVisible(false);
-        layout.addWidget(documentTabs);
-        var splitter = new QSplitter(Qt.Orientation.Horizontal);
-        splitter.addWidget(configurationTreePane);
-        textPanel.setObjectName("workspaceTextPanel");
-        var welcome = new WorkspaceWelcomePane(newFile, open);
-        textPanel.addWidget(welcome);
-        textPanel.addWidget(configurationTextPane);
-        windowIconChanged.connect(ignored -> welcome.update());
-        splitter.addWidget(textPanel);
-        splitter.setStretchFactor(0, 1);
-        splitter.setStretchFactor(1, 2);
-        splitter.setSizes(List.of(380, 780));
-        layout.addWidget(splitter, 1);
-        layout.addWidget(status);
-        layout.addLayout(footer);
-        setCentralWidget(central);
+        workspacePane = new WorkspacePane(this, documentTabs, newFile, open);
+        setCentralWidget(workspacePane);
         buildMenus();
         documentTabs.configureMenu(open, newFile);
         viewTlvHex.triggered.connect(this::showSelectedTlvHex);
-        configurationTreePane.currentItemChanged.connect((current, previous) -> {
-            configurationTextPane.highlight(configurationTreePane.selectedTlv());
+        workspacePane.configurationTreePane().currentItemChanged.connect((current, previous) -> {
+            workspacePane.configurationTextPane().highlight(workspacePane.configurationTreePane().selectedTlv());
             updateActions();
         });
-        configurationTreePane.itemDoubleClicked.connect((item, column) -> {
-            configurationTreePane.setCurrentItem(item);
-            Node selected = configurationTreePane.selectedTlv();
+        workspacePane.configurationTreePane().itemDoubleClicked.connect((item, column) -> {
+            workspacePane.configurationTreePane().setCurrentItem(item);
+            Node selected = workspacePane.configurationTreePane().selectedTlv();
             if (document != null && documentService.canPopulate(document, selected)) {
                 populateContainer(selected);
             }
@@ -199,7 +163,7 @@ public final class MainWindow extends QMainWindow {
                 editSelectedTlv();
             }
         });
-        configurationTreePane.configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv, viewTlvHex));
+        workspacePane.configurationTreePane().configureContextMenu(List.of(addTlv, editTlv, duplicateTlv, deleteTlv, viewTlvHex));
         poller.timeout.connect(this::receiveResult);
         poller.start(40);
         updateActions();
@@ -220,8 +184,13 @@ public final class MainWindow extends QMainWindow {
                 showStatus("Could not load Common TLV settings; using minimum-only defaults. Existing file was preserved.");
             }
         }
-        upgradeChip = new UpgradeChip(() -> showAbout(true));
-        int menuInset = layout.contentsMargins().left();
+        upgradeChip = new UpgradeChip(() -> maintenance.showAbout(true));
+        maintenance = new ApplicationMaintenanceController(this, () -> pending == null,
+                this::withAllDocumentsPermission, () -> {
+                    closeApproved = true;
+                    close();
+                }, upgradeChip::setAvailable);
+        int menuInset = workspacePane.contentInset();
         var menuIcon = new QToolButton() {
             /** Reserve menu-bar space for the icon and its horizontal padding. */
             @Override public io.qt.core.QSize sizeHint() {
@@ -252,8 +221,8 @@ public final class MainWindow extends QMainWindow {
         menuIcon.setFixedSize(menuInset + 14, 26);
         windowIconChanged.connect(icon -> menuIcon.update());
         menuBar().setCornerWidget(menuIcon, Qt.Corner.TopLeftCorner);
-        menuBar().setCornerWidget(new WorkspaceLayoutControls(upgradeChip, splitter,
-                configurationTreePane, textPanel), Qt.Corner.TopRightCorner);
+        menuBar().setCornerWidget(new WorkspaceLayoutControls(upgradeChip, workspacePane.splitter(),
+                workspacePane.configurationTreePane(), workspacePane.textPanel()), Qt.Corner.TopRightCorner);
         if (interactive) {
             upgradeChip.check(() -> new ReleaseUpdateService().checkRelease(
                     AboutDialog.loadBuildInfo().getProperty("ui.version", "unknown")));
@@ -501,13 +470,13 @@ public final class MainWindow extends QMainWindow {
         edit.addSeparator();
         var copy = action("&Copy", "editCopy", QKeySequence.StandardKey.Copy);
         copy.setEnabled(false);
-        copy.triggered.connect(configurationTextPane::copy);
-        configurationTextPane.copyAvailable.connect(copy::setEnabled);
+        copy.triggered.connect(workspacePane.configurationTextPane()::copy);
+        workspacePane.configurationTextPane().copyAvailable.connect(copy::setEnabled);
         edit.addAction(copy);
         var selectAll = action("Select &All", "editSelectAll", QKeySequence.StandardKey.SelectAll);
         selectAll.setEnabled(false);
-        selectAll.triggered.connect(configurationTextPane::selectAll);
-        configurationTextPane.textChanged.connect(() -> selectAll.setEnabled(!configurationTextPane.toPlainText().isEmpty()));
+        selectAll.triggered.connect(workspacePane.configurationTextPane()::selectAll);
+        workspacePane.configurationTextPane().textChanged.connect(() -> selectAll.setEnabled(!workspacePane.configurationTextPane().toPlainText().isEmpty()));
         edit.addAction(selectAll);
         var settings = new QMenu("Settings", this);
         settings.setObjectName("settingsMenu");
@@ -531,8 +500,8 @@ public final class MainWindow extends QMainWindow {
                         DesktopTheme.apply(appearance);
                         showTextTlvNumbers = dialog.showTextTlvNumbers();
                         if (document != null) {
-                            configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
-                            configurationTextPane.highlight(configurationTreePane.selectedTlv());
+                            workspacePane.configurationTextPane().displayDocument(document, showTextTlvNumbers, secrets.masking());
+                            workspacePane.configurationTextPane().highlight(workspacePane.configurationTreePane().selectedTlv());
                         }
                     } catch (IOException exception) {
                         showStatus("Could not save appearance settings. Previous settings were kept.");
@@ -566,7 +535,7 @@ public final class MainWindow extends QMainWindow {
         });
         var helpMenu = menuBar().addMenu("&Help");
         var about = action("&About", "aboutOscar", null);
-        about.triggered.connect(() -> showAbout(false));
+        about.triggered.connect(() -> maintenance.showAbout(false));
         var userGuide = action("&User Guide", "userGuide", null);
         userGuide.triggered.connect(() -> {
             if (!io.qt.gui.QDesktopServices.openUrl(new io.qt.core.QUrl(
@@ -578,92 +547,8 @@ public final class MainWindow extends QMainWindow {
         helpMenu.addAction(about);
     }
 
-    private void showAbout(boolean checkUpdates) {
-        var dialog = new AboutDialog(this);
-        dialog.onUpdateAvailability(upgradeChip::setAvailable);
-        io.oscarui.service.UbuntuUpdateService.Installer installer;
-        io.oscarui.service.WindowsUpdateService.Installer windowsInstaller;
-        boolean uninstallRequested;
-        try {
-            if (checkUpdates) {
-                dialog.checkUpdates();
-            }
-            dialog.exec();
-            installer = dialog.requestedInstaller();
-            windowsInstaller = dialog.requestedWindowsInstaller();
-            uninstallRequested = dialog.uninstallRequested();
-        } finally {
-            dialog.stopChecking();
-            dialog.dispose();
-        }
-        if (uninstallRequested && pending == null) {
-            confirmUninstall();
-        } else if (windowsInstaller != null && pending == null) {
-            withAllDocumentsPermission(() -> installWindowsUpdate(windowsInstaller));
-        } else if (installer != null && pending == null) {
-            withAllDocumentsPermission(() -> installUbuntuUpdate(installer));
-        }
-    }
-
-    private void confirmUninstall() {
-        String action = System.getProperty("os.name", "").startsWith("Windows")
-                ? "Close OSCAR-UI and open Windows Installed apps? Select OSCAR-UI there to uninstall."
-                : "Close OSCAR-UI and request administrator approval to uninstall?";
-        if (QMessageBox.question(this, "Uninstall OSCAR-UI", action
-                + "\nConfiguration files outside the installation directory will be kept.",
-                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
-                QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
-            return;
-        }
-        withAllDocumentsPermission(() -> {
-            try {
-                new io.oscarui.service.UninstallService().launch();
-                closeApproved = true;
-                close();
-            } catch (java.io.IOException exception) {
-                QMessageBox.warning(this, "Uninstall could not start", exception.getMessage());
-            }
-        });
-    }
-
-    private void installWindowsUpdate(io.oscarui.service.WindowsUpdateService.Installer installer) {
-        if (QMessageBox.question(this, "Update OSCAR-UI",
-                "Close OSCAR-UI to download and install version " + installer.version()
-                        + "? Windows will request administrator approval. The app reopens after a successful update.",
-                new QMessageBox.StandardButtons(QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.Cancel),
-                QMessageBox.StandardButton.Cancel) != QMessageBox.StandardButton.Yes) {
-            return;
-        }
-        try {
-            new io.oscarui.service.WindowsUpdateService().launch(installer);
-            closeApproved = true;
-            close();
-        } catch (java.io.IOException exception) {
-            QMessageBox.warning(this, "Update could not start", exception.getMessage());
-        }
-    }
-
-    private void installUbuntuUpdate(io.oscarui.service.UbuntuUpdateService.Installer installer) {
-        var service = new io.oscarui.service.UbuntuUpdateService();
-        var download = new UbuntuUpdateDialog(this, installer, service);
-        try {
-            if (download.exec() == QDialog.DialogCode.Accepted.value()) {
-                try {
-                    service.launch(installer, download.downloadedPackage());
-                    closeApproved = true;
-                    close();
-                } catch (java.io.IOException exception) {
-                    service.discard(download.downloadedPackage());
-                    QMessageBox.warning(this, "Update could not start", exception.getMessage());
-                }
-            }
-        } finally {
-            download.dispose();
-        }
-    }
-
     private void showSelectedTlvHex() {
-        Node selected = configurationTreePane.selectedTlv();
+        Node selected = workspacePane.configurationTreePane().selectedTlv();
         if (pending != null || document == null || selected == null || selected.tlvPath().isEmpty()) {
             return;
         }
@@ -740,8 +625,8 @@ public final class MainWindow extends QMainWindow {
 
     private void rememberSession() {
         if (workspace.active() != null) {
-            workspace.active().remember(configurationTreePane.rememberView(),
-                    configurationTextPane.verticalScrollBar().value(), configurationTextPane.horizontalScrollBar().value());
+            workspace.active().remember(workspacePane.configurationTreePane().rememberView(),
+                    workspacePane.configurationTextPane().verticalScrollBar().value(), workspacePane.configurationTextPane().horizontalScrollBar().value());
         }
     }
 
@@ -764,16 +649,16 @@ public final class MainWindow extends QMainWindow {
         document = session == null ? null : session.document();
         modified = session != null && session.modified();
         if (session == null) {
-            configurationTreePane.clearDocument();
-            configurationTextPane.clear();
+            workspacePane.configurationTreePane().clearDocument();
+            workspacePane.configurationTextPane().clear();
         } else {
-            configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
-            configurationTreePane.displayRoot(document.root(), documentService.hasBinaryTree(document));
-            configurationTreePane.applyMask(secrets.masking());
-            configurationTreePane.restoreView(session.treeState());
+            workspacePane.configurationTextPane().displayDocument(document, showTextTlvNumbers, secrets.masking());
+            workspacePane.configurationTreePane().displayRoot(document.root(), documentService.hasBinaryTree(document));
+            workspacePane.configurationTreePane().applyMask(secrets.masking());
+            workspacePane.configurationTreePane().restoreView(session.treeState());
             updateMicVisibility();
-            configurationTextPane.verticalScrollBar().setValue(session.textScroll());
-            configurationTextPane.horizontalScrollBar().setValue(session.textHorizontalScroll());
+            workspacePane.configurationTextPane().verticalScrollBar().setValue(session.textScroll());
+            workspacePane.configurationTextPane().horizontalScrollBar().setValue(session.textHorizontalScroll());
         }
         String savedStatus = session == null ? "" : session.status();
         updateDocumentLabels();
@@ -812,9 +697,9 @@ public final class MainWindow extends QMainWindow {
         }
         document = current;
         modified = changed;
-        configurationTextPane.displayDocument(current, showTextTlvNumbers, secrets.masking());
-        configurationTreePane.displayRoot(current.root(), documentService.hasBinaryTree(current));
-        configurationTreePane.applyMask(secrets.masking());
+        workspacePane.configurationTextPane().displayDocument(current, showTextTlvNumbers, secrets.masking());
+        workspacePane.configurationTreePane().displayRoot(current.root(), documentService.hasBinaryTree(current));
+        workspacePane.configurationTreePane().applyMask(secrets.masking());
         updateMicVisibility();
         updateDocumentLabels();
         updateActions();
@@ -824,11 +709,11 @@ public final class MainWindow extends QMainWindow {
         if (document == null) {
             return;
         }
-        configurationTreePane.setMicVisibility(tlvNode -> documentService.isGeneratedMic(document.configurationType(), tlvNode.tlvPath()), showMicTlvs.isChecked());
+        workspacePane.configurationTreePane().setMicVisibility(tlvNode -> documentService.isGeneratedMic(document.configurationType(), tlvNode.tlvPath()), showMicTlvs.isChecked());
     }
 
     private void updateDocumentLabels() {
-        typeLabel.setText(workspace.active() == null ? ""
+        workspacePane.showDocumentType(workspace.active() == null ? ""
                 : workspace.active().format() == WorkspaceSessions.Format.BINARY ? "Binary" : "Text");
         documentTabs.refresh(workspace);
         showStatus("");
@@ -838,15 +723,14 @@ public final class MainWindow extends QMainWindow {
         if (workspace.active() != null) {
             workspace.active().status(message);
         }
-        status.setText(message);
-        status.setVisible(!message.isEmpty());
+        workspacePane.showStatus(message);
     }
 
     private Node insertionParent() {
         if (document == null) {
             return null;
         }
-        return configurationTreePane.insertionParent();
+        return workspacePane.configurationTreePane().insertionParent();
     }
 
     private void chooseTlv() {
@@ -867,7 +751,7 @@ public final class MainWindow extends QMainWindow {
                 submit(() -> documentService.insert(original, parent, selection.definition(), selection.value()),
                         changed -> {
                             display(changed, true);
-                            configurationTreePane.selectLastChild(parent);
+                            workspacePane.configurationTreePane().selectLastChild(parent);
                         });
             }
             dialog.dispose();
@@ -881,8 +765,8 @@ public final class MainWindow extends QMainWindow {
         Document original = document;
         submit(() -> documentService.populate(original, container), changed -> {
             display(changed, true);
-            configurationTreePane.selectCorresponding(container);
-            configurationTreePane.expandSelection();
+            workspacePane.configurationTreePane().selectCorresponding(container);
+            workspacePane.configurationTreePane().expandSelection();
         });
     }
 
@@ -892,12 +776,12 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void editSelectedTlv() {
-        Node selected = configurationTreePane.selectedTlv();
+        Node selected = workspacePane.configurationTreePane().selectedTlv();
         if (pending != null || !canOpenEditor(selected)) {
             return;
         }
         Document original = document;
-        var dialog = new TlvEditorDialog(this, documentService, original, configurationTreePane.parentOf(selected),
+        var dialog = new TlvEditorDialog(this, documentService, original, workspacePane.configurationTreePane().parentOf(selected),
                 List.of(documentService.definition(original, selected)), selected);
         dialog.applyMask(secrets.masking());
         try {
@@ -914,13 +798,13 @@ public final class MainWindow extends QMainWindow {
                     return;
                 }
                 display(changed, true);
-                configurationTreePane.selectCorresponding(selected);
+                workspacePane.configurationTreePane().selectCorresponding(selected);
             });
         } finally { dialog.dispose(); }
     }
 
     private void duplicateSelectedTlv() {
-        Node selected = configurationTreePane.selectedTlv();
+        Node selected = workspacePane.configurationTreePane().selectedTlv();
         if (pending != null || !documentService.canDuplicate(document, selected)) {
             return;
         }
@@ -928,13 +812,13 @@ public final class MainWindow extends QMainWindow {
         int index = original.root().childTlvs().indexOf(selected) + 1;
         submit(() -> documentService.duplicate(original, selected), changed -> {
             display(changed, true);
-            configurationTreePane.selectCorresponding(changed.root().childTlvs().get(index));
-            configurationTreePane.expandSelection();
+            workspacePane.configurationTreePane().selectCorresponding(changed.root().childTlvs().get(index));
+            workspacePane.configurationTreePane().expandSelection();
         });
     }
 
     private void deleteSelectedTlv() {
-        Node selected = configurationTreePane.selectedTlv();
+        Node selected = workspacePane.configurationTreePane().selectedTlv();
         if (pending != null || document == null || !documentService.canDelete(document, selected)) {
             return;
         }
@@ -945,16 +829,15 @@ public final class MainWindow extends QMainWindow {
     }
 
     private void deleteNode(Document original, Node selected) {
-        Node parent = configurationTreePane.parentOf(selected);
+        Node parent = workspacePane.configurationTreePane().parentOf(selected);
         submit(() -> documentService.delete(original, selected), changed -> {
             display(changed, true);
-            configurationTreePane.selectCorresponding(parent);
+            workspacePane.configurationTreePane().selectCorresponding(parent);
         });
     }
 
     private void updateMaskingStatus() {
-        maskingLabel.setVisible(secrets.obfuscateSnmpSecrets());
-        maskingDivider.setVisible(secrets.obfuscateSnmpSecrets());
+        workspacePane.showMasking(secrets.obfuscateSnmpSecrets());
     }
 
     private void showSecrets() {
@@ -965,9 +848,9 @@ public final class MainWindow extends QMainWindow {
         try {
             if (dialog.exec() == QDialog.DialogCode.Accepted.value()) {
                 if (document != null) {
-                    configurationTextPane.displayDocument(document, showTextTlvNumbers, secrets.masking());
-                    configurationTreePane.applyMask(secrets.masking());
-                    configurationTextPane.highlight(configurationTreePane.selectedTlv());
+                    workspacePane.configurationTextPane().displayDocument(document, showTextTlvNumbers, secrets.masking());
+                    workspacePane.configurationTreePane().applyMask(secrets.masking());
+                    workspacePane.configurationTextPane().highlight(workspacePane.configurationTreePane().selectedTlv());
                 }
                 updateMaskingStatus();
                 showStatus("");
@@ -1193,8 +1076,7 @@ public final class MainWindow extends QMainWindow {
             }
             if (operationOwner != null && operationOwner != workspace.active()) {
                 // Report the background failure without storing it on an unrelated tab.
-                status.setText(message);
-                status.setVisible(true);
+                workspacePane.showStatus(message);
             } else {
                 showStatus(message);
             }
@@ -1222,7 +1104,7 @@ public final class MainWindow extends QMainWindow {
 
     private void updateActions() {
         boolean idle = pending == null;
-        textPanel.setCurrentIndex(document == null ? 0 : 1);
+        workspacePane.textPanel().setCurrentIndex(document == null ? 0 : 1);
         newFile.setEnabled(idle);
         open.setEnabled(idle);
         closeTab.setEnabled(idle && document != null);
@@ -1242,7 +1124,7 @@ public final class MainWindow extends QMainWindow {
         inspectHexDump.setEnabled(binaryActive);
         inspectTlvBreakdown.setEnabled(binaryActive);
         configChecks.setEnabled(idle && document != null);
-        Node selected = configurationTreePane.selectedTlv();
+        Node selected = workspacePane.configurationTreePane().selectedTlv();
         viewTlvHex.setEnabled(idle && document != null && selected != null && !selected.tlvPath().isEmpty()
                 && !selected.tlvPath().contains(Node.UNMAPPED_TLV_TYPE_CODE));
         duplicateTlv.setEnabled(idle && documentService.canDuplicate(document, selected));
