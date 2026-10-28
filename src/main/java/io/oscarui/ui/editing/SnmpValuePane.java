@@ -13,6 +13,15 @@ import java.util.regex.Pattern;
 final class SnmpValuePane extends QWidget {
     private static final int IPV4_OCTET_COUNT = 4;
     private static final int MAX_IPV4_OCTET = (1 << Byte.SIZE) - 1;
+    /*
+     * Split an SNMP value statement into editor fields (no Snmp11/Snmp64 prefix or semicolon).
+     * Example input: 1.3.6.1.2.1.1.5.0 OctetString "lab-modem"
+     * Expected captures: group 1 = 1.3.6.1.2.1.1.5.0 (OID/name),
+     * group 2 = OctetString (data-type token), group 3 = lab-modem (unquoted value).
+     * Match the entire stripped input: OID/name, whitespace, word token, whitespace,
+     * then a double-quoted value. DOTALL lets dots span line breaks; the value may be empty.
+     * This extracts fields only; it does not validate OID syntax, supported types, or values.
+     */
     private static final Pattern STATEMENT = Pattern.compile("(?s)^(.+?)\\s+(\\w+)\\s+\"(.*)\"$");
     private final QLineEdit oid = new QLineEdit();
     private final QComboBox dataType = new QComboBox();
