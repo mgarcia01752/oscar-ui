@@ -1,5 +1,61 @@
 # Development TODO
 
+## Digit-map editor and separate source file
+
+- [ ] Add a simple notepad-style Digit Map editor for PacketCable configurations,
+  with New/Open, multiline editing, Find, Save/Save As and unsaved-change handling.
+  Allow editing a map already embedded in a selected SNMP VarBind as well as
+  loading a separate dial-plan text file.
+- [ ] On Save, write the dial plan to a user-selected companion text file and
+  insert or update its contents as an SNMP OCTET STRING at the selected digit-map
+  OID in the active configuration, using OSCAR's digit-map API and TLV 64 support.
+  Confirm the appropriate OID/profile; do not assume all maps use one OID or
+  overwrite unrelated VarBinds. Embed file contents, not the filename.
+- [ ] Mark the parent configuration modified after applying the saved map;
+  saving the companion file does not silently overwrite the parent configuration
+  on disk. Define safe failure/cancel behavior so a failed save or insertion
+  leaves the current configuration intact and the user's edits recoverable.
+- [ ] Keep the companion-file association as workspace metadata, not a wire TLV.
+  The compiled MTA file remains self-contained. When opening an existing binary,
+  offer Save As for the extracted map because its original source path is absent.
+- [ ] Preserve encoding, line endings and complete file contents without silent
+  trimming. Validate supported payload size through OSCAR; distinguish successful
+  embedding from validation of the dial-plan language itself.
+- [ ] Test separate-file save, insertion, editing an existing map, large TLV-64
+  values, cancellation, write failures and binary save/reopen byte preservation.
+  Update architecture, user documentation and screenshots when implemented.
+
+## Registry specification editions in About
+
+- [ ] Add a registry specification section to About showing each supported
+  registry/family, source specification identifier and issue/edition, including
+  embedded-device catalogs and version-specific profiles.
+- [ ] Obtain provenance from the bundled OSCAR registry/API so the displayed
+  editions follow the installed JAR. Keep specification editions distinct from
+  OSCAR and OSCAR-UI release versions; avoid a duplicate hardcoded UI list.
+- [ ] Show multiple sources where a catalog derives from several specifications.
+  Label legacy, unverified or partial coverage explicitly; a source edition is
+  not a claim of full specification compliance. Track missing upstream provenance
+  metadata before implementing the display.
+- [ ] Verify the displayed sources against the bundled catalogs, update About
+  documentation and screenshots, and check layout in light and dark themes.
+
+## Integer input for numeric byte-array TLVs
+
+- [ ] Add a Hex / Integer input choice when editing a byte-array TLV whose
+  specification defines a numeric value, such as a port, timeout or retry count.
+  Keep arbitrary byte arrays in hex mode; do not infer numeric meaning from
+  payload length alone. Prefer corrected numeric codecs from the OSCAR registry
+  when available, with OSCAR owning field semantics and encoding.
+- [ ] Obtain supported width, signedness, byte order, units and permitted range
+  from verified upstream metadata. Preserve the exact wire width and leading
+  zero bytes when converting decimal input; reject overflow and invalid values.
+  If metadata is insufficient, keep hex editing and track the upstream gap.
+- [ ] Verify mode switching and edit/save/reopen preserve bytes, including
+  8/16/24/32-bit widths where applicable, zero, limits and invalid input.
+  Example: a two-byte retry value entered as `3` encodes as `00 03`; a
+  specification limit of 255 still applies despite the two-byte storage width.
+
 ## Python test encoding follow-up
 
 - [x] Add explicit UTF-8 in DEB fixtures and dependency normalization.
