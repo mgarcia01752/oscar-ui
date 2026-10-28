@@ -1099,6 +1099,34 @@ class MainWindowTest {
         }
     }
 
+    @Test void aboutDiagnosticsCopiesClearsAndShowsReadOnlyLog() {
+        io.oscarui.service.SessionDiagnostics.clear();
+        io.oscarui.service.SessionDiagnostics.failure(
+                io.oscarui.service.SessionDiagnostics.Stage.BINARY_EXPORT,
+                new IllegalStateException("synthetic-secret"));
+        var about = new AboutDialog(null);
+        var viewer = new io.oscarui.ui.maintenance.DiagnosticsDialog(about);
+        try {
+            var menu = about.findChild(QToolButton.class, "diagnosticsButton").menu();
+            assertEquals(java.util.List.of("View log…", "Copy log", "Save log…", "Clear log"),
+                    menu.actions().stream().map(QAction::text).toList());
+            menu.actions().get(1).trigger();
+            assertTrue(QApplication.clipboard().text().contains("BINARY_EXPORT failed"));
+            assertFalse(QApplication.clipboard().text().contains("synthetic-secret"));
+            var text = viewer.findChild(QPlainTextEdit.class, "diagnosticsText");
+            assertTrue(text.isReadOnly());
+            assertTrue(text.toPlainText().contains("IllegalStateException"));
+            menu.actions().get(3).trigger();
+            menu.actions().get(1).trigger();
+            assertTrue(QApplication.clipboard().text().contains("No failures recorded"));
+        } finally {
+            viewer.dispose();
+            about.stopChecking();
+            about.dispose();
+            io.oscarui.service.SessionDiagnostics.clear();
+        }
+    }
+
     @Test void aboutShowsLinksAndChecksWithoutBlockingUi() throws Exception {
         var result = new java.util.concurrent.CompletableFuture<String>();
         var dialog = new AboutDialog(null, result::get);

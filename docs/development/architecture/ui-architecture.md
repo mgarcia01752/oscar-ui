@@ -1038,3 +1038,33 @@ protection. Add remains a registry-based list; this change does not add arbitrar
 vendor-type creation controls. The existing structural failure report can still
 label an uncatalogued vendor type UNKNOWN_TYPE; that label alone is not evidence
 of invalid vendor semantics or an editable-import failure.
+
+## OSCAR runtime cache and session diagnostics
+
+`DesktopApplication` configures `OscarRuntime` after Qt application initialization
+and before constructing the workspace or starting document workers. The default
+SNMP lookup cache is `snmp/DottedTextualNetSNMPMap.json` under Qt's application
+`CacheLocation`, a writable per-user location on Windows, Linux, and macOS.
+An explicit nonblank `oscar.snmp.cache.path` JVM property takes precedence.
+OSCAR still owns cache contents and initialization from its bundled lookup map;
+OSCAR-UI creates the parent directory and supplies the supported property.
+It does not copy, migrate, or delete an old working-directory cache.
+Directory setup failures are recorded; the workspace remains available for
+troubleshooting. Restart after correcting a cache failure because Java can retain
+a failed OSCAR static initializer for the rest of the process.
+
+`SessionDiagnostics` retains the latest 200 failure events in memory, synchronized
+across document workers and the UI. Binary import records framing, export,
+compilation, and round-trip failures before auto-detection discards candidate
+errors. Text compilation, file-read, and cache-setup failures also contribute.
+Candidate failures can appear even when a later file-type candidate succeeds.
+Each event includes a UTC timestamp, a controlled stage name, and at most eight
+cause types with eight stack locations each. Exception messages, source filenames,
+configuration bytes, console output, and OSCAR debug messages are excluded.
+Version and OS metadata accompany exports. This is a diagnostic summary, not a
+complete OSCAR log; no global stdout/stderr or Log4j capture is installed.
+
+About's **Diagnostics** menu offers View, Copy, Save, and Clear. The separate
+read-only viewer supports Find, Refresh, Copy, Save, and Clear. Logs are session
+only; Clear does not disable future capture. Export requires an explicit file
+selection and never uploads data. The source configuration is never attached.

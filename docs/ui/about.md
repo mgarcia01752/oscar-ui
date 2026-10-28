@@ -21,6 +21,28 @@ and actual result; optionally add screenshots. Review the draft and submit it
 on GitHub (sign-in may be required). The app does not submit reports or attach
 configuration files, secrets, usernames, paths, or logs automatically.
 
+Choose **Help → About → Diagnostics** after an import failure:
+
+- **View log…** opens a read-only window with Find and Refresh.
+- **Copy log** copies the session diagnostics for review.
+- **Save log…** saves a UTF-8 text file at a destination you choose.
+- **Clear log** removes recorded events; future failures are still captured.
+
+The log includes application versions, OS/Java versions, timestamps, operation
+stages, and exception types with stack locations. It excludes exception messages,
+configuration values, file paths, credentials, certificate contents, and raw debug
+output. It holds the latest 200 failures until you clear it or close OSCAR-UI.
+Failed file-type candidates may be listed even when a later candidate succeeds.
+Review copied or saved diagnostics before attaching them to a GitHub issue.
+Nothing is sent automatically.
+
+OSCAR's SNMP name lookup cache now uses the operating system's per-user
+application cache directory, rather than the folder from which you launched
+OSCAR-UI. This avoids needing write access to the installation directory.
+If cache setup fails, diagnostics records `SNMP_CACHE`; fix the directory
+permissions and restart OSCAR-UI before trying again. A custom Java
+`-Doscar.snmp.cache.path=...` setting continues to override the default.
+
 Choose **Help → About → Check for updates** for a manual online check against the latest
 published stable OSCAR-UI release. Draft releases are not offered. The check does
 not install updates automatically. Use the releases/downloads link to obtain the
@@ -39,6 +61,8 @@ version is current; retry when GitHub is reachable.
 ![About, package links, and release updates in OSCAR-UI dark mode](../images/user-guide/about-dark.png)
 
 ![About specification grid in light mode](../images/user-guide/about-light.png)
+
+![Session diagnostics viewer](../images/user-guide/diagnostics-dark.png)
 
 Shown from a development build; installed packages also show the uninstall button.
 

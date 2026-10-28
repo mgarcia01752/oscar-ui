@@ -46,6 +46,7 @@ class UserGuideScreenshotsTest {
             Files.createDirectories(images);
             DesktopTheme.apply(Appearance.DARK);
             captureDialog(new AboutDialog(null), images.resolve("about-dark.png"));
+            captureDialog(new io.oscarui.ui.maintenance.DiagnosticsDialog(null), images.resolve("diagnostics-dark.png"));
             DesktopTheme.apply(Appearance.LIGHT);
             captureDialog(new AboutDialog(null), images.resolve("about-light.png"));
         } finally {

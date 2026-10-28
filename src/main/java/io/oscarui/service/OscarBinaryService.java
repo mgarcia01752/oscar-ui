@@ -296,11 +296,13 @@ public final class OscarBinaryService {
             }
             return bytes;
         } catch (IOException error) {
+            SessionDiagnostics.failure(SessionDiagnostics.Stage.FILE_READ, error);
             throw new InspectionException("Cannot read the configuration. Check the file and permissions.");
         }
     }
 
     private Document decode(Path path, byte[] bytes, FileType configurationType) throws InspectionException {
+        var stage = SessionDiagnostics.Stage.BINARY_FRAMING;
         try {
             Configurator.setLevel("com.comcast.oscar", Level.OFF);
             var dictionary = dictionary(configurationType);
@@ -317,6 +319,7 @@ public final class OscarBinaryService {
                     throw new InspectionException("Editable PacketCable binary import of SNMP statements is not supported yet.");
                 }
             }
+            stage = SessionDiagnostics.Stage.BINARY_EXPORT;
             var decodedSource = new StringBuilder(configurationType.header()).append(" {\n");
             for (String entry : logicalPayloads(original, configurationType)) {
                 var snapshot = new TlvBuilder();
@@ -340,12 +343,18 @@ public final class OscarBinaryService {
             Path origin = path.toAbsolutePath().normalize();
             var document = documents.decoded(text, configurationType, new BinaryOrigin(origin,
                     java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes)), bytes));
+            stage = SessionDiagnostics.Stage.TEXT_COMPILE;
             byte[] imported = OscarTextCompileCheck.compile(document.text());
+            stage = SessionDiagnostics.Stage.BINARY_ROUND_TRIP;
             if (!original.equals(payloads(imported, lengthFieldBytesByTlvType))) {
                 throw new InspectionException("Oscar cannot preserve this binary configuration as editable text; import cancelled.");
             }
             return document;
+        } catch (InspectionException error) {
+            SessionDiagnostics.failure(stage, error);
+            throw error;
         } catch (RuntimeException | LinkageError | com.comcast.oscar.tlv.TlvException error) {
+            SessionDiagnostics.failure(stage, error);
             throw new InspectionException("Oscar could not decode this binary configuration. Check its type and whether it is truncated or unsupported.");
         } catch (java.security.NoSuchAlgorithmException error) {
             throw new IllegalStateException(error);

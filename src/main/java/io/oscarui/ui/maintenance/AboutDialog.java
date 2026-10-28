@@ -110,6 +110,25 @@ public final class AboutDialog extends QDialog {
         var reportIssue = link("Report an issue with OSCAR-UI", io.oscarui.service.IssueReportService.issueUrl(build, System.getProperties()));
         reportIssue.setObjectName("reportIssueLink");
         reportIssue.setToolTip("Open a GitHub issue draft with application and platform versions; review before submitting");
+        var diagnostics = new QToolButton();
+        diagnostics.setText("Diagnostics");
+        diagnostics.setObjectName("diagnosticsButton");
+        diagnostics.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup);
+        var diagnosticsMenu = new QMenu(diagnostics);
+        diagnosticsMenu.addAction("View log…").triggered.connect(() -> {
+            var viewer = new DiagnosticsDialog(this);
+            try {
+                viewer.exec();
+            } finally {
+                viewer.dispose();
+            }
+        });
+        diagnosticsMenu.addAction("Copy log").triggered.connect(() ->
+                QApplication.clipboard().setText(io.oscarui.service.SessionDiagnostics.snapshot()));
+        diagnosticsMenu.addAction("Save log…").triggered.connect(() -> DiagnosticsDialog.saveLog(this));
+        diagnosticsMenu.addAction("Clear log").triggered.connect(io.oscarui.service.SessionDiagnostics::clear);
+        diagnostics.setMenu(diagnosticsMenu);
+        links.addWidget(diagnostics);
         links.addWidget(reportIssue);
         var updates = new QGroupBox("Release updates");
         var updateLayout = new QVBoxLayout(updates);

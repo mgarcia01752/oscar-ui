@@ -37,6 +37,8 @@ public final class DesktopApplication {
             // An explicit display name makes Qt append it to every native window title.
             // Keep the default name and let each window own its caption.
             QApplication.setDesktopFileName(LINUX_DESKTOP_FILE_NAME);
+            io.oscarui.service.OscarRuntime.configureCache(io.qt.core.QStandardPaths.writableLocation(
+                    io.qt.core.QStandardPaths.StandardLocation.CacheLocation));
             var window = new MainWindow(!smoke);
             window.show();
             QTimer smokeTimer = new QTimer(window);

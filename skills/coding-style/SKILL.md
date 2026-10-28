@@ -63,6 +63,26 @@ public String formatDescription(String description) {
 Use equivalent multiline docstrings for public Python functions and comment
 banners for script entry points or reusable shell/PowerShell functions.
 
+## Regular-expression documentation
+
+When adding or changing a regex, put a descriptive comment immediately above its
+`Pattern` declaration or inline use. Include:
+
+- What the expression extracts, validates, or replaces.
+- A concrete synthetic input and the expected match, capture groups, or output.
+- The meaning of each capture group when callers consume groups.
+- Relevant matching limits: whole input versus substring, preprocessing such as
+  stripping whitespace, significant flags, empty values, and excluded delimiters.
+- What matching does not establish when extraction is separate from validation.
+
+For example, a pattern extracting an SNMP value statement should show input such
+as `1.3.6.1.2.1.1.5.0 OctetString "lab-modem"`, identify the OID, type, and value
+captures, and explain whether the TLV prefix and semicolon are included.
+Describe actual behavior rather than intended behavior; an extraction pattern
+must not be described as complete OID or datatype validation. Keep comments in
+sync when the regex or its callers change. Comment-only changes do not require
+new tests; behavior changes need relevant positive and negative cases.
+
 ## Conditional statements
 
 Java `if`, `else if`, and `else` branches always use braces, with the body on

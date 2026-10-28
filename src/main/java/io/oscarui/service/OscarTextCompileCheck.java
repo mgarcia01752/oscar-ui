@@ -58,6 +58,7 @@ final class OscarTextCompileCheck {
             reported = reported.isBlank() ? detail : reported + "\n" + detail;
         }
         if (encoded == null || !reported.isBlank()) {
+            SessionDiagnostics.failure(SessionDiagnostics.Stage.TEXT_COMPILE, failure);
             if (reported.isBlank()) {
                 reported = "OSCAR returned no encoded TLV result.";
             }

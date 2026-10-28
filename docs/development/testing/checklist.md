@@ -428,3 +428,18 @@ See [Windows update architecture](../architecture/windows-updates.md).
   verify that the original file stays unchanged.
 - The supplied local advanced DOCSIS configuration was checked read-only through
   `OscarBinaryService.open`; it is not copied into tracked fixtures.
+
+## Cache and diagnostics regression
+
+- Run `OscarCacheStartupTest` with native UI tests enabled. A fresh child JVM
+  imports a synthetic SNMP binary from a directory where `res` is a file,
+  preventing the old working-directory cache. Temporary fixtures are removed.
+- Run `OscarRuntimeTest` for default paths, explicit overrides, and blocked
+  cache directories. Run `SessionDiagnosticsTest` for cause retention, privacy,
+  bounded history, clearing, and malformed binary failure capture.
+- Native `MainWindowTest` verifies About menu actions, copy/clear behavior, and
+  the read-only viewer. Check View, Find, Refresh, Save, cancellation, and failed
+  export destinations manually on each installed platform.
+- On Windows, launch the installed UI without elevation and open a synthetic
+  SNMP binary. Confirm the user cache is created and diagnostics is accessible.
+  A Linux offscreen test does not establish Windows installer behavior.
