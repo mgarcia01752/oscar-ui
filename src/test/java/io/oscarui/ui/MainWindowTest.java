@@ -1089,6 +1089,7 @@ class MainWindowTest {
         try {
             var registry = dialog.findChild(QGroupBox.class, "registrySpecifications");
             assertNotNull(registry);
+            assertTrue(dialog.height() < 650, "About must fit shorter desktop displays");
             var types = new OscarDocumentService().types();
             assertEquals(2 + types.size() * 2, registry.findChildren(QLabel.class).size());
             for (int row = 0; row < types.size(); row++) {

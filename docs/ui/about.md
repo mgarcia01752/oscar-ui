@@ -8,7 +8,7 @@ in your default browser. This requires an internet connection.
 
 Choose **Help → About** to see installed component versions in the
 **Package | Version | Link** table. Project links open OSCAR-UI and OSCAR on GitHub. The license link opens OSCAR-UI's license in its repository.
-Below the version table, **TLV Registry | Specification** lists each supported
+Beside the version and release-update panels, **TLV Registry | Specification** lists each supported
 file type and its source edition from the bundled OSCAR JAR. Multiple source
 specifications appear on separate lines within the same cell. The compact panel matches the version panel styling without a table header bar
 or unused rows; hover over an edition to see its full source text.
