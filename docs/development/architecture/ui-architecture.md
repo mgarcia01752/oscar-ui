@@ -7,6 +7,28 @@ checks are incomplete; successful encoding is not deployment validation.
 
 ## UI component ownership
 
+UI source is organized into Java subpackages under `src/main/java/io/oscarui/ui/`:
+
+```text
+ui/
+├── MainWindow.java       # Window actions and document coordination
+├── workspace/           # Panes, tabs, layout controls and session state
+├── editing/             # New/Add/Edit/Save choices and text repair
+├── inspection/          # Binary reports, TLV descriptions and MIC checks
+├── settings/            # Preferences, appearance and session secrets
+├── maintenance/         # About, release checks, update and uninstall flows
+└── formatting/          # Presentation-only description formatting
+```
+
+Keep local helpers package-private. Cross-package UI entry points are public
+and documented, but remain application-internal interfaces rather than an OSCAR
+library API. Widget methods run on the Qt UI thread. Services stay in
+`io.oscarui.service`; do not move encoding or validation into the UI packages.
+Focused tests mirror their owning subpackage. Workspace integration and guide
+capture tests remain in `io.oscarui.ui` and exercise the composed application.
+This source organization does not change menus, layout or file formats.
+
+
 `MainWindow` arranges panes, owns actions and document state, and coordinates
 asynchronous service operations. Widgets and their callbacks run on the Qt UI
 thread. Oscar parsing, validation, and serialization remain in the service layer.

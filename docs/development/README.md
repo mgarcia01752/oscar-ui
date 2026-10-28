@@ -308,3 +308,11 @@ Use `./scripts/unix/clean.sh --dry-run` to preview, then omit `--dry-run` to
 remove generated builds and installer images from `target/` and `dist/`.
 Dependency caches are retained. See the [cleanup shortcuts](short-cuts.md#clean-generated-builds-and-installer-images)
 for selection options and the Windows command.
+
+## UI source packages
+
+`src/main/java/io/oscarui/ui/` keeps `MainWindow` as the coordinator and groups
+components into `workspace`, `editing`, `inspection`, `settings`, `maintenance`,
+and `formatting`. Follow the [package ownership map](architecture/ui-architecture.md#ui-component-ownership)
+when adding components. Focused UI tests mirror these packages; integration and
+screenshot tests remain in the root UI test package.

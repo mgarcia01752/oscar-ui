@@ -4,6 +4,23 @@
  */
 package io.oscarui.ui;
 
+import io.oscarui.ui.workspace.WorkspaceWelcomePane;
+import io.oscarui.ui.workspace.ConfigurationTreePane;
+import io.oscarui.ui.editing.TlvEditorDialog;
+import io.oscarui.ui.editing.NewDocumentDialog;
+import io.oscarui.ui.editing.TextRepairDialog;
+import io.oscarui.ui.inspection.BinaryInspectionDialog;
+import io.oscarui.ui.inspection.BinaryFailureDialog;
+import io.oscarui.ui.inspection.SharedSecretCheckDialog;
+import io.oscarui.ui.settings.GlobalSettingsDialog;
+import io.oscarui.ui.settings.CommonTlvSettingsDialog;
+import io.oscarui.ui.settings.SecretsDialog;
+import io.oscarui.ui.settings.DesktopTheme;
+import io.oscarui.ui.settings.SessionSecrets;
+import io.oscarui.ui.maintenance.AboutDialog;
+import io.oscarui.ui.maintenance.UpgradeChip;
+import io.oscarui.ui.maintenance.UbuntuUpdateDialog;
+
 import static org.junit.jupiter.api.Assertions.*;
 import io.oscarui.service.DocsisTestFixtures;
 import io.oscarui.service.OscarDocumentService;

@@ -4,6 +4,27 @@
  */
 package io.oscarui.ui;
 
+import io.oscarui.ui.workspace.WorkspacePane;
+import io.oscarui.ui.workspace.WorkspaceLayoutControls;
+import io.oscarui.ui.workspace.DocumentTabs;
+import io.oscarui.ui.workspace.WorkspaceSessions;
+import io.oscarui.ui.editing.TlvEditorDialog;
+import io.oscarui.ui.editing.NewDocumentDialog;
+import io.oscarui.ui.editing.SaveFormatDialog;
+import io.oscarui.ui.editing.TextRepairDialog;
+import io.oscarui.ui.inspection.BinaryInspectionDialog;
+import io.oscarui.ui.inspection.BinaryFailureDialog;
+import io.oscarui.ui.inspection.BinaryCheckDialog;
+import io.oscarui.ui.inspection.TlvHexDialog;
+import io.oscarui.ui.inspection.SharedSecretCheckDialog;
+import io.oscarui.ui.settings.GlobalSettingsDialog;
+import io.oscarui.ui.settings.SecretsDialog;
+import io.oscarui.ui.settings.DesktopTheme;
+import io.oscarui.ui.settings.SessionSecrets;
+import io.oscarui.ui.maintenance.ApplicationMaintenanceController;
+import io.oscarui.ui.maintenance.AboutDialog;
+import io.oscarui.ui.maintenance.UpgradeChip;
+
 import io.oscarui.service.*;
 import com.comcast.oscar.configurationfile.TemplateBannerLevel;
 import io.oscarui.service.OscarDocumentService.*;
