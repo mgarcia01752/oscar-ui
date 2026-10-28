@@ -133,6 +133,10 @@ changes, so describe the complete pending scope.
 
 Return a copy/paste command using `tools/git/git-save.sh --commit-msg` with
 a double-quoted multiline message; do not execute it unless asked to commit.
-Use `Feature`, `BugFix`, or `Documentation` as the category, an imperative
+Use `Feature`, `BugFix`, `Documentation`, or `Maintenance` as the category, an imperative
 one-line summary, `- ` detail lines, and a `- Tests:` line. Keep each message
 line at most 60 characters. Never claim unperformed validation.
+
+Use `Maintenance` for refactoring, package reorganization, and housekeeping
+that preserve user-facing behavior. Use `Feature` for new behavior, `BugFix`
+for corrections, and `Documentation` for documentation-only changes.

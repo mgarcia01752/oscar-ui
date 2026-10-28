@@ -125,3 +125,12 @@ Read `docs/development/build/packaging.md` and the affected workflow/helper. Con
 Report findings with file locations and user impact, followed by actual check
 results and remaining platform checks. Do not equate a successful build with
 a successful native launch or an uploaded draft with a published release.
+
+## Commit-message classification
+
+Use `Maintenance` for behavior-preserving refactoring, package reorganization,
+and housekeeping. Use `Feature` for new behavior, `BugFix` for corrections,
+and `Documentation` for documentation-only changes. Classify the complete
+pending scope, not just the last edited file. Follow the commit workflow in
+`AGENTS.md`: supply the category as the prefix of the existing `--commit-msg`
+argument, keep message lines within 60 characters, and report actual checks.

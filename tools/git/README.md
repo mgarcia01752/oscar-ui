@@ -18,7 +18,7 @@ tools/git/git-save.sh --commit-msg "Feature: Describe the change
 
 This stages **all non-ignored changes**, including new files and deletions, and
 creates a local commit. Review `git status` and the diff first. It does not push.
-Use `Feature`, `BugFix`, or `Documentation`; keep each message line within
+Use `Feature`, `BugFix`, `Documentation`, or `Maintenance`; keep each message line within
 60 characters and include actual validation results.
 
 ### Push only the main branch
@@ -180,3 +180,7 @@ For a version-only release, use
 `tools/git/git-push.sh --tag-minor --force-push` (major/patch also supported).
 The release helper creates a new version commit and tag, runs validation, and
 uses a normal atomic push. Existing remote tags remain immutable.
+
+`Maintenance` covers refactoring, package reorganization, and housekeeping
+without new user-facing behavior. Pass it as the message prefix through the
+existing `--commit-msg` option; no separate command-line flag is needed.
