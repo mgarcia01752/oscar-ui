@@ -8,6 +8,12 @@ in your default browser. This requires an internet connection.
 
 Choose **Help → About** to see installed component versions in the
 **Package | Version | Link** table. Project links open OSCAR-UI and OSCAR on GitHub. The license link opens OSCAR-UI's license in its repository.
+Below the version table, **TLV Registry | Specification** lists each supported
+file type and its source edition from the bundled OSCAR JAR. Multiple source
+specifications appear on separate lines within the same cell. The table scrolls
+to show additional file types; hover over an edition to see its full text.
+These editions identify registry sources, not complete specification compliance.
+
 **Report an issue with OSCAR-UI** opens the project's GitHub issue form in your
 browser with OSCAR-UI, OSCAR, bundled Qt/Qt Jambi, Java, OS version, and
 architecture already filled in. Describe the reproduction steps, expected result,
@@ -31,6 +37,8 @@ version is current; retry when GitHub is reachable.
 **Help → About: package links and release updates**
 
 ![About, package links, and release updates in OSCAR-UI dark mode](../images/user-guide/about-dark.png)
+
+![About specification grid in light mode](../images/user-guide/about-light.png)
 
 Shown from a development build; installed packages also show the uninstall button.
 

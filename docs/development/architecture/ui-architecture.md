@@ -263,6 +263,16 @@ injects a temporary settings store.
 
 ## About and release checks
 
+The About panel displays a read-only **TLV Registry | Specification** grid below
+the package/version grid, aligned to the same content width. File types and
+edition text come from `OscarDocumentService.types()` and the bundled OSCAR
+catalogs, without a second UI specification list. Multi-source editions separated
+by ` + ` render on separate lines in one cell; the complete source text remains
+available as a tooltip. Missing registry discovery shows an explicit unavailable
+row while retaining package versions and update controls. This is file-type
+provenance, not a compliance statement or a list of all embedded catalogs.
+
+
 `AboutDialog` owns the branded About panel, project links, build versions, and
 manual update status. A Package | Version | Link grid lists OSCAR-UI and OSCAR
 with clickable GitHub links. The OSCAR-UI license links to the

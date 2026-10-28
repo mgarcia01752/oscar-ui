@@ -23,6 +23,21 @@ class UserGuideScreenshotsTest {
     @TempDir Path temporary;
     private Throwable captureFailure;
 
+    @Test void captureAboutSpecifications() throws Exception {
+        QApplication.initialize(new String[0]);
+        QApplication.setQuitOnLastWindowClosed(false);
+        try {
+            Path images = Path.of("target/user-guide-images");
+            Files.createDirectories(images);
+            DesktopTheme.apply(Appearance.DARK);
+            captureDialog(new AboutDialog(null), images.resolve("about-dark.png"));
+            DesktopTheme.apply(Appearance.LIGHT);
+            captureDialog(new AboutDialog(null), images.resolve("about-light.png"));
+        } finally {
+            QApplication.shutdown();
+        }
+    }
+
     @Test void captureWelcomeWorkspace() throws Exception {
         QApplication.initialize(new String[0]);
         QApplication.setQuitOnLastWindowClosed(false);

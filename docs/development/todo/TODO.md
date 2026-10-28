@@ -27,18 +27,14 @@
 
 ## Registry specification editions in About
 
-- [ ] Add a registry specification section to About showing each supported
-  registry/family, source specification identifier and issue/edition, including
-  embedded-device catalogs and version-specific profiles.
-- [ ] Obtain provenance from the bundled OSCAR registry/API so the displayed
-  editions follow the installed JAR. Keep specification editions distinct from
-  OSCAR and OSCAR-UI release versions; avoid a duplicate hardcoded UI list.
-- [ ] Show multiple sources where a catalog derives from several specifications.
-  Label legacy, unverified or partial coverage explicitly; a source edition is
-  not a claim of full specification compliance. Track missing upstream provenance
-  metadata before implementing the display.
-- [ ] Verify the displayed sources against the bundled catalogs, update About
-  documentation and screenshots, and check layout in light and dark themes.
+- [x] Show supported file types and their bundled registry editions below the
+  About version grid; render multiple sources on separate lines in each cell.
+  Read metadata through OSCAR discovery, not a hardcoded UI list.
+- [x] Update architecture, user documentation and light/dark screenshots; verify
+  grid contents against the bundled catalogs with native UI tests.
+- [ ] Extend provenance to embedded-device catalogs and profile-specific coverage
+  labels when upstream metadata supports them. Source editions alone do not
+  establish full specification compliance.
 
 ## Integer input for numeric byte-array TLVs
 

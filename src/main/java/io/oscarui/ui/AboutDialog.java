@@ -83,6 +83,7 @@ final class AboutDialog extends QDialog {
         addPackageRow(packageGrid, 2, "OSCAR", build.getProperty("oscar.version", "unknown"),
                 ReleaseUpdateService.OSCAR_PROJECT);
         layout.addWidget(packages);
+        layout.addWidget(registrySpecifications());
         var license = link("OSCAR-UI license: Apache License 2.0", ReleaseUpdateService.UI_PROJECT + "/blob/main/LICENSE");
         license.setObjectName("applicationLicenseLink");
         layout.addWidget(license);
@@ -192,6 +193,40 @@ final class AboutDialog extends QDialog {
             // Missing metadata is displayed as unknown, never as a guessed release.
         }
         return build;
+    }
+
+    private QWidget registrySpecifications() {
+        var table = new QTableWidget(this);
+        table.setObjectName("registrySpecifications");
+        table.setColumnCount(2);
+        table.setWordWrap(false);
+        table.setHorizontalHeaderLabels(java.util.List.of("TLV Registry", "Specification"));
+        table.verticalHeader().hide();
+        table.verticalHeader().setMinimumSectionSize(24);
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers);
+        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection);
+        table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents);
+        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch);
+        table.setMinimumHeight(300);
+        table.setToolTip("File types and source editions from the bundled OSCAR registry. "
+                + "Source provenance does not imply complete specification compliance.");
+        try {
+            var types = new io.oscarui.service.OscarDocumentService().types();
+            table.setRowCount(types.size());
+            for (int row = 0; row < types.size(); row++) {
+                var type = types.get(row);
+                table.setItem(row, 0, new QTableWidgetItem(type.header()));
+                var edition = new QTableWidgetItem(type.edition().replace(" + ", "\n"));
+                edition.setToolTip(type.edition());
+                table.setItem(row, 1, edition);
+            }
+            table.resizeRowsToContents();
+        } catch (io.oscarui.service.InspectionException exception) {
+            table.setRowCount(1);
+            table.setItem(0, 0, new QTableWidgetItem("Unavailable"));
+            table.setItem(0, 1, new QTableWidgetItem("Cannot read bundled registry metadata"));
+        }
+        return table;
     }
 
     private void requestWindowsUpdate() {
