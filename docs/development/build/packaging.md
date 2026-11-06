@@ -514,6 +514,9 @@ ID signature, notarization, or automatic macOS updates are configured.
 
 The installer test mounts the actual DMG, copies the app into a temporary
 Applications directory, ejects the DMG, and runs the native Cocoa smoke test.
+File loading has a bounded 60-second deadline for cold native hosts; the Mac
+launcher process has a separate 90-second timeout. A load timeout reports
+`UI_SMOKE_TIMEOUT` and fails packaging; it never counts as a successful launch.
 It hides the build Qt directory and clears Java/Qt/dynamic-library environment
 overrides before launching the packaged app. It then removes only that temporary
 app and checks preservation of a synthetic external configuration file.

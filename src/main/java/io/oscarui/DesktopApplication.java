@@ -16,6 +16,7 @@ import io.qt.gui.QAction;
 import java.nio.file.Path;
 
 public final class DesktopApplication {
+    private static final int SMOKE_LOAD_TIMEOUT_MILLIS = 60_000;
     private static final String APPLICATION_NAME = "OSCAR-UI";
     private static final String LINUX_DESKTOP_FILE_NAME = "oscar-ui-OSCAR-UI";
 
@@ -53,7 +54,12 @@ public final class DesktopApplication {
                     }
                 });
                 smokeTimer.start(100);
-                QTimer.singleShot(15000, () -> QApplication.exit(2));
+                // Cold native CI hosts must initialize OSCAR before loading completes.
+                QTimer.singleShot(SMOKE_LOAD_TIMEOUT_MILLIS, () -> {
+                    System.err.println("UI_SMOKE_TIMEOUT: File loading did not complete within "
+                            + SMOKE_LOAD_TIMEOUT_MILLIS + " ms");
+                    QApplication.exit(2);
+                });
             }
             int result = QApplication.exec();
             window.close();

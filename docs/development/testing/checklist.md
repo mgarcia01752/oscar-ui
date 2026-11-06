@@ -338,6 +338,7 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - [x] Model the stripped private runtime without `bin/java` in CPU-slice tests.
 - [ ] Pass Apple Silicon and Intel macOS 15 builds, framework deployment, CPU-slice checks and signature verification.
 - [ ] Mount the generated DMG, copy and launch with build Qt hidden and environment cleared.
+  Require file loading within the 60-second smoke deadline; timeouts must fail.
 - [ ] Remove the test copy and preserve the external synthetic configuration.
 - [x] Locally test that either missing architecture DMG prevents publication.
 - [ ] Confirm both native macOS jobs and DMG artifacts pass hosted release gates.
