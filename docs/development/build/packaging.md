@@ -501,7 +501,9 @@ JNI frameworks, invokes Qt's `macdeployqt` for Qt frameworks and Cocoa plugins,
 and bundles a private Java runtime with `jpackage`. `sips`/`iconutil` produce the
 native icon from the existing PNG. Dependency sources and notices are retained.
 Before signing, `lipo <binary> -verify_arch <cpu>` requires the selected CPU slice in the
-launcher, bundled Java executable/JVM, Qt/JNI frameworks and Cocoa plugin.
+launcher, bundled JVM, Qt/JNI frameworks and Cocoa plugin. The private runtime
+has no `bin/java`: [jpackage defaults](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jpackage.html)
+strip native commands, and the application launcher loads the JVM directly.
 Universal libraries are accepted when they contain the required slice.
 
 Qt deployment uses `-no-codesign` to defer signing until JNI framework rpaths

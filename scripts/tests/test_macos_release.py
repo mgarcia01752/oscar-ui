@@ -29,12 +29,25 @@ class MacosReleaseTest(unittest.TestCase):
         """Verify required CPU slices and propagate lipo failures before shipping."""
         with tempfile.TemporaryDirectory() as directory:
             application = Path(directory) / 'OSCAR-UI.app'
-            (application / 'Contents/Frameworks/QtCore.framework').mkdir(parents=True)
+            binaries = ['Contents/MacOS/OSCAR-UI',
+                        'Contents/runtime/Contents/Home/lib/server/libjvm.dylib',
+                        'Contents/PlugIns/platforms/libqcocoa.dylib',
+                        'Contents/Frameworks/QtCore.framework/QtCore']
+            for binary in binaries:
+                executable = application / binary
+                executable.parent.mkdir(parents=True, exist_ok=True)
+                executable.write_bytes(b'synthetic Mach-O fixture')
+
+            def check_input(arguments):
+                self.assertTrue(Path(arguments[1]).is_file(), arguments)
+
+            # Model jpackage runtime stripping: no bin/java is shipped.
+            self.assertFalse((application / 'Contents/runtime/Contents/Home/bin/java').exists())
             for suffix, cpu in [('x64', 'x86_64'), ('arm64', 'arm64')]:
-                with self.subTest(cpu=cpu), patch.object(MAC, 'run') as run:
+                with self.subTest(cpu=cpu), patch.object(MAC, 'run', side_effect=check_input) as run:
                     MAC.verify_architecture(application, suffix)
                     commands = [call.args[0] for call in run.call_args_list]
-                    self.assertEqual(5, len(commands))
+                    self.assertEqual(4, len(commands))
                     self.assertTrue(all(command[0] == 'lipo' and command[2:] == ['-verify_arch', cpu]
                                         for command in commands))
                     self.assertEqual(application / 'Contents/Frameworks/QtCore.framework/QtCore', commands[-1][1])

@@ -122,8 +122,9 @@ def verify_architecture(application, architecture):
     """
     mach_o_architecture = 'x86_64' if architecture == 'x64' else 'arm64'
     libraries = sorted((application / 'Contents/Frameworks').glob('*.framework'))
+    # jpackage strips native commands, including bin/java; its launcher loads
+    # the private JVM directly instead of spawning a Java executable.
     executables = [application / 'Contents/MacOS/OSCAR-UI',
-                   application / 'Contents/runtime/Contents/Home/bin/java',
                    application / 'Contents/runtime/Contents/Home/lib/server/libjvm.dylib',
                    application / 'Contents/PlugIns/platforms/libqcocoa.dylib',
                    *[framework / framework.stem for framework in libraries]]
