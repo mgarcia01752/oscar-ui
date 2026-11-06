@@ -448,3 +448,21 @@ See [Windows update architecture](../architecture/windows-updates.md).
 - On Windows, launch the installed UI without elevation and open a synthetic
   SNMP binary. Confirm the user cache is created and diagnostics is accessible.
   A Linux offscreen test does not establish Windows installer behavior.
+
+## Installer release filenames
+
+- Run `test_build_image.py` for exact lowercase output names on Windows, Ubuntu,
+  macOS ARM64 and macOS Intel, using two synthetic POM versions.
+- Run `test_release_publication.py` to block missing, duplicate, incorrectly cased,
+  wrong-version or wrong-architecture assets before publication.
+- Run `UbuntuUpdateServiceTest` for new versioned names and historical Debian
+  names, retaining URL, size and checksum validation.
+- Verify MSI/DEB/DMG creation and installation in each native release job.
+  Local orchestration tests do not replace native installer verification.
+
+- `test_release_config.py` checks configuration-driven URL/name changes, CLI use
+  outside the checkout, missing configuration and duplicated production literals.
+- `ReleaseConfigurationTest` checks packaged resource bytes against the canonical
+  source and Java formatting. Windows installer tests check the staged sidecar.
+- Validate shared coding-style and release-QA skills through canonical, Codex and
+  Claude discovery paths after changing the shared-configuration requirement.

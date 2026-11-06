@@ -16,7 +16,10 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-API = 'https://api.github.com/repos/Comcast/Oscar'
+sys.path.insert(0, str(ROOT / 'scripts/build'))
+import release_config
+API = release_config.project('oscar', 'api')
+OSCAR_PROJECT = release_config.project('oscar')
 VERSION_PATTERN = r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
 POM_NAMESPACE = {'m': 'http://maven.apache.org/POM/4.0.0'}
 
@@ -146,10 +149,10 @@ def _references(root, version, commit, digest):
         'scripts/build/desktop.py': [(rf"\.tools/oscar-{escaped}'", f".tools/oscar-{version}'")],
         'THIRD-PARTY-NOTICES.md': [
             (rf'^\| Comcast/Oscar {escaped}, commit [0-9a-f]{{40}} \|.*$',
-             f'| Comcast/Oscar {version}, commit {commit} | Apache-2.0; https://github.com/Comcast/Oscar/releases/tag/v{version} |')],
+             f'| Comcast/Oscar {version}, commit {commit} | Apache-2.0; {OSCAR_PROJECT}/releases/tag/v{version} |')],
         'docs/development/README.md': [
-            (rf'\[Oscar v{escaped}\]\(https://github.com/Comcast/Oscar/releases/tag/v{escaped}\)',
-             f'[Oscar v{version}](https://github.com/Comcast/Oscar/releases/tag/v{version})'),
+            (rf'\[Oscar v{escaped}\]\({re.escape(OSCAR_PROJECT)}/releases/tag/v{escaped}\)',
+             f'[Oscar v{version}]({OSCAR_PROJECT}/releases/tag/v{version})'),
             (rf'Tools → Check Shared Secret checks a selected binary through OSCAR {escaped}\.',
              f'Tools → Check Shared Secret checks a selected binary through OSCAR {version}.')],
         'docs/development/architecture/ui-architecture.md': [
@@ -221,7 +224,7 @@ def _update(root, version, dry_run):
         _progress(f'JAR validated. SHA-256: {digest}')
         for name in ('LICENSE', 'NOTICE'):
             _progress(f'Downloading {name} at the pinned commit...')
-            content = _fetch(f'https://raw.githubusercontent.com/Comcast/Oscar/{commit}/{name}')
+            content = _fetch(f"{release_config.project('oscar', 'raw')}/{commit}/{name}")
             if not content.strip():
                 raise RuntimeError(f'Empty upstream {name}.')
             (staging / name).write_bytes(content)

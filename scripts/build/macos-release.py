@@ -10,10 +10,13 @@ import plistlib
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import release_config
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -201,7 +204,7 @@ def build():
     run(['codesign', '--verify', '--deep', '--strict', application])
     release = output / 'release'
     release.mkdir()
-    dmg = release / f'OSCAR-UI-{version}-macos-{architecture}.dmg'
+    dmg = release / release_config.installer(version, 'macos', architecture, 'dmg')
     (image / 'Applications').symlink_to('/Applications')
     run(['hdiutil', 'create', '-volname', 'OSCAR-UI', '-srcfolder', image,
          '-format', 'UDZO', dmg])

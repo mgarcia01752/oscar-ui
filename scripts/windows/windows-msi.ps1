@@ -10,12 +10,13 @@ release as a patch source. Release publishing remains the coordinator's job.
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$ReleaseConfig = Get-Content "$Root/src/main/resources/release.properties" -Raw | ConvertFrom-StringData
 $Image = "$Root/dist/windows/app-image/OSCAR-UI"
 $Output = "$Root/target/windows-production"
 $Release = "$Root/dist/windows/release"
 [xml]$Pom = Get-Content "$Root/pom.xml"
 $Version = [string]$Pom.project.version
-$Project = 'https://github.com/mgarcia01752/oscar-ui'
+$Project = $ReleaseConfig['github.web'] + "/" + $ReleaseConfig['ui.repository']
 $Builder = "$Root/scripts/build/windows-installer.py"
 
 # Run build tools with checked exit codes and visible progress.
@@ -84,7 +85,7 @@ function Get-ReleaseMetadata([string]$ReleasePath) {
     if ($env:GH_TOKEN) {
         $Headers.Authorization = "Bearer $env:GH_TOKEN"
     }
-    Invoke-RestMethod -Uri "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/$ReleasePath" -Headers $Headers
+    Invoke-RestMethod -Uri ($ReleaseConfig['github.api'] + "/" + $ReleaseConfig['ui.repository'] + "/releases/$ReleasePath") -Headers $Headers
 }
 
 # A deliberately deleted baseline ends the patch family. Other API failures
@@ -99,7 +100,8 @@ function Test-PatchBaselineAvailable([string]$BaselineVersion) {
         }
         throw
     }
-    $Msi = @($BaselineRelease.assets | Where-Object name -eq "OSCAR-UI-$BaselineVersion-windows-x64.msi")
+    # PowerShell -eq also accepts the uppercase names of historical releases.
+    $Msi = @($BaselineRelease.assets | Where-Object name -eq ($ReleaseConfig['installer.template'].Replace('{version}', $BaselineVersion).Replace('{os}', 'windows').Replace('{arch}', 'x64').Replace('{extension}', 'msi')))
     return (!$BaselineRelease.draft -and !$BaselineRelease.prerelease -and $Msi.Count -eq 1)
 }
 
@@ -156,7 +158,8 @@ Invoke-Build python $Arguments
 Invoke-Build candle.exe @('-nologo', '-arch', 'x64', '-out', "$Output/product.wixobj", "$Output/product.wxs")
 Invoke-Build light.exe @('-nologo', '-ext', 'WixUIExtension', '-b', "payload=$Image", '-out', "$Output/product.msi", "$Output/product.wixobj")
 New-Item -ItemType Directory -Force $Release | Out-Null
-Copy-Item "$Output/product.msi" "$Release/OSCAR-UI-$Version-windows-x64.msi"
+$InstallerName = $ReleaseConfig['installer.template'].Replace('{version}', $Version).Replace('{os}', 'windows').Replace('{arch}', 'x64').Replace('{extension}', 'msi')
+Copy-Item "$Output/product.msi" "$Release/$InstallerName"
 Invoke-Build python @($Builder, 'archive', '--image', $Image, '--output', $Output, '--archive', "$Release/windows-patch-inputs.zip")
 $Metadata = Get-Content "$Output/inputs.json" -Raw | ConvertFrom-Json
 $Manifest = @{
@@ -172,13 +175,13 @@ if ($Metadata.fromVersion) {
     Invoke-Build $Torch @('-p', '-xi', "$Output/previous.wixpdb", "$Output/product.wixpdb", '-out', "$Output/patch.wixmst")
     Invoke-Build candle.exe @('-nologo', '-out', "$Output/patch.wixobj", "$Output/patch.wxs")
     Invoke-Build light.exe @('-nologo', '-out', "$Output/patch.wixmsp", "$Output/patch.wixobj")
-    $PatchName = "OSCAR-UI-$Version-windows-x64.msp"
+    $PatchName = ($ReleaseConfig['patch.template'].Replace('{version}', $Version))
     Invoke-Build pyro.exe @("$Output/patch.wixmsp", '-out', "$Release/$PatchName", '-t', 'Previous', "$Output/patch.wixmst",
         '-bt', "payload=$Output/previous-image", '-bu', "payload=$Image")
     $Manifest.patch = @{ url = "$Project/releases/download/v$Version/$PatchName"
         size = (Get-Item "$Release/$PatchName").Length
         digest = 'sha256:' + (Get-FileHash "$Release/$PatchName" -Algorithm SHA256).Hash.ToLowerInvariant() }
-    $OldMsi = @($Latest.assets | Where-Object name -eq "OSCAR-UI-$($Metadata.fromVersion)-windows-x64.msi")
+    $OldMsi = @($Latest.assets | Where-Object name -eq ($ReleaseConfig['installer.template'].Replace('{version}', $Metadata.fromVersion).Replace('{os}', 'windows').Replace('{arch}', 'x64').Replace('{extension}', 'msi')))
     if ($OldMsi.Count -ne 1) {
         throw 'Previous MSI unavailable for mandatory patch lifecycle test'
     }
@@ -199,7 +202,7 @@ if ($Metadata.fromVersion) {
         $PriorManifest = Get-Content "$Output/chain-$Cursor.json" -Raw | ConvertFrom-Json
         if (!$PriorManifest.patch -or $PriorManifest.productCode -ne $Metadata.productCode -or
             [version]$PriorManifest.fromVersion -ge [version]$Cursor) { throw 'Invalid patch chain' }
-        $PriorPatchAsset = @($PriorRelease.assets | Where-Object name -eq "OSCAR-UI-$Cursor-windows-x64.msp")
+        $PriorPatchAsset = @($PriorRelease.assets | Where-Object name -eq ($ReleaseConfig['patch.template'].Replace('{version}', $Cursor)))
         if ($PriorPatchAsset.Count -ne 1) {
             throw 'Missing patch-chain artifact'
         }
@@ -210,7 +213,7 @@ if ($Metadata.fromVersion) {
     }
     if ($Chain.Count -gt 0) {
         $BaselineRelease = Get-ReleaseMetadata "tags/v$Cursor"
-        $BaselineAsset = @($BaselineRelease.assets | Where-Object name -eq "OSCAR-UI-$Cursor-windows-x64.msi")
+        $BaselineAsset = @($BaselineRelease.assets | Where-Object name -eq ($ReleaseConfig['installer.template'].Replace('{version}', $Cursor).Replace('{os}', 'windows').Replace('{arch}', 'x64').Replace('{extension}', 'msi')))
         if ($BaselineAsset.Count -ne 1) {
             throw 'Missing original baseline MSI'
         }

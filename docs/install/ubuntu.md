@@ -6,6 +6,10 @@ Targets Ubuntu 22.04, 24.04, and 26.04 LTS on x64. Download the `.deb` from
 [GitHub Releases](https://github.com/mgarcia01752/oscar-ui/releases).
 Java and Qt are included; no repository checkout is needed.
 
+New release assets use `oscar-ui-<version>-ubuntu-x64.deb`. Older installed
+versions that only recognize `_amd64.deb` need a manual update using the steps
+below once; the updated app recognizes the new filenames.
+
 ## Install and launch
 
 1. Open a terminal in the folder where you want to save the installer.
@@ -13,9 +17,10 @@ Java and Qt are included; no repository checkout is needed.
 
    ```bash
    url=$(curl -fsSL https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest |
-     python3 -c 'import json,sys; print(next(a["browser_download_url"] for a in json.load(sys.stdin)["assets"] if a["name"].endswith("_amd64.deb")))') &&
-   curl -fL "$url" -o oscar-ui_amd64.deb &&
-   sudo apt install ./oscar-ui_amd64.deb
+     python3 -c 'import json,sys; r=json.load(sys.stdin); n="oscar-ui-"+r["tag_name"].removeprefix("v")+"-ubuntu-x64.deb"; a=[a for a in r["assets"] if a["name"] in (n,"oscar-ui_amd64.deb")]; assert len(a)==1, "Expected one Ubuntu installer"; print(a[0]["browser_download_url"])') &&
+   installer="${url##*/}" &&
+   curl -fL "$url" -o "$installer" &&
+   sudo apt install "./$installer"
    ```
 
    GitHub supplies the latest release's download URL, so no tag or version is

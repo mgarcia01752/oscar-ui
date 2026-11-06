@@ -39,7 +39,7 @@ downloaded OSCAR-UI MSI in your Downloads folder and prints the selected filenam
 before starting installation:
 
 ```powershell
-$msi = Get-ChildItem "$env:USERPROFILE\Downloads\OSCAR-UI-*.msi" |
+$msi = Get-ChildItem "$env:USERPROFILE\Downloads\oscar-ui-*.msi" |
     Sort-Object LastWriteTime -Descending |
     Select-Object -First 1
 
@@ -74,7 +74,7 @@ OSCAR-UI MSI in Downloads and write a diagnostic log. No version number is neede
 
 ```bat
 set "OSCAR_MSI="
-for /f "delims=" %F in ('dir /b /a-d /o-d /t:w "%USERPROFILE%\Downloads\OSCAR-UI-*-windows-x64.msi" 2^>nul') do @if not defined OSCAR_MSI set "OSCAR_MSI=%F"
+for /f "delims=" %F in ('dir /b /a-d /o-d /t:w "%USERPROFILE%\Downloads\oscar-ui-*-windows-x64.msi" 2^>nul') do @if not defined OSCAR_MSI set "OSCAR_MSI=%F"
 if defined OSCAR_MSI (echo Installing: %OSCAR_MSI%) else (echo No OSCAR-UI MSI found in Downloads.)
 if defined OSCAR_MSI msiexec.exe /i "%USERPROFILE%\Downloads\%OSCAR_MSI%" /L*V "%TEMP%\oscar-ui-install.log"
 ```

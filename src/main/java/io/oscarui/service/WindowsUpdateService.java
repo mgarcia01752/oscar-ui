@@ -109,7 +109,7 @@ public final class WindowsUpdateService {
         JsonNode patch = update.path("patch");
         if (!productCode.matches("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}") || !fingerprint.matches("[a-fA-F0-9]{64}")
                 || !patch.path("url").asText().equals(ReleaseUpdateService.UI_PROJECT + "/releases/download/v"
-                    + targetVersion + "/OSCAR-UI-" + targetVersion + "-windows-x64.msp")
+                    + targetVersion + "/" + ReleaseConfiguration.patch(targetVersion))
                 || !patch.path("digest").asText().matches("sha256:[a-fA-F0-9]{64}")
                 || patch.path("size").asLong() <= 0 || patch.path("size").asLong() > 100 * 1024 * 1024) {
             throw new IOException("Invalid Windows patch identity.");

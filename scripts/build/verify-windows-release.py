@@ -7,6 +7,10 @@ import json
 import re
 from pathlib import Path
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import release_config
+
 
 def verify(version, assets, manifest):
     """Validate required Windows assets and optional MSP identity against a release.
@@ -16,7 +20,7 @@ def verify(version, assets, manifest):
     """
     if manifest.get('version') != version or manifest.get('layout') != 1:
         raise ValueError('Windows update manifest version/layout mismatch')
-    for name in [f'OSCAR-UI-{version}-windows-x64.msi', 'windows-patch-inputs.zip', 'windows-update.json']:
+    for name in [release_config.installer(version, 'windows', 'x64', 'msi'), 'windows-patch-inputs.zip', 'windows-update.json']:
         matches = [asset for asset in assets if asset['name'] == name]
         if len(matches) != 1 or matches[0].get('size', 0) <= 0 or matches[0].get('state') != 'uploaded':
             raise ValueError(f'Missing/invalid Windows asset: {name}')
@@ -26,8 +30,8 @@ def verify(version, assets, manifest):
         if patches or manifest.get('fromVersion') is not None:
             raise ValueError('Baseline release must not offer an MSP')
         return
-    name = f'OSCAR-UI-{version}-windows-x64.msp'
-    url = f'https://github.com/mgarcia01752/oscar-ui/releases/download/v{version}/{name}'
+    name = release_config.settings()['patch.template'].format(version=version)
+    url = f'{release_config.project()}/releases/download/v{version}/{name}'
     if (not manifest.get('fromVersion') or len(patches) != 1 or patches[0]['name'] != name
             or patches[0].get('state') != 'uploaded' or patch.get('url') != url
             or patches[0].get('size', 0) != patch.get('size') or patch.get('size', 0) <= 0

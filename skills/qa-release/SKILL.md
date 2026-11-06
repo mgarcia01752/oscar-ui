@@ -36,6 +36,14 @@ before approving version or packaging changes. The root POM owns the UI version;
 source code and release artifacts must derive it rather than duplicate literals.
 Check generated package versions and tag agreement, not just matching source text.
 
+## Shared release configuration
+
+Enforce [shared URLs and naming](../coding-style/SKILL.md#shared-project-urls-and-release-names).
+Verify the JAR resource and installed helper sidecar come from the same canonical
+properties file. Exercise Java, Python, shell/CI and PowerShell consumers, legacy
+update compatibility, and missing configuration failure. Do not approve a
+release-name or endpoint change that updates only one producer or consumer.
+
 ## Release descriptions
 
 Confirm `packaging/release-notes.md` and installer information describe the

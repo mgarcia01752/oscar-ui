@@ -34,9 +34,9 @@ class WindowsInstallerTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for directory in ['target', 'scripts/windows', 'packaging/windows']:
+        for directory in ['target', 'scripts/windows', 'packaging/windows', 'src/main/resources']:
             (self.root / directory).mkdir(parents=True, exist_ok=True)
-        for name in ['LICENSE', 'scripts/windows/windows-update.ps1', 'packaging/windows/install-information.txt',
+        for name in ['src/main/resources/release.properties', 'LICENSE', 'scripts/windows/windows-update.ps1', 'packaging/windows/install-information.txt',
                      'packaging/windows/dialog.bmp', 'packaging/windows/banner.bmp']:
             (self.root / name).write_text('synthetic content', encoding='utf-8')
         self.mock_root = patch.object(INSTALLER, 'ROOT', self.root)
@@ -64,6 +64,8 @@ class WindowsInstallerTest(unittest.TestCase):
         image = self.image('1.0.0')
         output = self.root / 'baseline'
         metadata = INSTALLER.prepare(image, '1.0.0', output)
+        self.assertEqual((INSTALLER.ROOT / 'src/main/resources/release.properties').read_bytes(),
+                         (image / 'app/release.properties').read_bytes())
         (output / 'product.wixpdb').write_bytes(b'synthetic symbols')
         bundle = self.root / 'inputs.zip'
         INSTALLER.archive_inputs(image, output, bundle)
@@ -141,6 +143,8 @@ $Function = $Ast.Find({ param($Node)
     $Node.Name -eq 'Get-ReleaseMetadata'
 }, $true)
 Invoke-Expression $Function.Extent.Text
+$Repository = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Source))
+$ReleaseConfig = Get-Content "$Repository/src/main/resources/release.properties" -Raw | ConvertFrom-StringData
 function Invoke-RestMethod($Uri, $Headers) {
     if ($Uri -ne "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/$script:ExpectedPath") {
         throw 'Unexpected metadata host or path'
@@ -266,6 +270,8 @@ $Function = $Ast.Find({ param($Node)
     $Node.Name -eq 'Test-PatchBaselineAvailable'
 }, $true)
 Invoke-Expression $Function.Extent.Text
+$Repository = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Source))
+$ReleaseConfig = Get-Content "$Repository/src/main/resources/release.properties" -Raw | ConvertFrom-StringData
 Add-Type 'public class BaselineTestException : System.Exception {
     public System.Net.HttpStatusCode StatusCode;
     public BaselineTestException Response { get { return this; } }
@@ -279,9 +285,11 @@ function Get-ReleaseMetadata($Path) {
     }
     return @{draft=$false; prerelease=$false; assets=$script:Assets}
 }
-$script:Assets = @(@{name='OSCAR-UI-1.0.0-windows-x64.msi'})
+$script:Assets = @(@{name='oscar-ui-1.0.0-windows-x64.msi'})
 $script:Status = 200
 if (!(Test-PatchBaselineAvailable '1.0.0')) { throw 'Available baseline rejected' }
+$script:Assets = @(@{name='OSCAR-UI-1.0.0-windows-x64.msi'})
+if (!(Test-PatchBaselineAvailable '1.0.0')) { throw 'Legacy uppercase baseline rejected' }
 $script:Assets = @()
 if (Test-PatchBaselineAvailable '1.0.0') { throw 'Missing MSI accepted' }
 $script:Status = 404
@@ -360,6 +368,15 @@ foreach ($Status in @(401, 403, 500)) {
         with zipfile.ZipFile(image / 'app/oscar-ui.jar') as jar:
             self.assertEqual(b'ui.version=1.0.1', jar.read('build-info.properties'))
 
+    def test_release_configuration_change_requires_new_baseline(self):
+        """An installed helper must not retain stale endpoint settings after an MSP."""
+        baseline, previous = self.baseline()
+        (self.root / 'src/main/resources/release.properties').write_text(
+            'github.web=https://example.invalid', encoding='utf-8')
+        target = INSTALLER.prepare(self.image('1.0.1'), '1.0.1', self.root / 'updated', previous)
+        self.assertNotEqual(baseline['productCode'], target['productCode'])
+        self.assertIsNone(target['fromVersion'])
+
     def test_dependency_change_requires_new_baseline(self):
         """Reject an MSP when runtime bytes change, even across a patch version."""
         baseline, previous = self.baseline()
@@ -390,7 +407,7 @@ foreach ($Status in @(401, 403, 500)) {
         """A missing MSP or mismatched digest prevents publication."""
         version = '1.0.1'
         assets = [{'name': name, 'size': 10, 'state': 'uploaded'} for name in
-                  ['OSCAR-UI-1.0.1-windows-x64.msi', 'windows-patch-inputs.zip', 'windows-update.json']]
+                  ['oscar-ui-1.0.1-windows-x64.msi', 'windows-patch-inputs.zip', 'windows-update.json']]
         manifest = {'version': version, 'layout': 1, 'fromVersion': None, 'patch': None}
         VERIFY.verify(version, assets, manifest)
         manifest['fromVersion'] = '1.0.0'

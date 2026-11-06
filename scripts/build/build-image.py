@@ -7,8 +7,11 @@ from pathlib import Path
 import platform
 import shutil
 import subprocess
-import sys
 import xml.etree.ElementTree as ET
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import release_config
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,16 +77,16 @@ def _plan(requested):
     if target == 'linux':
         command = ['bash', (ROOT / 'scripts/unix/linux-release.sh').as_posix()]
         directories = [ROOT / 'dist/linux/deb']
-        artifact = ROOT / 'dist/linux/release/oscar-ui_amd64.deb'
+        artifact = ROOT / ('dist/linux/release/' + release_config.installer(version, 'ubuntu', 'x64', 'deb'))
     elif target == 'macos':
         command = [sys.executable, (ROOT / 'scripts/build/macos-release.py').as_posix()]
         directories = [ROOT / 'dist/macos']
         architecture = 'arm64' if platform.machine().lower() == 'arm64' else 'x64'
-        artifact = ROOT / f'dist/macos/release/OSCAR-UI-{version}-macos-{architecture}.dmg'
+        artifact = ROOT / ('dist/macos/release/' + release_config.installer(version, 'macos', architecture, 'dmg'))
     else:
         command = ['pwsh', '-NoProfile', '-File', (ROOT / 'scripts/windows/windows-release.ps1').as_posix()]
         directories = [ROOT / 'dist/windows/app-image', ROOT / 'dist/windows/msi']
-        artifact = ROOT / f'dist/windows/release/OSCAR-UI-{version}-windows-x64.msi'
+        artifact = ROOT / ('dist/windows/release/' + release_config.installer(version, 'windows', 'x64', 'msi'))
     return target, command, artifact, directories
 
 

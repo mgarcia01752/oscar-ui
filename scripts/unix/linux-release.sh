@@ -41,4 +41,5 @@ env -u JAVA_HOME -u QT_PLUGIN_PATH -u LD_LIBRARY_PATH QT_QPA_PLATFORM=offscreen 
   --smoke-test "$ROOT/src/test/resources/simple-docsis.txt" | tee "$PROBE/smoke.log"
 grep -q 'UI_SMOKE_OK' "$PROBE/smoke.log"
 mkdir -p "$ROOT/dist/linux/release"
-cp "$PACKAGE" "$ROOT/dist/linux/release/oscar-ui_amd64.deb"
+INSTALLER="$(python3 "$ROOT/scripts/build/release_config.py" installer "$VERSION" ubuntu x64 deb)"
+cp "$PACKAGE" "$ROOT/dist/linux/release/$INSTALLER"

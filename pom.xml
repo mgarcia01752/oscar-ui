@@ -32,7 +32,7 @@
     </pluginManagement>
     <resources>
       <resource><directory>src/main/resources</directory>
-        <filtering>true</filtering><includes><include>build-info.properties</include></includes>
+        <filtering>true</filtering><includes><include>build-info.properties</include><include>release.properties</include></includes>
       </resource>
       <resource>
         <directory>docs/images</directory><targetPath>icons</targetPath>

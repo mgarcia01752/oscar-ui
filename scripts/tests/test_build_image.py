@@ -38,6 +38,21 @@ class BuildImageTest(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'Cannot build'):
                     BUILD._plan('linux')
 
+    def test_exact_release_names_follow_pom_version(self):
+        """All native targets use lowercase versioned OS/architecture names."""
+        for version in ('1.2.3', '2.10.7'):
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                (root / 'pom.xml').write_text(
+                    f'<project xmlns="http://maven.apache.org/POM/4.0.0"><version>{version}</version></project>',
+                    encoding='utf-8')
+                for host, machine, suffix in [('linux', 'x86_64', 'ubuntu-x64.deb'),
+                                              ('win32', 'AMD64', 'windows-x64.msi'),
+                                              ('darwin', 'arm64', 'macos-arm64.dmg'),
+                                              ('darwin', 'x86_64', 'macos-x64.dmg')]:
+                    with self.subTest(version=version, host=host, machine=machine), patch.object(BUILD, 'ROOT', root), patch.object(BUILD, 'sys', SimpleNamespace(platform=host, executable='python3')), patch.object(BUILD.platform, 'machine', return_value=machine):
+                        self.assertEqual(f'oscar-ui-{version}-{suffix}', BUILD._plan('all')[2].name)
+
     def test_preview_and_existing_output_do_not_start_build(self):
         """Preview without mutations and preserve previous installer output.
 

@@ -24,8 +24,10 @@ $FixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('oscar-update-test-' + [gui
 $OriginalProgramFiles = $env:ProgramFiles
 $env:ProgramFiles = Join-Path $FixtureRoot 'Program Files'
 $InstallRoot = Join-Path $env:ProgramFiles 'OSCAR-UI'
-$Project = 'https://github.com/mgarcia01752/oscar-ui'
-$Api = 'https://api.github.com/repos/mgarcia01752/oscar-ui'
+$Root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$ReleaseConfig = Get-Content "$Root/src/main/resources/release.properties" -Raw | ConvertFrom-StringData
+$Project = $ReleaseConfig['github.web'] + '/' + $ReleaseConfig['ui.repository']
+$Api = $ReleaseConfig['github.api'] + '/' + $ReleaseConfig['ui.repository']
 $Version = '1.0.1'
 $Prompt = $Ast.Find({ param($Node)
     $Node -is [Management.Automation.Language.ExpandableStringExpressionAst] -and

@@ -34,7 +34,7 @@ public final class UbuntuUpdateService {
         public Installer {
             if (version == null || !version.matches("[0-9]+\\.[0-9]+\\.[0-9]+") || url == null
                     || !url.toString().startsWith(ReleaseUpdateService.UI_PROJECT + "/releases/download/v" + version + "/")
-                    || !url.getPath().endsWith("_amd64.deb") || url.getQuery() != null || url.getFragment() != null
+                    || !isInstallerName(version, url.getPath().substring(url.getPath().lastIndexOf('/') + 1)) || url.getQuery() != null || url.getFragment() != null
                     || size <= 0 || size > MAX_PACKAGE_BYTES || digest == null
                     || !digest.matches("sha256:[0-9a-fA-F]{64}")) {
                 throw new IllegalArgumentException("Invalid Ubuntu installer metadata.");
@@ -181,4 +181,13 @@ public final class UbuntuUpdateService {
             throw new IOException("Download size or SHA-256 verification failed.");
         }
     }
+
+    /** Matches current release filenames and the older Debian download convention. */
+    static boolean isInstallerName(String version, String name) {
+        return name.equals(ReleaseConfiguration.installer(version, "ubuntu", "x64", "deb"))
+                || name.equals("oscar-ui_amd64.deb")
+                || name.equals("oscar-ui_" + version + "_amd64.deb")
+                || name.equals("oscar-ui_" + version + "-1_amd64.deb");
+    }
+
 }

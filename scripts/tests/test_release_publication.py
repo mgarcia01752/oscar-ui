@@ -35,7 +35,15 @@ class ReleasePublicationTest(unittest.TestCase):
                 remaining = tuple(value for value in ('arm64', 'x64') if value != architecture)
                 self.run_publication('42', False, macos_images=remaining)
 
-    def run_publication(self, identity, success, macos_images=('arm64', 'x64')):
+    def test_wrong_or_duplicate_installer_names_block_publication(self):
+        """Reject mixed case, wrong version/architecture and duplicate assets."""
+        for name in ('OSCAR-UI-1.0.0-ubuntu-x64.deb', 'oscar-ui-2.0.0-ubuntu-x64.deb',
+                     'oscar-ui-1.0.0-ubuntu-arm64.deb', 'oscar-ui_amd64.deb'):
+            with self.subTest(name=name):
+                self.run_publication('42', False, wrong_name=name)
+        self.run_publication('42', False, duplicate=True)
+
+    def run_publication(self, identity, success, macos_images=('arm64', 'x64'), wrong_name=None, duplicate=False):
         """Execute the workflow using isolated assets and a non-network gh command.
 
         Decode captured output as UTF-8 independently of Python or host defaults.
@@ -45,12 +53,19 @@ class ReleasePublicationTest(unittest.TestCase):
             (root / 'bin').mkdir()
             (root / 'macos-release').mkdir()
             for architecture in macos_images:
-                (root / f'macos-release/OSCAR-UI-1.0.0-macos-{architecture}.dmg').write_bytes(b'test dmg')
+                (root / f'macos-release/oscar-ui-1.0.0-macos-{architecture}.dmg').write_bytes(b'test dmg')
             (root / 'scripts/build').mkdir(parents=True)
-            shutil.copy2(ROOT / 'scripts/build/verify-windows-release.py', root / 'scripts/build')
+            for helper in ('verify-windows-release.py', 'release_config.py'):
+                shutil.copy2(ROOT / 'scripts/build' / helper, root / 'scripts/build')
+            (root / 'src/main/resources').mkdir(parents=True)
+            shutil.copy2(ROOT / 'src/main/resources/release.properties', root / 'src/main/resources')
             assets = [{'name': name, 'size': 10, 'state': 'uploaded'} for name in
-                      ['OSCAR-UI-1.0.0-windows-x64.msi', 'oscar-ui_amd64.deb',
+                      ['oscar-ui-1.0.0-windows-x64.msi', 'oscar-ui-1.0.0-ubuntu-x64.deb',
                        'windows-patch-inputs.zip', 'windows-update.json']]
+            if wrong_name:
+                assets[1]['name'] = wrong_name
+            if duplicate:
+                assets.append(dict(assets[1]))
             (root / 'assets.json').write_text(json.dumps({'assets': assets}), encoding='utf-8')
             (root / 'identity').write_text(identity, encoding='utf-8')
             gh = root / 'bin/gh'
@@ -88,7 +103,7 @@ else:
             self.assertEqual(success, result.returncode == 0, result.stdout + result.stderr)
             self.assertEqual(success, (root / 'published').exists())
             if success:
-                self.assertEqual(['OSCAR-UI-1.0.0-macos-arm64.dmg', 'OSCAR-UI-1.0.0-macos-x64.dmg'],
+                self.assertEqual(['oscar-ui-1.0.0-macos-arm64.dmg', 'oscar-ui-1.0.0-macos-x64.dmg'],
                                  json.loads((root / 'uploaded.json').read_text(encoding='utf-8')))
             else:
                 self.assertFalse((root / 'uploaded.json').exists())

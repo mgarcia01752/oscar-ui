@@ -35,6 +35,10 @@ you do not need to download the repository.
 | Windows (x64) | `.msi` | [Windows installation](docs/install/windows.md) |
 | macOS 15 (Apple Silicon / Intel, experimental) | `.dmg` | [macOS installation](docs/install/macos.md) |
 
+Installer filenames use lowercase `oscar-ui-<version>-<os>-<arch>.<extension>`:
+`windows-x64.msi`, `ubuntu-x64.deb`, `macos-arm64.dmg` (Apple Silicon), or
+`macos-x64.dmg` (Intel). Choose the matching asset on the release page.
+
 The **MSI + DEB + DMG** badge shows the combined release workflow status;
 all three platform builds and their required checks must pass. See the
 [release runs](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)

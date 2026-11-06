@@ -14,8 +14,8 @@ Gatekeeper behavior still needs testing on a downloaded copy on a user's Mac.
 
    | Mac | Disk image |
    | --- | --- |
-   | Apple Silicon (M-series) | `OSCAR-UI-<version>-macos-arm64.dmg` |
-   | Intel | `OSCAR-UI-<version>-macos-x64.dmg` |
+   | Apple Silicon (M-series) | `oscar-ui-<version>-macos-arm64.dmg` |
+   | Intel | `oscar-ui-<version>-macos-x64.dmg` |
 
    Check **Apple menu → About This Mac** if unsure which processor you have.
 2. Open the DMG and drag **OSCAR-UI** onto **Applications**.

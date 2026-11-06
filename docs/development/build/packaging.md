@@ -1,11 +1,66 @@
 # Desktop releases
 
-Each version retains two full installation assets:
+## Required installer asset naming
 
-- `OSCAR-UI-<version>-windows-x64.msi`: run the installer and launch
+Project URLs and installer templates are owned by
+`src/main/resources/release.properties`. Java reads the packaged resource through
+`ReleaseConfiguration`; build tools and CI use `scripts/build/release_config.py`.
+PowerShell reads the same flat properties directly. Windows installer staging
+copies the canonical file beside `windows-update.ps1`; the installed updater
+needs neither Python nor a source checkout. Missing configuration fails rather
+than falling back to duplicated URLs. The root POM remains the version owner.
+
+All published full installers must use lowercase filenames with this structure:
+
+```text
+oscar-ui-<major>.<minor>.<patch>-<os>-<arch>.<extension>
+```
+
+Use `windows`, `ubuntu`, or `macos` for `<os>`, and `x64` or `arm64` for
+`<arch>`. Intel macOS uses `x64`; Apple Silicon uses `arm64`. Use the release
+version without a leading `v`. Extensions are `dmg`, `deb`, or `msi`, matched
+to the platform. For example, a synthetic version `1.2.3` produces:
+
+| Target | Required release filename |
+| --- | --- |
+| Windows x64 | `oscar-ui-1.2.3-windows-x64.msi` |
+| Ubuntu x64 | `oscar-ui-1.2.3-ubuntu-x64.deb` |
+| macOS Intel | `oscar-ui-1.2.3-macos-x64.dmg` |
+| macOS Apple Silicon | `oscar-ui-1.2.3-macos-arm64.dmg` |
+
+Apply this contract to final local installer outputs and published release
+assets. Internal package identifiers and architecture fields keep their native
+formats (for example, Debian `amd64`); display names may remain `OSCAR-UI`.
+
+Changes to this contract must update build scripts, artifact collection, release upload
+selection, checksums, updater asset discovery and metadata, download links, and
+tests together. Use release metadata to resolve the versioned DEB download URL. Preserve discovery of older published releases
+where required by supported update paths; do not rename existing release assets
+as part of the migration.
+
+Acceptance checks must verify exact lowercase names and version/OS/architecture
+for every supported target, including both macOS architectures, and prove that
+updaters and release publishing consume the renamed files. Reject missing,
+ambiguous, or incorrectly named installer assets before publication.
+
+The build wrappers and release publisher enforce these names. Updater discovery
+also accepts older Debian filenames; Windows baseline lookup remains
+case-insensitive so previously published MSI assets remain usable. MSP patch
+filenames and internal package names retain their existing contracts.
+
+Older installed Ubuntu versions that only recognize `_amd64.deb` cannot discover
+the renamed asset automatically. Install the new DEB manually once using the
+[Ubuntu installation guide](../../install/ubuntu.md); subsequent updates use
+the new discovery logic. Existing published assets are not renamed.
+
+Each version publishes full installers for these targets:
+
+- `oscar-ui-<version>-windows-x64.msi`: run the installer and launch
   OSCAR-UI from the Start menu.
-- `oscar-ui_amd64.deb`: install with `sudo apt install ./<file>.deb`,
+- `oscar-ui-<version>-ubuntu-x64.deb`: install with `sudo apt install ./<file>.deb`,
   then launch OSCAR-UI from the application menu.
+- `oscar-ui-<version>-macos-arm64.dmg` and
+  `oscar-ui-<version>-macos-x64.dmg`: drag the matching application into Applications.
 
 Both include Java and Qt; the DEB also includes ICU and declares system display
 library dependencies for APT. Windows includes app-local Visual C++ runtime DLLs.
@@ -341,9 +396,9 @@ For each release, measure the final MSI asset and installed file tree separately
 Keep source archive sizes distinct from runtime and total installed sizes in
 `packaging/release-notes.md`. Do not promise a fixed Windows displayed size.
 
-The uploaded Ubuntu asset uses the stable name `oscar-ui_amd64.deb` so GitHub’s
-`releases/latest/download/oscar-ui_amd64.deb` URL works without a tag lookup.
-The DEB retains its version internally; only the release filename is stable.
+The Ubuntu release asset is `oscar-ui-<version>-ubuntu-x64.deb`. Resolve its
+download URL from the release metadata or choose it on the release page; do not
+construct a fixed `releases/latest/download/` URL for a versioned asset.
 
 ### Ubuntu updater payload
 
@@ -539,8 +594,8 @@ bash scripts/macos/setup-qt.sh
 python3 scripts/build/build-image.py --macos
 ```
 
-Output: `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg` on Apple Silicon,
-or `dist/macos/release/OSCAR-UI-<version>-macos-x64.dmg` on Intel.
+Output: `dist/macos/release/oscar-ui-<version>-macos-arm64.dmg` on Apple Silicon,
+or `dist/macos/release/oscar-ui-<version>-macos-x64.dmg` on Intel.
 `--all` selects only the current native host architecture; Linux cannot
 cross-build these packages. Intel native deployment/launch and downloaded-app
 Gatekeeper behavior require their own macOS verification; local Linux tests do

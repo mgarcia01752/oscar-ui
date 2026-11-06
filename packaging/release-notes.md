@@ -11,6 +11,15 @@ Choose the standalone package for your system. Java and Qt are included; no repo
 | Ubuntu 22.04 / 24.04 / 26.04 x64 `.deb` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, ICU, and application-menu launcher; APT installs required system display libraries |
 | macOS 15 Apple Silicon / Intel `.dmg` (experimental) | OSCAR-UI application, OSCAR engine, private Java runtime, and Qt/Qt Jambi; drag the app into Applications |
 
+All full installer filenames are lowercase:
+`oscar-ui-<version>-windows-x64.msi`,
+`oscar-ui-<version>-ubuntu-x64.deb`,
+`oscar-ui-<version>-macos-arm64.dmg`, and
+`oscar-ui-<version>-macos-x64.dmg` (Intel).
+
+Ubuntu users on older versions that only recognize `_amd64.deb` must install
+this release manually once. Future in-app updates recognize the new names.
+
 ## Included OSCAR engine
 
 | Component | Bundled JAR size (approx.) | Included in |
@@ -54,10 +63,11 @@ If Windows displays **Windows protected your PC**, confirm the MSI came from thi
 ### Ubuntu
 
 1. Download the **Ubuntu x64 DEB** from this release.
-2. Open a terminal in the download folder and install it using its actual filename:
+2. Open a terminal in the download folder and install it using its actual filename
+   (replace `<version>` below with this release’s version):
 
    ```bash
-   sudo apt install ./oscar-ui_amd64.deb
+   sudo apt install "./oscar-ui-<version>-ubuntu-x64.deb"
    ```
 
 3. Launch **OSCAR-UI** from the application menu.
@@ -73,8 +83,8 @@ sudo apt remove oscar-ui
 ### macOS (Apple Silicon and Intel, experimental)
 
 1. Under **Assets**, download the matching disk image:
-   - Apple Silicon (M-series): `OSCAR-UI-<version>-macos-arm64.dmg`
-   - Intel: `OSCAR-UI-<version>-macos-x64.dmg`
+   - Apple Silicon (M-series): `oscar-ui-<version>-macos-arm64.dmg`
+   - Intel: `oscar-ui-<version>-macos-x64.dmg`
 2. Open the DMG and drag **OSCAR-UI** onto **Applications**.
 3. Eject the disk image and launch OSCAR-UI from Applications.
 

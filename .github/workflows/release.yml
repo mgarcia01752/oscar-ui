@@ -365,17 +365,22 @@ jobs:
             --jq ".[] | select(.tag_name == \"$RELEASE_TAG\") | .id")
           [[ "$release_id" =~ ^[0-9]+$ ]] || { echo "Expected one release for $RELEASE_TAG" >&2; exit 1; }
           gh api "repos/$GH_REPO/releases/$release_id" > release-assets.json
-          jq -e --arg msi "OSCAR-UI-${version}-windows-x64.msi" \
-            --arg deb "oscar-ui_amd64.deb" '
+          # Count installer suffixes case-insensitively (e.g. old.MSI), then require exact names.
+          jq -e --arg msi "$(python3 scripts/build/release_config.py installer "$version" windows x64 msi)" \
+            --arg deb "$(python3 scripts/build/release_config.py installer "$version" ubuntu x64 deb)" '
             .assets as $assets |
+            ([$assets[] | select(.name | test("\\.(msi|deb)$"; "i"))] | length) == 2 and
             all([$msi, $deb][]; . as $name |
-              any($assets[]; .name == $name and .state == "uploaded" and .size > 0))
+              ([$assets[] | select(.name == $name and .state == "uploaded" and .size > 0)] | length) == 1)
           ' release-assets.json
           gh release download "$RELEASE_TAG" --pattern windows-update.json --dir windows-metadata
           python3 scripts/build/verify-windows-release.py --version "$version" \
             --assets release-assets.json --manifest windows-metadata/windows-update.json
-          dmgs=("macos-release/OSCAR-UI-${version}-macos-arm64.dmg"
-                "macos-release/OSCAR-UI-${version}-macos-x64.dmg")
+          dmgs=("macos-release/$(python3 scripts/build/release_config.py installer "$version" macos arm64 dmg)"
+                "macos-release/$(python3 scripts/build/release_config.py installer "$version" macos x64 dmg)")
+          shopt -s nullglob
+          found_dmgs=(macos-release/*.[dD][mM][gG])
+          [[ "${#found_dmgs[@]}" -eq 2 ]] || { echo "Expected exactly two macOS installers" >&2; exit 1; }
           for dmg in "${dmgs[@]}"; do
             test -s "$dmg"
           done

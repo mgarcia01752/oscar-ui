@@ -1,5 +1,16 @@
 # Development TODO
 
+## Consistent installer release filenames
+
+- [x] Implement the [installer naming contract](../build/packaging.md#required-installer-asset-naming):
+  lowercase `oscar-ui-<major>.<minor>.<patch>-<os>-<arch>.<extension>` for
+  Windows MSI, Ubuntu DEB, and macOS Intel/Apple Silicon DMG installers.
+- [x] Update producers, publisher, updater discovery, checksum/metadata references,
+  and download documentation together; replace the stable unversioned DEB link.
+- [x] Test every supported platform name and architecture, version propagation,
+  release asset selection, and supported update compatibility with older releases.
+  Require the naming checks to pass before publishing.
+
 ## Digit-map editor and separate source file
 
 - [ ] Add a simple notepad-style Digit Map editor for PacketCable configurations,

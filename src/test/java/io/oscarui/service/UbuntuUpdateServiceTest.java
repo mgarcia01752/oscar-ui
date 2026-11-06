@@ -35,6 +35,25 @@ class UbuntuUpdateServiceTest {
                 output, release, ignored -> {}, () -> true));
     }
 
+    @Test void discoversVersionedNamesAndRejectsWrongPlatformVersionOrCase() throws Exception {
+        var service = new ReleaseUpdateService();
+        for (String version : new String[]{"1.2.3", "2.10.7"}) {
+            String name = "oscar-ui-" + version + "-ubuntu-x64.deb";
+            String url = ReleaseUpdateService.UI_PROJECT + "/releases/download/v" + version + "/" + name;
+            String json = "{\"tag_name\":\"v" + version + "\",\"draft\":false,\"prerelease\":false,\"assets\":[{"
+                    + "\"name\":\"" + name + "\",\"browser_download_url\":\"" + url
+                    + "\",\"size\":1,\"digest\":\"sha256:" + "0".repeat(64) + "\"}]}";
+            assertEquals(URI.create(url), service.parseRelease("0.1.0", json).installer().url());
+            for (String wrong : new String[]{name.replace("oscar-ui", "OSCAR-UI"),
+                    name.replace(version, "9.9.9"), name.replace("x64", "arm64"),
+                    name.replace("ubuntu", "macos")}) {
+                assertNull(service.parseRelease("0.1.0", json.replace(name, wrong)).installer());
+                assertThrows(IllegalArgumentException.class, () -> new UbuntuUpdateService.Installer(
+                        version, URI.create(url.replace(name, wrong)), 1, "sha256:" + "0".repeat(64)));
+            }
+        }
+    }
+
     @Test void refusesMissingHashesForeignUrlsAndWrongReleasePaths() throws Exception {
         var valid = installer(new byte[]{1});
         for (String url : new String[]{"http://github.com/package.deb", "https://evil.example/oscar-ui_amd64.deb",

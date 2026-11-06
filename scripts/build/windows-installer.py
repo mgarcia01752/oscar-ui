@@ -51,6 +51,7 @@ def prepare(image, version, output, previous=None):
     # jpackage build metadata is not an installed runtime dependency.
     for metadata in image.rglob('.jpackage.xml'):
         metadata.unlink()
+    shutil.copy2(ROOT / 'src/main/resources/release.properties', image / 'app/release.properties')
     shutil.copy2(ROOT / 'scripts/windows/windows-update.ps1', image / 'app/windows-update.ps1')
     hashes = WIX._hashes(image)
     dependencies = {name: digest for name, digest in hashes.items() if name not in MUTABLE}

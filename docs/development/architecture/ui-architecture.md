@@ -1074,3 +1074,24 @@ About's **Diagnostics** menu offers View, Copy, Save, and Clear. The separate
 read-only viewer supports Find, Refresh, Copy, Save, and Clear. Logs are session
 only; Clear does not disable future capture. Export requires an explicit file
 selection and never uploads data. The source configuration is never attached.
+
+## Shared project endpoints and release naming
+
+`src/main/resources/release.properties` owns GitHub endpoint bases, the UI and
+OSCAR repository identities, the full-installer naming template, and the legacy
+MSP template. `ReleaseConfiguration` loads the bundled properties for Java.
+`ReleaseUpdateService.UI_PROJECT` and `OSCAR_PROJECT` remain compatibility aliases
+derived from that configuration. Release, issue, guide and license links append
+paths to those project bases; metadata lookups derive the API base from the same
+repository identity. OSCAR bootstrap and dependency-update tools use its matching
+web, API and raw-content destinations.
+
+`scripts/build/release_config.py` serves Python, shell and workflow callers.
+PowerShell uses `ConvertFrom-StringData` on the same canonical source. Production
+MSI staging copies it into `app/release.properties`, next to the installed updater;
+the file participates in dependency fingerprinting and therefore a changed
+endpoint/naming contract requires a compatible full MSI baseline. No environment
+URL override or duplicated fallback URL is introduced. Redirect-host allowlists
+remain separate security policy. Test fixtures may spell out expected URLs and
+historical asset names; human-readable Markdown hyperlinks remain explicit and
+must be maintained consistently with the central settings.

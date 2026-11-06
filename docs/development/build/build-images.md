@@ -78,10 +78,10 @@ dependency sources, so network access and disk space are required.
 
 | Target | Local installer | Packaging helper |
 | --- | --- | --- |
-| Linux | `dist/linux/release/oscar-ui_amd64.deb` | `scripts/unix/linux-release.sh` |
-| Windows | `dist/windows/release/OSCAR-UI-<version>-windows-x64.msi` | `scripts/windows/windows-release.ps1` |
-| macOS ARM64 | `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg` | `scripts/build/macos-release.py` |
-| macOS Intel x64 | `dist/macos/release/OSCAR-UI-<version>-macos-x64.dmg` | `scripts/build/macos-release.py` |
+| Linux | `dist/linux/release/oscar-ui-<version>-ubuntu-x64.deb` | `scripts/unix/linux-release.sh` |
+| Windows | `dist/windows/release/oscar-ui-<version>-windows-x64.msi` | `scripts/windows/windows-release.ps1` |
+| macOS ARM64 | `dist/macos/release/oscar-ui-<version>-macos-arm64.dmg` | `scripts/build/macos-release.py` |
+| macOS Intel x64 | `dist/macos/release/oscar-ui-<version>-macos-x64.dmg` | `scripts/build/macos-release.py` |
 
 The version comes from `pom.xml`. The wrapper refuses an existing destination
 installer or intermediate build directory. Move previous output aside before

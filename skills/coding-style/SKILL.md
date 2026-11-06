@@ -83,6 +83,24 @@ must not be described as complete OID or datatype validation. Keep comments in
 sync when the regex or its callers change. Comment-only changes do not require
 new tests; behavior changes need relevant positive and negative cases.
 
+## Shared project URLs and release names
+
+Project repository URLs, API/raw-content endpoints, and installer filename
+patterns must have one canonical owner: `src/main/resources/release.properties`.
+Use `ReleaseConfiguration` in Java, `scripts/build/release_config.py` in Python,
+shell and CI, and read the same properties in PowerShell. Derive release,
+download, issue and documentation links from the configured project base.
+Do not introduce a second hardcoded `$Project`, API URL, or installer pattern,
+or a fallback literal that can drift. Keep the release version in `pom.xml`.
+
+Package the configuration with every installed helper that reads it; never
+require a source checkout or Python for the Windows updater. Tests may use
+explicit synthetic expectations and historical compatibility names. Keep those
+separate from production naming and preserve update trust checks. Static
+Markdown links must stay consistent with the configured project destinations.
+Add regression checks for configuration propagation and duplicated production
+URLs/naming templates whenever changing this contract.
+
 ## Conditional statements
 
 Java `if`, `else if`, and `else` branches always use braces, with the body on

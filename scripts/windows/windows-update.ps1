@@ -18,8 +18,9 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $InstallRoot = Split-Path -Parent $PSScriptRoot
-$Project = 'https://github.com/mgarcia01752/oscar-ui'
-$Api = 'https://api.github.com/repos/mgarcia01752/oscar-ui'
+$ReleaseConfig = Get-Content "$PSScriptRoot/release.properties" -Raw | ConvertFrom-StringData
+$Project = $ReleaseConfig['github.web'] + '/' + $ReleaseConfig['ui.repository']
+$Api = $ReleaseConfig['github.api'] + '/' + $ReleaseConfig['ui.repository']
 $DownloadDirectory = $null
 $Staging = $null
 Add-Type -AssemblyName System.Windows.Forms

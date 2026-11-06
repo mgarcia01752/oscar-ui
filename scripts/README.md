@@ -116,6 +116,9 @@ Tests mock all removal processes; no real package removal is performed locally.
   helper with integrity and installed-baseline checks.
 - `windows/test-windows-update-helper.ps1`: mocked compatibility/hash checks.
 - `windows/test-production-patch.ps1`: hosted-only install/patch/repair/uninstall.
+- `build/release_config.py`: shared project URL and installer-name reader/CLI;
+  reads `src/main/resources/release.properties` independently of the caller's directory.
+  Example: `python3 scripts/build/release_config.py installer 1.2.3 macos x64 dmg`.
 - `build/verify-windows-release.py`: publication gate for manifest/asset consistency.
 
 See [Windows update architecture](../docs/development/architecture/windows-updates.md).

@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 
 /** Read-only lookup of the latest published stable OSCAR-UI release. */
 public final class ReleaseUpdateService {
-    public static final String UI_PROJECT = "https://github.com/mgarcia01752/oscar-ui";
-    public static final String OSCAR_PROJECT = "https://github.com/Comcast/Oscar";
+    public static final String UI_PROJECT = ReleaseConfiguration.project("ui", "web");
+    public static final String OSCAR_PROJECT = ReleaseConfiguration.project("oscar", "web");
     private static final Pattern VERSION = Pattern.compile("v?(\\d+)\\.(\\d+)\\.(\\d+)(-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?");
     private static final int TIMEOUT_MILLIS = 10_000;
     private static final int MAX_RESPONSE_BYTES = 1_048_576;
@@ -39,7 +39,7 @@ public final class ReleaseUpdateService {
      */
     public ReleaseCheck checkRelease(String installedVersion) throws IOException {
         var connection = (HttpURLConnection) URI.create(
-                "https://api.github.com/repos/mgarcia01752/oscar-ui/releases/latest").toURL().openConnection();
+                ReleaseConfiguration.project("ui", "api") + "/releases/latest").toURL().openConnection();
         connection.setConnectTimeout(TIMEOUT_MILLIS);
         connection.setReadTimeout(TIMEOUT_MILLIS);
         connection.setRequestProperty("Accept", "application/vnd.github+json");
@@ -102,9 +102,12 @@ public final class ReleaseUpdateService {
         if (compareVersions(release.path("tag_name").asText(), installedVersion) <= 0) {
             return new ReleaseCheck(status, null, false);
         }
+        String tag = release.path("tag_name").asText();
+        String version = tag.startsWith("v") ? tag.substring(1) : tag;
         UbuntuUpdateService.Installer installer = null;
         for (var asset : release.path("assets")) {
-            if (asset.path("name").asText().endsWith("_amd64.deb")) {
+            if (UbuntuUpdateService.isInstallerName(
+                    version, asset.path("name").asText())) {
                 if (installer != null) {
                     return new ReleaseCheck(status + " Use the downloads link to select a package.", null, true);
                 }
