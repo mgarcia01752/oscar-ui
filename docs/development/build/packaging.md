@@ -500,11 +500,13 @@ The macOS Maven profile supplies Qt Jambi's universal native framework JAR. The 
 JNI frameworks, invokes Qt's `macdeployqt` for Qt frameworks and Cocoa plugins,
 and bundles a private Java runtime with `jpackage`. `sips`/`iconutil` produce the
 native icon from the existing PNG. Dependency sources and notices are retained.
-Before signing, `lipo -verify_arch` requires the selected CPU slice in the
+Before signing, `lipo <binary> -verify_arch <cpu>` requires the selected CPU slice in the
 launcher, bundled Java executable/JVM, Qt/JNI frameworks and Cocoa plugin.
 Universal libraries are accepted when they contain the required slice.
 
-The bundle is ad-hoc signed after deployment, verified with `codesign`, and
+Qt deployment uses `-no-codesign` to defer signing until JNI framework rpaths
+and bundle metadata are finalized. See [Qt deployment options](https://doc.qt.io/qt-6/macos-deployment.html).
+The bundle is then ad-hoc signed, verified with `codesign`, and
 packed into a DMG with an Applications shortcut. No Apple credentials, Developer
 ID signature, notarization, or automatic macOS updates are configured.
 

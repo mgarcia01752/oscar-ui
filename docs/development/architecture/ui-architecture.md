@@ -788,7 +788,9 @@ platform behavior. Java build staging and dependency-source collection are share
 The POM owns application and Qt Jambi versions. Qt's deployment tool resolves the
 native framework closure; the DMG must pass an isolated packaged-app smoke test
 before release publication. Native jobs use matching ARM64/x64 JDKs and verify
-bundled CPU slices. Both architecture-specific DMGs are required by publication.
+bundled CPU slices. Deployment defers signing until rpath and metadata changes
+finish; final signing and strict verification precede DMG creation. Both
+architecture-specific DMGs are required by publication.
 About links to the macOS installation guide. Intel native validation remains
 pending its first workflow run.
 Ad-hoc signing is not Developer ID signing or notarization. First native CI and

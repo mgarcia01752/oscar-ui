@@ -128,7 +128,8 @@ def verify_architecture(application, architecture):
                    application / 'Contents/PlugIns/platforms/libqcocoa.dylib',
                    *[framework / framework.stem for framework in libraries]]
     for executable in executables:
-        run(['lipo', '-verify_arch', mach_o_architecture, executable])
+        # -verify_arch consumes all following arguments as architecture names.
+        run(['lipo', executable, '-verify_arch', mach_o_architecture])
 
 
 def build():
@@ -180,7 +181,8 @@ def build():
     native = application / f'Contents/app/lib/qtjambi-native-macos-{qt_version}.jar'
     executables = extract_frameworks(native, frameworks)
     # Explicit JNI executables are required: the Java launcher does not link Qt.
-    run([qt / 'bin/macdeployqt', application, '-always-overwrite',
+    # Sign once after deployment, rpath edits and metadata changes are complete.
+    run([qt / 'bin/macdeployqt', application, '-always-overwrite', '-no-codesign',
          *[f'-executable={executable}' for executable in executables]])
     for executable in executables:
         # The JNI libraries must resolve sibling frameworks from the launcher.

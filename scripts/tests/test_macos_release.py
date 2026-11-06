@@ -35,9 +35,10 @@ class MacosReleaseTest(unittest.TestCase):
                     MAC.verify_architecture(application, suffix)
                     commands = [call.args[0] for call in run.call_args_list]
                     self.assertEqual(5, len(commands))
-                    self.assertTrue(all(command[:3] == ['lipo', '-verify_arch', cpu] for command in commands))
-                    self.assertEqual(application / 'Contents/Frameworks/QtCore.framework/QtCore', commands[-1][-1])
-                    self.assertTrue(any(command[-1].name == 'libjvm.dylib' for command in commands))
+                    self.assertTrue(all(command[0] == 'lipo' and command[2:] == ['-verify_arch', cpu]
+                                        for command in commands))
+                    self.assertEqual(application / 'Contents/Frameworks/QtCore.framework/QtCore', commands[-1][1])
+                    self.assertTrue(any(command[1].name == 'libjvm.dylib' for command in commands))
             with patch.object(MAC, 'run', side_effect=RuntimeError('missing x86_64 slice')):
                 with self.assertRaisesRegex(RuntimeError, 'missing x86_64'):
                     MAC.verify_architecture(application, 'x64')
