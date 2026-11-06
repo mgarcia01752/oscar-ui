@@ -12,7 +12,8 @@ do not duplicate source collection, runtime assembly, or release verification.
 - Accept `--linux`, `--windows`, `--macos`, or `--all` as mutually exclusive targets.
   `--all` means all supported installers on the current host: one Ubuntu DEB
   on Linux x64, one Windows MSI on Windows x64, or an experimental DMG on
-  macOS arm64. Reject foreign targets and other architectures before building. Do not dispatch GitHub Actions.
+  macOS arm64 or Intel x86_64. `--all` creates only the native architecture's
+  DMG, never both. Reject foreign targets and other architectures before building. Do not dispatch GitHub Actions.
 - Use `--dry-run` to inspect commands and paths without building. Resolve the
   checkout from the script location, not the caller's working directory.
 - Check the pinned release JDK and platform prerequisites in the linked guide.

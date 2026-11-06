@@ -148,10 +148,10 @@ def _checks():
         _run('Native Qt dialog tests', [*maven, '-Doscar.ui.tests=true', 'test'], environment)
     elif sys.platform == 'darwin':
         _run('Java build and service tests', [*maven, 'clean', 'verify'])
-        print('[pre-push] macOS native Qt packaging is unsupported; Java/tool checks only.', flush=True)
+        print('[pre-push] macOS native DMG lifecycle checks run in release CI; Java/tool checks only.', flush=True)
     else:
         raise RuntimeError(f'Unsupported host: {sys.platform}')
-    print('[pre-push] Windows/Ubuntu installer install/uninstall and other OS matrix checks remain CI-only.', flush=True)
+    print('[pre-push] Windows/Ubuntu/macOS installer lifecycle and other OS matrix checks remain CI-only.', flush=True)
 
 
 if __name__ == '__main__':

@@ -2,16 +2,22 @@
 
 [README](../../README.md) · [User guide](../ui/README.md)
 
-The experimental DMG targets **Apple Silicon (M-series), macOS 15**. Intel
-Macs are not supported by this package. Java and Qt are included.
+Experimental DMGs target **macOS 15 on Apple Silicon (M-series) and Intel**.
+Download the image matching your Mac; each includes its own Java and Qt runtime.
 Native packaging and launch must pass macOS CI before publication; interactive
 Gatekeeper behavior still needs testing on a downloaded copy on a user's Mac.
 
 ## Install and launch
 
 1. Open the [latest release](https://github.com/mgarcia01752/oscar-ui/releases/latest).
-   Under **Assets**, download `OSCAR-UI-<version>-macos-arm64.dmg`.
-   Choose the DMG disk image, not the **Source code** archives.
+   Under **Assets**, choose the DMG matching your Mac, not the **Source code** archives:
+
+   | Mac | Disk image |
+   | --- | --- |
+   | Apple Silicon (M-series) | `OSCAR-UI-<version>-macos-arm64.dmg` |
+   | Intel | `OSCAR-UI-<version>-macos-x64.dmg` |
+
+   Check **Apple menu → About This Mac** if unsure which processor you have.
 2. Open the DMG and drag **OSCAR-UI** onto **Applications**.
 3. Eject the disk image and open OSCAR-UI from Applications.
 
@@ -27,7 +33,7 @@ Managed Macs may prevent this exception. Do not disable Gatekeeper globally.
 The Update chip links to About and downloads; there is no automatic macOS
 installer. To update manually:
 
-1. Download the new DMG from the
+1. Download the new DMG matching your Mac's architecture from the
    [latest release](https://github.com/mgarcia01752/oscar-ui/releases/latest).
 2. Quit OSCAR-UI, open the DMG, and drag **OSCAR-UI** into **Applications**.
 3. Choose **Replace** when prompted, eject the disk image, and launch OSCAR-UI.

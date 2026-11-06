@@ -333,10 +333,11 @@ See [Windows update architecture](../architecture/windows-updates.md).
 
 - [x] Test positive derived bundle versions across pre-1.0 and 1.0 releases,
   preserving the displayed POM version and existing launcher metadata.
-- [ ] Pass Apple Silicon macOS 15 build, framework deployment, and signature verification.
+- [ ] Pass Apple Silicon and Intel macOS 15 builds, framework deployment, CPU-slice checks and signature verification.
 - [ ] Mount the generated DMG, copy and launch with build Qt hidden and environment cleared.
 - [ ] Remove the test copy and preserve the external synthetic configuration.
-- [ ] Confirm missing/failed macOS artifacts prevent public release publication.
+- [x] Locally test that either missing architecture DMG prevents publication.
+- [ ] Confirm both native macOS jobs and DMG artifacts pass hosted release gates.
 - [ ] Test downloaded-app Gatekeeper approval on a user's Mac; do not equate CI with this check.
 ## Workspace layout controls
 

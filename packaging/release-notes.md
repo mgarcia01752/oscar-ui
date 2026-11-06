@@ -9,7 +9,7 @@ Choose the standalone package for your system. Java and Qt are included; no repo
 | --- | --- |
 | Windows x64 `.msi` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, app-local Visual C++ runtime DLLs, Start menu entry, and optional desktop shortcut |
 | Ubuntu 22.04 / 24.04 / 26.04 x64 `.deb` | OSCAR-UI, OSCAR engine, private Java runtime, Qt/Qt Jambi, ICU, and application-menu launcher; APT installs required system display libraries |
-| macOS 15 Apple Silicon `.dmg` (experimental) | OSCAR-UI application, OSCAR engine, private Java runtime, and Qt/Qt Jambi; drag the app into Applications |
+| macOS 15 Apple Silicon / Intel `.dmg` (experimental) | OSCAR-UI application, OSCAR engine, private Java runtime, and Qt/Qt Jambi; drag the app into Applications |
 
 ## Included OSCAR engine
 
@@ -70,13 +70,15 @@ sudo apt remove oscar-ui
 
 [Ubuntu installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/ubuntu.md)
 
-### macOS (Apple Silicon, experimental)
+### macOS (Apple Silicon and Intel, experimental)
 
-1. Under **Assets**, download `OSCAR-UI-<version>-macos-arm64.dmg`.
+1. Under **Assets**, download the matching disk image:
+   - Apple Silicon (M-series): `OSCAR-UI-<version>-macos-arm64.dmg`
+   - Intel: `OSCAR-UI-<version>-macos-x64.dmg`
 2. Open the DMG and drag **OSCAR-UI** onto **Applications**.
 3. Eject the disk image and launch OSCAR-UI from Applications.
 
-The package targets macOS 15 on M-series Macs; Intel Macs are not supported. Java and Qt are included. It is ad-hoc signed, not Developer ID signed or notarized. If macOS blocks launch because the developer cannot be verified, confirm the download source and follow the [Gatekeeper steps in the macOS installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/macos.md#install-and-launch). Interactive downloaded-app testing remains pending.
+The packages target macOS 15 on M-series and Intel Macs. Java and Qt are included. It is ad-hoc signed, not Developer ID signed or notarized. If macOS blocks launch because the developer cannot be verified, confirm the download source and follow the [Gatekeeper steps in the macOS installation guide](https://github.com/mgarcia01752/oscar-ui/blob/main/docs/install/macos.md#install-and-launch). Interactive downloaded-app testing remains pending.
 
 **Update:** Quit OSCAR-UI and replace the app in Applications using the new DMG. macOS updates are manual.
 

@@ -30,9 +30,12 @@ class ReleasePublicationTest(unittest.TestCase):
 
     def test_missing_macos_image_blocks_publication(self):
         """A successful Windows metadata check cannot publish without the DMG."""
-        self.run_publication('42', False, macos_image=False)
+        for architecture in ('arm64', 'x64'):
+            with self.subTest(missing_architecture=architecture):
+                remaining = tuple(value for value in ('arm64', 'x64') if value != architecture)
+                self.run_publication('42', False, macos_images=remaining)
 
-    def run_publication(self, identity, success, macos_image=True):
+    def run_publication(self, identity, success, macos_images=('arm64', 'x64')):
         """Execute the workflow using isolated assets and a non-network gh command.
 
         Decode captured output as UTF-8 independently of Python or host defaults.
@@ -41,8 +44,8 @@ class ReleasePublicationTest(unittest.TestCase):
             root = Path(temporary)
             (root / 'bin').mkdir()
             (root / 'macos-release').mkdir()
-            if macos_image:
-                (root / 'macos-release/OSCAR-UI-1.0.0-macos-arm64.dmg').write_bytes(b'test dmg')
+            for architecture in macos_images:
+                (root / f'macos-release/OSCAR-UI-1.0.0-macos-{architecture}.dmg').write_bytes(b'test dmg')
             (root / 'scripts/build').mkdir(parents=True)
             shutil.copy2(ROOT / 'scripts/build/verify-windows-release.py', root / 'scripts/build')
             assets = [{'name': name, 'size': 10, 'state': 'uploaded'} for name in
@@ -65,7 +68,10 @@ elif args[:2] == ['release', 'download']:
     Path('windows-metadata/windows-update.json').write_text(json.dumps(
         {'layout': 1, 'version': '1.0.0', 'fromVersion': None, 'patch': None}), encoding='utf-8')
 elif args[:2] == ['release', 'upload']:
-    pass
+    assets = [Path(value) for value in args[3:] if not value.startswith('--')]
+    if len(assets) != 2 or not all(asset.is_file() for asset in assets):
+        sys.exit('Expected both macOS DMGs before uploading')
+    Path('uploaded.json').write_text(json.dumps([asset.name for asset in assets]), encoding='utf-8')
 elif args == ['release', 'edit', 'v1.0.0', '--draft=false']:
     Path('published').touch()
 else:
@@ -81,3 +87,8 @@ else:
                                     capture_output=True, text=True, encoding='utf-8')
             self.assertEqual(success, result.returncode == 0, result.stdout + result.stderr)
             self.assertEqual(success, (root / 'published').exists())
+            if success:
+                self.assertEqual(['OSCAR-UI-1.0.0-macos-arm64.dmg', 'OSCAR-UI-1.0.0-macos-x64.dmg'],
+                                 json.loads((root / 'uploaded.json').read_text(encoding='utf-8')))
+            else:
+                self.assertFalse((root / 'uploaded.json').exists())

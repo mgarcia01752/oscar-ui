@@ -15,6 +15,33 @@ SPEC.loader.exec_module(MAC)
 
 
 class MacosReleaseTest(unittest.TestCase):
+    def test_native_architecture_selects_intel_and_apple_silicon(self):
+        """Choose accurate asset names and reject foreign hosts before building."""
+        for machine, expected in [('x86_64', 'x64'), ('arm64', 'arm64')]:
+            with self.subTest(machine=machine), patch.object(MAC.sys, 'platform', 'darwin'), patch.object(MAC.platform, 'machine', return_value=machine):
+                self.assertEqual(expected, MAC.native_architecture())
+        for host, machine in [('linux', 'x86_64'), ('darwin', 'ppc64')]:
+            with self.subTest(host=host, machine=machine), patch.object(MAC.sys, 'platform', host), patch.object(MAC.platform, 'machine', return_value=machine):
+                with self.assertRaisesRegex(RuntimeError, 'cross-compilation'):
+                    MAC.native_architecture()
+
+    def test_bundle_architecture_checks_runtime_plugins_and_frameworks(self):
+        """Verify required CPU slices and propagate lipo failures before shipping."""
+        with tempfile.TemporaryDirectory() as directory:
+            application = Path(directory) / 'OSCAR-UI.app'
+            (application / 'Contents/Frameworks/QtCore.framework').mkdir(parents=True)
+            for suffix, cpu in [('x64', 'x86_64'), ('arm64', 'arm64')]:
+                with self.subTest(cpu=cpu), patch.object(MAC, 'run') as run:
+                    MAC.verify_architecture(application, suffix)
+                    commands = [call.args[0] for call in run.call_args_list]
+                    self.assertEqual(5, len(commands))
+                    self.assertTrue(all(command[:3] == ['lipo', '-verify_arch', cpu] for command in commands))
+                    self.assertEqual(application / 'Contents/Frameworks/QtCore.framework/QtCore', commands[-1][-1])
+                    self.assertTrue(any(command[-1].name == 'libjvm.dylib' for command in commands))
+            with patch.object(MAC, 'run', side_effect=RuntimeError('missing x86_64 slice')):
+                with self.assertRaisesRegex(RuntimeError, 'missing x86_64'):
+                    MAC.verify_architecture(application, 'x64')
+
     def test_bundle_metadata_preserves_display_version_and_other_fields(self):
         """Retain the release version and existing launcher metadata on disk."""
         with tempfile.TemporaryDirectory() as directory:

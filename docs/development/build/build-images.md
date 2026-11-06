@@ -19,7 +19,7 @@ On Windows, from PowerShell:
 python scripts/build/build-image.py --windows
 ```
 
-On Apple Silicon macOS, after the prerequisites below:
+On Intel or Apple Silicon macOS, after the prerequisites below:
 
 ```bash
 python3 scripts/build/build-image.py --macos
@@ -33,9 +33,9 @@ python3 scripts/build/build-image.py --all
 
 Use `python` instead of `python3` on Windows. **`--all` builds only the current
 OS installer**, not all three operating systems. Linux produces a DEB; Windows
-produces an MSI; Apple Silicon macOS produces an experimental DMG.
-Explicitly selecting another OS fails before building. Other ARM targets and
-Intel macOS packaging are unsupported.
+produces an MSI; Intel or Apple Silicon macOS produces its native experimental
+DMG. Explicitly selecting another OS fails before building. Other CPU targets
+and cross-compilation are unsupported.
 
 Preview the command and output path without starting a build:
 
@@ -57,8 +57,9 @@ Prepare OSCAR and Qt using the [platform setup instructions](packaging.md#build-
   and `dpkg-dev`. Run `./install.sh --development --check` to inspect prerequisites.
 - Windows x64: PowerShell 7 (`pwsh`), Visual Studio 2022 C++ build tools and
   x64 redistributable files, and WiX 3.14.1 on `PATH`.
-- macOS ARM64: Apple Silicon (macOS 15 is the CI build platform), Xcode
-  Command Line Tools, and the pinned Temurin Java 21 ARM64 JDK. Prepare the
+- macOS ARM64 / Intel x64: macOS 15 is the CI build platform. Use Xcode
+  Command Line Tools and the pinned Temurin Java 21 JDK matching the host
+  architecture (ARM64 for Apple Silicon, x64 for Intel). Prepare the
   project-local OSCAR and Qt dependencies from the repository root:
 
   ```bash
@@ -67,7 +68,8 @@ Prepare OSCAR and Qt using the [platform setup instructions](packaging.md#build-
   ```
 
   Packaging uses `macdeployqt`, `jpackage`, `codesign`, and `hdiutil`.
-  Intel macOS and cross-building the DMG from Linux or Windows are unsupported.
+  The output matches the native host architecture; cross-building the DMG from
+  another architecture, Linux or Windows is unsupported.
 
 The wrapper does not install prerequisites. Packaging downloads corresponding
 dependency sources, so network access and disk space are required.
@@ -79,6 +81,7 @@ dependency sources, so network access and disk space are required.
 | Linux | `dist/linux/release/oscar-ui_amd64.deb` | `scripts/unix/linux-release.sh` |
 | Windows | `dist/windows/release/OSCAR-UI-<version>-windows-x64.msi` | `scripts/windows/windows-release.ps1` |
 | macOS ARM64 | `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg` | `scripts/build/macos-release.py` |
+| macOS Intel x64 | `dist/macos/release/OSCAR-UI-<version>-macos-x64.dmg` | `scripts/build/macos-release.py` |
 
 The version comes from `pom.xml`. The wrapper refuses an existing destination
 installer or intermediate build directory. Move previous output aside before
@@ -95,7 +98,7 @@ packaged application smoke check before removing that temporary copy.
 MSI install/uninstall testing runs separately on disposable CI runners.
 A successful local build does not replace the release CI requirements.
 
-## Experimental Apple Silicon build
+## Experimental macOS builds
 
 The DMG is ad-hoc signed, without an Apple Developer ID or notarization.
 No Apple signing credentials are required. Gatekeeper approval on a downloaded

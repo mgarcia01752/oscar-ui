@@ -764,7 +764,7 @@ unfiltered. No document values or shared secrets are stored in the overlay.
 
 CodeQL Java analysis must complete successfully before any OS test job starts.
 Release publication requires reusable Java/tooling CI on Ubuntu 22.04/24.04/26.04,
-macOS 15, and Windows 11 ARM in parallel, followed by Windows, Ubuntu and macOS
+macOS 15 ARM64/Intel, and Windows 11 ARM in parallel, followed by Windows, Ubuntu and macOS
 image builds and installer checks. Only `oscar-ui-ci.yml` and `release.yml` remain;
 branch validation never builds images, and packaging does not repeat CodeQL.
 Build the x64 MSI on Windows Server 2022 and test that same artifact on Windows
@@ -782,12 +782,15 @@ online; no offline guide is bundled.
 
 ### Experimental macOS packaging
 
-Apple Silicon DMG packaging owns its native deployment in
+Apple Silicon and Intel DMG packaging share native deployment in
 `scripts/build/macos-release.py`; existing Windows/Ubuntu packagers retain their
 platform behavior. Java build staging and dependency-source collection are shared.
 The POM owns application and Qt Jambi versions. Qt's deployment tool resolves the
 native framework closure; the DMG must pass an isolated packaged-app smoke test
-before release publication. About links to the macOS installation guide.
+before release publication. Native jobs use matching ARM64/x64 JDKs and verify
+bundled CPU slices. Both architecture-specific DMGs are required by publication.
+About links to the macOS installation guide. Intel native validation remains
+pending its first workflow run.
 Ad-hoc signing is not Developer ID signing or notarization. First native CI and
 interactive downloaded-app testing remain pending; automatic updates are deferred.
 ## Workspace layout controls

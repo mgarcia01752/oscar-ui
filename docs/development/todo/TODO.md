@@ -376,4 +376,6 @@ use Snmp11 as the one-byte-length VarBind grammar identifier.
 
 - [ ] Run the new macOS DMG workflow and resolve any native deployment failures.
 - [ ] Verify interactive installation and Gatekeeper approval on a downloaded DMG.
-- [ ] Consider Intel packaging, Developer ID/notarization, and automatic updates after Apple Silicon validation.
+- [x] Configure native Intel and Apple Silicon workflow jobs and architecture-specific DMGs.
+- [ ] Verify the Intel DMG build, installed launch and removal in hosted CI.
+- [ ] Consider Developer ID/notarization and automatic updates after native validation.

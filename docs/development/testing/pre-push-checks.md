@@ -102,7 +102,8 @@ No validator downloads or elevated installations are performed automatically.
 | Java | Clean build and ordinary service tests |
 | Native Linux/Windows | Qt smoke and opt-in dialog tests |
 
-macOS runs Java and tooling checks; native macOS UI support is not implemented.
+macOS runs Java and tooling checks locally. Native ARM64 and Intel x64 DMG
+packaging and install/launch/removal checks run in release CI.
 Windows/Ubuntu MSI/DEB packaging, installation/uninstallation, the other OS matrix
 entries, and manual desktop verification remain CI/release checks. A successful
 local gate does not promise that every CI job or device configuration will pass.

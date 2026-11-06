@@ -122,8 +122,9 @@ See [Windows update architecture](../docs/development/architecture/windows-updat
 
 ## Experimental macOS
 
-`scripts/macos/setup-qt.sh` installs project-local Qt on Apple Silicon.
-`scripts/build/macos-release.py` builds, ad-hoc signs, and verifies the DMG.
+`scripts/macos/setup-qt.sh` installs project-local Qt on Intel and Apple Silicon Macs.
+`scripts/build/macos-release.py` checks native CPU slices, builds, ad-hoc signs,
+and verifies the host's `macos-x64` or `macos-arm64` DMG.
 Use `python3 scripts/build/build-image.py --macos` after bootstrap/setup.
 See [macOS packaging](../docs/development/build/packaging.md#experimental-macos-dmg).
 

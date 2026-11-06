@@ -13,7 +13,7 @@
 [![Windows MSI, Ubuntu DEB and macOS DMG release status](https://img.shields.io/github/actions/workflow/status/mgarcia01752/oscar-ui/release.yml?label=MSI%20%2B%20DEB%20%2B%20DMG)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/release.yml)
 [![OSCAR-UI CI](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml/badge.svg)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
 [![Ubuntu LTS CI targets: 22.04, 24.04, 26.04](https://img.shields.io/badge/Ubuntu_LTS-22.04%20%7C%2024.04%20%7C%2026.04-E95420?logo=ubuntu&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
-[![macOS 15 CI target](https://img.shields.io/badge/macOS-15-000000?logo=apple&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
+[![macOS 15 CI target](https://img.shields.io/badge/macOS-15%20arm64%20%7C%20x64-000000?logo=apple&logoColor=white)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
 [![Java 21](https://img.shields.io/badge/Java-21-007396)](https://github.com/mgarcia01752/oscar-ui/actions/workflows/oscar-ui-ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
@@ -33,7 +33,7 @@ you do not need to download the repository.
 | --- | --- | --- |
 | Ubuntu 22.04 / 24.04 / 26.04 (x64) | `.deb` | [Ubuntu installation](docs/install/ubuntu.md) |
 | Windows (x64) | `.msi` | [Windows installation](docs/install/windows.md) |
-| macOS 15 (Apple Silicon, experimental) | `.dmg` | [macOS installation](docs/install/macos.md) |
+| macOS 15 (Apple Silicon / Intel, experimental) | `.dmg` | [macOS installation](docs/install/macos.md) |
 
 The **MSI + DEB + DMG** badge shows the combined release workflow status;
 all three platform builds and their required checks must pass. See the

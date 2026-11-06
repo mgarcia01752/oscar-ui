@@ -122,7 +122,7 @@ Exactly two workflow files are maintained:
 
 `release.yml` handles version-tag pushes and manual runs selected on a tag.
 It first calls `oscar-ui-ci.yml` for the exact tagged commit, running the full
-Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, macOS 15, and Windows 11 ARM checks in parallel. All three image-build jobs declare
+Ubuntu 22.04, Ubuntu 24.04, Ubuntu 26.04, macOS 15 ARM64 and Intel, and Windows 11 ARM checks in parallel. All three image-build jobs declare
 `needs: ci`: failed, cancelled or skipped CI prevents packaging and uploads.
 A passing branch build or an older tag does not satisfy this gate.
 Release publishing remains gated by the coordinator. Manual runs on branches
@@ -426,7 +426,7 @@ and reject missing or ambiguous release identities without publishing.
 ## Release validation gate
 
 The reusable OSCAR-UI CI workflow tests Java on Ubuntu 22.04, 24.04,
-26.04, macOS 15, and Windows 11 ARM. Windows uses x64 Java and Python
+26.04, macOS 15 ARM64/Intel, and Windows 11 ARM. Windows uses x64 Java and Python
 under emulation to match the shipping x64 application.
 
 After that CI passes, build candidate installers. The Windows Server 2022
@@ -450,8 +450,8 @@ flowchart TD
     Platforms -->|Branch or PR| Done[Validation complete; no images or release]
     Platforms --> MSI[Build candidate x64 MSI on Windows Server 2022]
     Platforms --> DEB[Build candidate DEB on Ubuntu 22.04]
-    Platforms --> Mac[Experimental Apple Silicon DMG]
-    Mac --> MacTest[Mount, copy, native launch, remove]
+    Platforms --> Mac[Experimental macOS DMGs: ARM64 + Intel x64]
+    Mac --> MacTest[Both: mount, copy, native launch, remove]
     MacTest --> Gate
     MSI --> Server[Server MSI lifecycle and applicable MSP checks]
     Server --> Win11[Same MSI: Windows 11 ARM<br/>Install, launch, uninstall]
@@ -459,7 +459,7 @@ flowchart TD
     Win11 --> Gate{All required checks passed?}
     Ubuntu --> Gate
     Gate -->|Yes| Verify[Verify release assets and update metadata]
-    Verify --> Publish[Publish tested MSI, DEB and experimental DMG]
+    Verify --> Publish[Publish tested MSI, DEB and both macOS DMGs]
     Gate -->|No| Stop[Block publication]
 ```
 
@@ -491,12 +491,18 @@ a macOS app version whose first component is zero. Packaging therefore derives
 `CFBundleShortVersionString` back to the actual POM version. The About dialog,
 JAR and DMG names retain the actual release version; no second version is maintained.
 
-The macOS job in `release.yml` builds on an Apple Silicon macOS 15 runner. The macOS Maven
-profile supplies Qt Jambi's universal native framework JAR. The focused
+The macOS matrix in `release.yml` builds on native `macos-15` (Apple Silicon)
+and `macos-15-intel` (Intel x64) runners, using the matching pinned Temurin JDK.
+Both also run Java/tooling checks in `oscar-ui-ci.yml`. Runner labels follow
+[GitHub's hosted-runner documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job).
+The macOS Maven profile supplies Qt Jambi's universal native framework JAR. The focused
 `scripts/build/macos-release.py` reuses Java build/attribution staging, extracts
 JNI frameworks, invokes Qt's `macdeployqt` for Qt frameworks and Cocoa plugins,
 and bundles a private Java runtime with `jpackage`. `sips`/`iconutil` produce the
 native icon from the existing PNG. Dependency sources and notices are retained.
+Before signing, `lipo -verify_arch` requires the selected CPU slice in the
+launcher, bundled Java executable/JVM, Qt/JNI frameworks and Cocoa plugin.
+Universal libraries are accepted when they contain the required slice.
 
 The bundle is ad-hoc signed after deployment, verified with `codesign`, and
 packed into a DMG with an Applications shortcut. No Apple credentials, Developer
@@ -510,17 +516,25 @@ app and checks preservation of a synthetic external configuration file.
 This is not proof of interactive Gatekeeper approval on a downloaded package.
 
 Release publication now waits for Windows, Ubuntu, and macOS package jobs.
-The final publisher attaches the verified DMG before making the release public.
+The final publisher downloads `macos-release-arm64` and `macos-release-x64`,
+requires both nonempty DMGs before uploading either, and attaches both verified
+images before making the release public. Per-architecture reports/artifacts have
+unique names; matrix fail-fast is disabled, while any failed target still blocks
+publication.
 Manual release dispatch must select a version tag and follows the same gates.
 Native DMG validation passed in run 39674156576; interactive Gatekeeper approval
 on a downloaded package remains a separate user check.
 
-Local Apple Silicon build (after OSCAR bootstrap and Java 21 setup):
+Local Intel or Apple Silicon build (after OSCAR bootstrap and Java 21 setup):
 
 ```bash
 bash scripts/macos/setup-qt.sh
 python3 scripts/build/build-image.py --macos
 ```
 
-Output: `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg`.
-`--all` selects macOS on Apple Silicon; Linux cannot cross-build this package.
+Output: `dist/macos/release/OSCAR-UI-<version>-macos-arm64.dmg` on Apple Silicon,
+or `dist/macos/release/OSCAR-UI-<version>-macos-x64.dmg` on Intel.
+`--all` selects only the current native host architecture; Linux cannot
+cross-build these packages. Intel native deployment/launch and downloaded-app
+Gatekeeper behavior require their own macOS verification; local Linux tests do
+not establish them.

@@ -3,7 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-[[ "$(uname -s)" == Darwin && "$(uname -m)" == arm64 ]] || { echo 'Apple Silicon macOS required' >&2; exit 1; }
+if [[ "$(uname -s)" != Darwin ]]; then
+  echo 'Native macOS Intel or Apple Silicon required' >&2
+  exit 1
+fi
+case "$(uname -m)" in
+  arm64|x86_64) ;;
+  *) echo 'Native macOS Intel or Apple Silicon required' >&2; exit 1 ;;
+esac
 QT_VERSION="$(python3 -c 'import sys,xml.etree.ElementTree as E; print(E.parse(sys.argv[1]).findtext("{*}properties/{*}qtjambi.version"))' "$ROOT/pom.xml")"
 echo "[macOS] Installing Qt $QT_VERSION in the project tools directory..."
 python3 -m venv "$ROOT/.tools/macos-venv"

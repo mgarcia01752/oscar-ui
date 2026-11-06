@@ -24,7 +24,7 @@ def main(argv=None):
     targets = parser.add_mutually_exclusive_group(required=True)
     targets.add_argument('--linux', action='store_true', help='Build an Ubuntu x64 DEB on Linux')
     targets.add_argument('--windows', action='store_true', help='Build a Windows x64 MSI on Windows')
-    targets.add_argument('--macos', action='store_true', help='Build an experimental Apple Silicon DMG on macOS')
+    targets.add_argument('--macos', action='store_true', help='Build an experimental native Intel or Apple Silicon DMG on macOS')
     targets.add_argument('--all', action='store_true', help='Build all supported installers for this host only')
     parser.add_argument('--dry-run', action='store_true', help='Show the build command and output without executing')
     arguments = parser.parse_args(argv)
@@ -61,9 +61,9 @@ def main(argv=None):
 def _plan(requested):
     hosts = {'linux': 'linux', 'win32': 'windows', 'darwin': 'macos'}
     host = hosts.get(sys.platform)
-    architectures = ('arm64',) if host == 'macos' else ('x86_64', 'amd64')
+    architectures = ('arm64', 'x86_64') if host == 'macos' else ('x86_64', 'amd64')
     if host is None or platform.machine().lower() not in architectures:
-        raise RuntimeError('Unsupported host: require Linux/Windows x64 or macOS arm64.')
+        raise RuntimeError('Unsupported host: require Linux/Windows x64 or macOS arm64/x86_64.')
     target = host if requested == 'all' else requested
     if target != host:
         raise RuntimeError(f'Cannot build {target} on {host}. Run this command on a supported {target} host.')
@@ -78,7 +78,8 @@ def _plan(requested):
     elif target == 'macos':
         command = [sys.executable, (ROOT / 'scripts/build/macos-release.py').as_posix()]
         directories = [ROOT / 'dist/macos']
-        artifact = ROOT / f'dist/macos/release/OSCAR-UI-{version}-macos-arm64.dmg'
+        architecture = 'arm64' if platform.machine().lower() == 'arm64' else 'x64'
+        artifact = ROOT / f'dist/macos/release/OSCAR-UI-{version}-macos-{architecture}.dmg'
     else:
         command = ['pwsh', '-NoProfile', '-File', (ROOT / 'scripts/windows/windows-release.ps1').as_posix()]
         directories = [ROOT / 'dist/windows/app-image', ROOT / 'dist/windows/msi']

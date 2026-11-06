@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2026 OSCAR-UI contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Build and verify an experimental Apple Silicon DMG without Developer ID."""
+"""Build and verify an experimental native macOS DMG without Developer ID."""
 import importlib.util
 import os
 from pathlib import Path
@@ -96,14 +96,48 @@ def smoke(application):
          ROOT / 'src/test/resources/simple-docsis.txt'], env=environment, timeout=90)
 
 
+def native_architecture():
+    """Return the native DMG suffix for an Intel or Apple Silicon process.
+
+    Reject unsupported platforms before staging files or invoking native tools.
+    """
+    architectures = {'arm64': 'arm64', 'x86_64': 'x64'}
+    architecture = architectures.get(platform.machine().lower())
+    if sys.platform != 'darwin' or architecture is None:
+        raise RuntimeError('Build on an Intel or Apple Silicon macOS runner; cross-compilation is unsupported.')
+    return architecture
+
+
+def verify_architecture(application, architecture):
+    """Require the selected CPU slice in the launcher, JVM and native libraries.
+
+    Check the actual staged bundle before signing or creating the disk image;
+    a universal framework is allowed, but an ARM-only Intel payload is not.
+
+    Args:
+        application: Staged .app bundle, before signing and DMG creation.
+        architecture: Native asset suffix returned by native_architecture().
+    Raises:
+        subprocess.CalledProcessError: A required binary lacks the CPU slice.
+    """
+    mach_o_architecture = 'x86_64' if architecture == 'x64' else 'arm64'
+    libraries = sorted((application / 'Contents/Frameworks').glob('*.framework'))
+    executables = [application / 'Contents/MacOS/OSCAR-UI',
+                   application / 'Contents/runtime/Contents/Home/bin/java',
+                   application / 'Contents/runtime/Contents/Home/lib/server/libjvm.dylib',
+                   application / 'Contents/PlugIns/platforms/libqcocoa.dylib',
+                   *[framework / framework.stem for framework in libraries]]
+    for executable in executables:
+        run(['lipo', '-verify_arch', mach_o_architecture, executable])
+
+
 def build():
     """Build, ad-hoc sign, mount, copy, and smoke-test a self-contained DMG.
 
-    Require native Apple Silicon and Java 21. Preserve prior release outputs.
+    Require native Intel or Apple Silicon and matching Java 21. Preserve prior release outputs.
     No system installation, Git push, or release publication is performed.
     """
-    if sys.platform != 'darwin' or platform.machine().lower() != 'arm64':
-        raise RuntimeError('Build on an Apple Silicon macOS runner; cross-compilation is unsupported.')
+    architecture = native_architecture()
     pom = ET.parse(ROOT / 'pom.xml')
     version = pom.findtext('{*}version')
     build_version = bundle_build_version(version)
@@ -158,12 +192,13 @@ def build():
     run([sys.executable, ROOT / 'scripts/build/verify-java-distribution.py',
          '--runtime', application / 'Contents/runtime/Contents/Home',
          '--sources', application / 'Contents/app/sources', '--jdk-home', os.environ['JAVA_HOME']])
+    verify_architecture(application, architecture)
     set_bundle_versions(application, version)
     run(['codesign', '--force', '--deep', '--sign', '-', application])
     run(['codesign', '--verify', '--deep', '--strict', application])
     release = output / 'release'
     release.mkdir()
-    dmg = release / f'OSCAR-UI-{version}-macos-arm64.dmg'
+    dmg = release / f'OSCAR-UI-{version}-macos-{architecture}.dmg'
     (image / 'Applications').symlink_to('/Applications')
     run(['hdiutil', 'create', '-volname', 'OSCAR-UI', '-srcfolder', image,
          '-format', 'UDZO', dmg])
